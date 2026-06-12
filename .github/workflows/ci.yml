@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"  # matches the Isaac Sim 5.x python on the GPU machine
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+      - name: Unit tests (sim tests auto-skip without Isaac Lab)
+        run: pytest -m "not slow" -q
+
+  # Sim smoke job intentionally absent: no GPU runner available yet. The sim gate is
+  # `pytest -m sim` run manually on the RTX 5090 machine and recorded in the
+  # CLAUDE.md Completed Log (QA rule 5.1.3). Add a self-hosted GPU job here when one exists.

@@ -1,0 +1,10 @@
+# Global defaults. Module code reads thresholds from here, never from literals (QA 5.1.5).
+seed: 42
+
+sim:
+  # Physics step (s); 1 kHz to match the Kino-Monitor / proprioception rate (spec section 1).
+  physics_dt: 0.001
+  # Control decimation: low-level policy / Sport-Client-style commands at 200 Hz.
+  control_decimation: 5
+  device: "cuda:0"
+  headless: true

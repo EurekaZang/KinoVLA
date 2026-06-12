@@ -1,0 +1,17 @@
+# M0 bring-up: Go2 standing on default flat terrain (M0 exit criterion).
+seed: 42
+
+scene:
+  num_envs: 1
+  env_spacing: 2.5
+
+episode:
+  # Simulated seconds the robot must hold a stand for the bring-up check to pass.
+  duration_s: 3.0
+
+stand_check:
+  # Nominal Go2 standing base height is ~0.32-0.34 m; pass band absorbs settling.
+  min_base_height_m: 0.25
+  max_base_height_m: 0.45
+  # Max |roll| / |pitch| during the hold (rad).
+  max_tilt_rad: 0.3

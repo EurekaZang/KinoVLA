@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kino-vla"
+version = "0.0.1"
+description = "Kino-VLA: closed-loop embodied reflection for a Unitree Go2 quadruped in Isaac Lab"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "pytest>=8.0",
+    "pre-commit>=3.5",
+]
+# Isaac Lab / Isaac Sim are NOT pip-installable from PyPI alone in a portable way.
+# See README "GPU machine setup" for the pinned install procedure (RTX 5090 / Blackwell
+# requires Isaac Sim >= 5.0 with CUDA 12.8+ PyTorch builds).
+
+[tool.setuptools.packages.find]
+include = ["kino_vla*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "ANN", # type annotations (public API typing — spec QA 5.1.1)
+]
+ignore = [
+    "ANN401", # Any in **kwargs is fine
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN"]
+"scripts/*" = ["ANN"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "sim: requires Isaac Sim / Isaac Lab and a GPU (skipped automatically when unavailable)",
+    "slow: long-running test, excluded from the default fast suite",
+]
+addopts = "-ra"
