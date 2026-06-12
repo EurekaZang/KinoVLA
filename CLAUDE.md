@@ -51,15 +51,19 @@ Milestones M2–M7 each swap one `[STUB]` for the real module. The demo command 
 ## 2. Progress State _(EDIT THIS SECTION EVERY SESSION)_
 
 ```
-CURRENT MILESTONE : M0 — Repository Scaffolding & Simulation Bring-up
-CURRENT TASK      : M0 GPU verification — on the RTX 5090 machine: follow README
-                    "GPU machine setup", run `python scripts/stand_go2.py --headless`
-                    and `pytest -m sim`; record result in Section 4, then mark M0 done.
-DEMO STATUS       : n/a (walking skeleton lands at end of M1)
-LAST SESSION NOTE : 2026-06-12 — Full CPU-tier scaffolding done (package, configs,
-                    seeding, tests, CI, pre-commit, README). 24 unit tests green.
-                    Go2 stand script written but unverifiable here (dev laptop has
-                    no GPU — see Section 6 issue #1).
+CURRENT MILESTONE : M1 — Kino-Fail operator library v0 + walking skeleton
+                    (CPU tier COMPLETE; Isaac-side checks pending GPU)
+CURRENT TASK      : GPU verification on the RTX 5090 machine — follow README "GPU
+                    machine setup", then: (a) M0: `python scripts/stand_go2.py
+                    --headless`; (b) M1: `python scripts/run_demo.py --backend isaac
+                    --headless`; (c) `pytest -m sim`. Record results in Section 4,
+                    then mark the M0 and M1 checkboxes and start M2.
+DEMO STATUS       : GREEN on surrogate backend (asserted in CI + tests/test_demo.py);
+                    Isaac backend authored, unverified (Section 6 #4/#5)
+LAST SESSION NOTE : 2026-06-12 — M1 CPU tier done per user directive to proceed with
+                    M0 left open (Section 6 #3): operator framework + O1/O6/O11 with
+                    QA 5.2 gates, surrogate backend, monitor v0, FSM + shield stubs,
+                    loop + run_demo. 69 unit tests green, ruff clean.
 ```
 
 Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
@@ -126,6 +130,15 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 2026-06-12 | M0 | CI workflow (lint + unit tests, py3.11; no GPU runner -> sim gate manual per QA 5.1.3) | .github/workflows/ci.yml
 2026-06-12 | M0 | scripts/check_env.py + scripts/stand_go2.py (Isaac Lab 2.x, headless, stand assertion + traj hash) + GPU-gated tests/test_sim_bringup.py | NOT yet run on GPU (Section 6 #1)
 2026-06-12 | M0 | README quickstart (dev tier verified locally; RTX 5090/Blackwell setup w/ cu128 + Isaac Sim 5.x pins) | README.md
+2026-06-12 | M1 | user directive: keep M0 open (GPU verify pending), proceed to M1 | Section 6 #3
+2026-06-12 | M1 | operator framework: FailureOperator ABC, uniform get_privileged_state (spec §8.2 P2), OperatorStack w/ θ concat | tests/test_operators.py
+2026-06-12 | M1 | O1 μ-Field, O6 Push, O11 Obs-Bias + θ-application/determinism/composability gates (QA 5.2) | tests/test_operators.py (15 tests)
+2026-06-12 | M1 | shared traction model + CPU surrogate backend (Sport-Client cmd interface, falsifiable fall model) | tests/test_traction.py, tests/test_demo.py vacuity test
+2026-06-12 | M1 | procedural terrain stub (seeded patch jitter, extent clamping) | tests/test_terrain.py
+2026-06-12 | M1 | rule-based Kino-Monitor v0: slip + tracking-error channels, EMA/debounce/arm/cooldown, text-summary stub | tests/test_monitor.py
+2026-06-12 | M1 | scripted FSM recovery stub (Backstep + box-detour Replan_Waypoint, avoid-radius growth) + pass-through shield stub | tests/test_fsm_recovery.py, tests/test_shield_stub.py
+2026-06-12 | M1 | walking skeleton: kino_vla/loop.py + skeleton.py + scripts/run_demo.py, green on surrogate, asserted in CI | tests/test_demo.py, .github/workflows/ci.yml
+2026-06-12 | M1 | Isaac kinematic backend authored blind (PhysX material patch + μ readback; root-velocity drive until M2) — GPU-deferred | tests/test_sim_operators.py (manual gate, QA 5.1.3)
 ```
 
 ---
@@ -178,4 +191,20 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 #2 2026-06-12 | M0 | No GPU CI runner available -> CI has lint+unit only; sim smoke
    is a documented manual gate (`pytest -m sim` on GPU machine), per M0 scope
    ("sim smoke test if GPU runner available") and QA 5.1.3.
+#3 2026-06-12 | M1 | USER DIRECTIVE: keep M0 open (GPU verification outstanding) and
+   continue with M1. Waterfall order preserved on paper — the M0 checkbox stays
+   unchecked until the 5090 run; M1 work proceeded in parallel per instruction.
+#4 2026-06-12 | M1 | CLAUDE.md §1 defines the walking skeleton on Isaac Lab, but the
+   dev/CI machines have no GPU. Added a CPU surrogate backend
+   (kino_vla/sim/surrogate.py, friction-limited point robot) so the demo, its
+   assertions, and CI exercise the full loop logic everywhere; `--backend auto`
+   selects Isaac when importable. The M1 exit criterion "demo runs headless
+   end-to-end" is therefore VERIFIED on the surrogate and UNVERIFIED on Isaac
+   until the 5090 run; "θ correctly applied in sim" is verified on the surrogate
+   plus an Isaac-side μ readback assertion in the GPU-gated demo test.
+#5 2026-06-12 | M1 | M1 has no locomotion policy (arrives at M2): the Isaac backend
+   drives the Go2 root with friction-limited velocity writes (kinematic stub)
+   while the legs hold stance; O1's μ is still a real PhysX material (set + read
+   back from the prim). Replaced by the trained policy at M2. Authored blind —
+   record any Isaac Lab API mismatches found on the 5090 here.
 ```
