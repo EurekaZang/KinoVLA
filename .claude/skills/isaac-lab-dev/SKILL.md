@@ -8,4 +8,6 @@ description: Use when writing or debugging any Isaac Lab / Isaac Sim / PhysX cod
 - Dynamic attachments: create/destroy D6 spring-damper joints at contact events (O4); add break-force.
 - Collider swap with hysteresis for collapse events (O3).
 - Record privileged params via the uniform get_privileged_state() operator API; never hardcode theta.
-- (Fill in: local CUDA/driver versions, Isaac Lab install path, known crash workarounds as you discover them.)
+- Machines: dev laptop = NO GPU (Isaac unavailable; sim tests auto-skip via tests/conftest.py). Sim box = RTX 5090, Blackwell sm_120 -> Isaac Sim >= 5.x + torch cu128 ONLY (Isaac Sim <= 4.5 lacks Blackwell kernels). Install pins in README "GPU machine setup".
+- Local pytest: run with `PYTHONPATH= pytest ...` (ROS Humble py3.10 site-packages leak in via shell profile and break plugin autoload).
+- Project env: conda `kinovla` (py3.11) — matches Isaac Sim 5.x python.
