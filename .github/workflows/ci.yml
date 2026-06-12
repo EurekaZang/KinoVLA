@@ -22,6 +22,8 @@ jobs:
         run: ruff format --check .
       - name: Unit tests (sim tests auto-skip without Isaac Lab)
         run: pytest -m "not slow" -q
+      - name: Walking skeleton demo (pinned M1 deliverable, CLAUDE.md §1)
+        run: python scripts/run_demo.py --backend surrogate
 
   # Sim smoke job intentionally absent: no GPU runner available yet. The sim gate is
   # `pytest -m sim` run manually on the RTX 5090 machine and recorded in the

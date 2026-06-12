@@ -17,7 +17,14 @@ pre-commit install
 python scripts/check_env.py     # report what this machine can run
 pytest -m "not slow" -q         # unit tests (sim tests auto-skip without Isaac Lab)
 ruff check . && ruff format --check .
+
+python scripts/run_demo.py --backend surrogate   # walking skeleton (M1 deliverable)
 ```
+
+The demo runs the full closed loop on a CPU surrogate backend: the Go2 walks
+onto an O1 ice patch, the Kino-Monitor fires, the scripted FSM backsteps and
+replans a detour, and the robot reaches the goal. Expected last line:
+`PASS: walking skeleton demo`.
 
 ## GPU machine setup (sim tier — RTX 5090 / Blackwell)
 
@@ -38,6 +45,7 @@ pip install isaaclab[isaacsim,all]==2.3.0 --extra-index-url https://pypi.nvidia.
 pip install -e ".[dev]"
 python scripts/check_env.py             # must show the 5090 with sm_120 and cuda >= 12.8
 python scripts/stand_go2.py --headless  # M0 bring-up: Go2 stands on flat terrain
+python scripts/run_demo.py --backend isaac --headless  # M1 skeleton on the real Go2 asset
 pytest -m sim                           # GPU-gated test suite
 ```
 
@@ -50,16 +58,18 @@ into that same environment.
 
 ```
 kino_vla/
-  sim/      Isaac Lab envs, Go2 bring-up, Kino-Fail operators O1–O11 (spec §8)
-  monitor/  1 kHz Kino-Monitor + Reflex loop
-  shield/   CBF-QP Safety Shield + Primitive Compiler (spec §6)
+  loop.py   closed-loop episode runner (walking skeleton; dual-rate split at M3)
+  skeleton.py  demo assembly: configs -> wired pipeline
+  sim/      backends (surrogate CPU / Isaac Go2), terrain, Kino-Fail operators (spec §8)
+  monitor/  Kino-Monitor (rule-based v0; 1 kHz + Reflex at M2)
+  shield/   Safety Shield (pass-through stub; CBF-QP at M3, spec §6)
   tokens/   Kino-Tokens extractor, privileged distillation (spec §4–5)
   map/      semantic traversability map (spec §7)
-  vla/      VLA Recovery Planner, Kino-SFT / Embodied DPO (spec §10–11)
+  vla/      recovery planner (scripted FSM stub; VLA + SFT/DPO at M7, spec §10–11)
   data/     Hindsight CoT pipeline + truth-consistency filter (spec §10)
   eval/     suites Cal/Sem/Comp/Bound/OOD, baselines B1–B5 (spec §12)
 configs/    all thresholds & tolerances (no magic numbers in code)
-scripts/    entry points (check_env, stand_go2; run_demo lands at M1)
+scripts/    entry points (check_env, stand_go2, run_demo)
 tests/      pytest; `-m sim` marks GPU-gated tests, auto-skipped without Isaac Lab
 ```
 

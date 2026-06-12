@@ -1,0 +1,9 @@
+# θ-application test tolerances (QA 5.2a: set parameter -> measure effect -> assert).
+# M4 adds per-operator regression tolerances in a separate file per its own scope.
+o1_mu_field:
+  mu_abs_tol: 0.02         # measured effective μ vs set μ (surrogate lookup / Isaac readback)
+  accel_rel_tol: 0.15      # behavioral: full-throttle accel from rest ≈ μ·g on the patch
+o6_push:
+  dv_rel_tol: 0.05         # observed Δv vs impulse / mass
+o11_obs_bias:
+  abs_tol: 1.0e-9          # bias is applied exactly (pure arithmetic)

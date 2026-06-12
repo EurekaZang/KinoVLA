@@ -1,0 +1,21 @@
+# Walking-skeleton demo episode (scripts/run_demo.py) — the M1 deliverable.
+# Go2 walks toward the goal, crosses onto an O1 ice patch, the monitor fires,
+# the FSM backsteps and replans a detour, and the robot reaches the goal.
+max_time_s: 60.0
+start:
+  pos: [0.0, 0.0]
+  heading: 0.0
+goal:
+  pos: [6.0, 0.0]
+  tol_m: 0.3
+terrain:
+  extent: [16.0, 10.0]
+  hazard_patch:
+    center: [3.0, 0.0]
+    half_size: [1.0, 1.0]
+    jitter_m: 0.3
+ice:
+  mu_s: 0.12
+  mu_d: 0.10
+  restitution: 0.0
+wall_clock_budget_s: 300.0   # QA 5.3: demo < 5 min headless

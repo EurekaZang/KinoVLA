@@ -1,0 +1,115 @@
+"""Closed-loop episode runner — the walking skeleton (CLAUDE.md §1).
+
+Pipeline per control step:
+    backend obs -> operator obs-corruption (Axis IV) -> Kino-Monitor ->
+    recovery policy -> Safety Shield -> backend command
+
+At M1 every stage downstream of the monitor is a stub (scripted FSM, pass-through
+shield); M2–M7 each replace exactly one stage. The loop runs single-rate at the
+backend's control frequency; the dual-rate (1 kHz monitor / planner-rate) split
+arrives with M3 (spec §6.9 latency budget).
+"""
+
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass
+from typing import Protocol
+
+import numpy as np
+
+from kino_vla.monitor.rule_monitor import MonitorEvent, RuleMonitor
+from kino_vla.shield.passthrough import ShieldDecision
+from kino_vla.sim.backend import LocomotionBackend
+from kino_vla.sim.operators.base import OperatorStack
+from kino_vla.sim.types import Obs
+from kino_vla.utils.seeding import trajectory_hash
+
+
+class RecoveryPolicy(Protocol):
+    """Anything that maps observations to commands and reacts to monitor events."""
+
+    def on_event(self, event: MonitorEvent) -> bool: ...
+
+    def step(self, obs: Obs) -> np.ndarray: ...
+
+
+class Shield(Protocol):
+    """Command filter contract (pass-through at M1, CBF-QP from M3)."""
+
+    def filter(self, cmd: np.ndarray, obs: Obs) -> ShieldDecision: ...
+
+
+@dataclass(frozen=True)
+class EpisodeResult:
+    """Everything the demo assertions and the QA determinism gates need."""
+
+    monitor_fired: bool
+    events: list[MonitorEvent]
+    fell: bool
+    goal_reached: bool
+    final_dist_m: float
+    sim_time_s: float
+    wall_time_s: float
+    n_steps: int
+    shield_interventions: int
+    traj_hash: str
+
+
+def run_episode(
+    backend: LocomotionBackend,
+    operators: OperatorStack,
+    monitor: RuleMonitor,
+    policy: RecoveryPolicy,
+    shield: Shield,
+    *,
+    seed: int,
+    goal_xy: np.ndarray,
+    goal_tol_m: float,
+    max_time_s: float,
+) -> EpisodeResult:
+    """Run one seeded episode to goal, fall, or timeout."""
+    wall_start = time.perf_counter()
+    goal_xy = np.asarray(goal_xy, dtype=np.float64)
+    obs = backend.reset(seed)
+    operators.on_reset(backend)
+    monitor.reset()
+
+    events: list[MonitorEvent] = []
+    interventions = 0
+    positions: list[np.ndarray] = [obs.pos.copy()]
+    velocities: list[np.ndarray] = [obs.vel_body.copy()]
+    goal_reached = False
+    max_steps = int(round(max_time_s / backend.dt))
+
+    for _ in range(max_steps):
+        obs_measured = operators.transform_obs(obs)
+        event = monitor.step(obs_measured)
+        if event is not None:
+            events.append(event)
+            policy.on_event(event)
+        cmd = policy.step(obs_measured)
+        decision = shield.filter(cmd, obs_measured)
+        interventions += int(decision.intervened)
+        operators.on_step(backend, obs.t)
+        obs = backend.step(decision.cmd)
+        positions.append(obs.pos.copy())
+        velocities.append(obs.vel_body.copy())
+        if obs.fallen:
+            break
+        if float(np.linalg.norm(obs.pos - goal_xy)) < goal_tol_m:
+            goal_reached = True
+            break
+
+    return EpisodeResult(
+        monitor_fired=len(events) > 0,
+        events=events,
+        fell=obs.fallen,
+        goal_reached=goal_reached,
+        final_dist_m=float(np.linalg.norm(obs.pos - goal_xy)),
+        sim_time_s=obs.t,
+        wall_time_s=time.perf_counter() - wall_start,
+        n_steps=len(positions) - 1,
+        shield_interventions=interventions,
+        traj_hash=trajectory_hash(np.asarray(positions), np.asarray(velocities)),
+    )

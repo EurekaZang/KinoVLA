@@ -1,0 +1,9 @@
+# Rule-based Kino-Monitor v0 thresholds (kino_vla/monitor/rule_monitor.py).
+# Calibrated against the surrogate backend at M1; re-calibrated on rollout logs at M2.
+ema_alpha: 0.3
+debounce_steps: 5        # consecutive steps above threshold before firing
+arm_delay_s: 0.5         # ignore the initial acceleration transient
+cooldown_s: 1.5          # suppress repeat events while recovery is in flight
+thresholds:
+  slip_ratio: 0.4
+  tracking_error: 0.35   # [m/s]

@@ -1,0 +1,20 @@
+# CPU surrogate backend parameters (kino_vla/sim/surrogate.py).
+# Reduced planar model of a Go2 tracking Sport-Client velocity commands;
+# values chosen for plausible quadruped scales, not system identification.
+control_hz: 50
+mass_kg: 15.0            # Go2 ~15 kg
+yaw_inertia_kgm2: 0.65
+base_height_m: 0.31
+max_speed_mps: 1.0
+max_yaw_rate_radps: 1.5
+tau_track_s: 0.25        # velocity tracking time constant
+tau_yaw_s: 0.15
+gravity: 9.81
+mu_nominal: 0.8          # ground friction outside operator regions
+gait_demand_per_speed: 3.0   # [m/s^2 per m/s] cyclic stance-force demand of a walking gait
+skid_noise_std: 0.05     # seeded lateral skid noise, scaled by slip ratio
+fall:
+  instability_gain: 1.0
+  decay_per_s: 0.3
+  threshold: 0.9
+  min_speed_mps: 0.05
