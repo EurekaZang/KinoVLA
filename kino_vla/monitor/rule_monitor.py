@@ -36,7 +36,11 @@ class MonitorEvent:
 _CHANNEL_HINTS = {
     "slip_ratio": "suspected traction loss",
     "tracking_error": "velocity command tracking degraded",
+    "effort_ratio": "suspected actuator-effort saturation",
 }
+
+# The proprioceptive channels the monitor thresholds, in priority order (spec §3).
+_CHANNELS = ("slip_ratio", "tracking_error", "effort_ratio")
 
 
 class RuleMonitor:
@@ -48,16 +52,34 @@ class RuleMonitor:
         self.reset()
 
     def reset(self) -> None:
-        self._ema = {"slip_ratio": 0.0, "tracking_error": 0.0}
-        self._above = {"slip_ratio": 0, "tracking_error": 0}
+        self._ema = {channel: 0.0 for channel in _CHANNELS}
+        self._above = {channel: 0 for channel in _CHANNELS}
         self._cooldown_until = 0.0
         self.events: list[MonitorEvent] = []
+
+    @property
+    def channel_emas(self) -> dict[str, float]:
+        """Current EMA-smoothed value of each channel (telemetry/recording access)."""
+        return dict(self._ema)
+
+    @property
+    def anomaly_score(self) -> float:
+        """Threshold-normalized anomaly score: ``max_c EMA_c / threshold_c``.
+
+        A scale-free detector statistic (1.0 is the firing operating point) used to
+        sweep the Monitor ROC across rollouts (spec §12 metric); independent of the
+        debounce/cooldown firing logic, which only sets *when* an event is emitted.
+        """
+        return max(
+            self._ema[channel] / float(self._cfg.thresholds.get(channel)) for channel in _CHANNELS
+        )
 
     def step(self, obs: Obs) -> MonitorEvent | None:
         alpha = float(self._cfg.ema_alpha)
         raw = {
             "slip_ratio": obs.slip_ratio,
             "tracking_error": float(np.linalg.norm(obs.cmd_prev[:2] - obs.vel_body)),
+            "effort_ratio": obs.effort_ratio,
         }
         for channel, value in raw.items():
             self._ema[channel] += alpha * (value - self._ema[channel])
@@ -67,7 +89,7 @@ class RuleMonitor:
                 self._above[channel] = 0
             return None
 
-        for channel in ("slip_ratio", "tracking_error"):
+        for channel in _CHANNELS:
             threshold = float(self._cfg.thresholds.get(channel))
             if self._ema[channel] > threshold:
                 self._above[channel] += 1

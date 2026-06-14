@@ -1,5 +1,8 @@
-# Rule-based Kino-Monitor v0 thresholds (kino_vla/monitor/rule_monitor.py).
-# Calibrated against the surrogate backend at M1; re-calibrated on rollout logs at M2.
+# Rule-based Kino-Monitor v0 thresholds — surrogate/default calibration.
+# The real Go2 policy has different proprioceptive characteristics (a push-off slip
+# transient, intermittent ice slip), so the Isaac backend uses its own calibration in
+# monitor/rule_v0_isaac.yaml (spec §3: thresholds calibrated per robot). Kept here at
+# the M1 surrogate values, plus the M2 effort-saturation channel.
 ema_alpha: 0.3
 debounce_steps: 5        # consecutive steps above threshold before firing
 arm_delay_s: 0.5         # ignore the initial acceleration transient
@@ -7,3 +10,4 @@ cooldown_s: 1.5          # suppress repeat events while recovery is in flight
 thresholds:
   slip_ratio: 0.4
   tracking_error: 0.35   # [m/s]
+  effort_ratio: 0.25     # actuator-effort saturation (O5 overload / O10 decay)
