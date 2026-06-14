@@ -7,3 +7,15 @@ o6_push:
   dv_rel_tol: 0.05         # observed Δv vs impulse / mass
 o11_obs_bias:
   abs_tol: 1.0e-9          # bias is applied exactly (pure arithmetic)
+# M2 operators (QA 5.2a): set parameter -> measure effect on the surrogate -> assert.
+o3_collapse:
+  mu_abs_tol: 0.02         # friction_at before trigger == mu_intact, after == mu_collapsed
+o5_payload:
+  mass_abs_tol: 1.0e-6     # backend.mass_kg == base + payload (exact)
+  dv_rel_tol: 0.05         # push Δv == J / (base + payload) mass
+o8_invisible_collider:
+  pos_abs_tol: 0.05        # robot halts within tol of the wall's near edge, never crosses
+o9_high_centering:
+  support_abs_tol: 1.0e-6  # measured support_ratio == residual_support inside the ridge
+o10_effort_decay:
+  scale_abs_tol: 1.0e-9    # scheduled effort scale is applied exactly
