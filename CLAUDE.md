@@ -51,27 +51,41 @@ Milestones M2–M7 each swap one `[STUB]` for the real module. The demo command 
 ## 2. Progress State _(EDIT THIS SECTION EVERY SESSION)_
 
 ```
-CURRENT MILESTONE : M1 — Kino-Fail operator library v0 + walking skeleton
-                    (CPU tier COMPLETE; Isaac-side checks pending GPU)
-CURRENT TASK      : GPU verification on the RTX 5090 machine — follow README "GPU
-                    machine setup", then: (a) M0: `python scripts/stand_go2.py
-                    --headless`; (b) M1: `python scripts/run_demo.py --backend isaac
-                    --headless`; (c) `pytest -m sim`. Record results in Section 4,
-                    then mark the M0 and M1 checkboxes and start M2.
-DEMO STATUS       : GREEN on surrogate backend (asserted in CI + tests/test_demo.py);
-                    Isaac backend authored, unverified (Section 6 #4/#5)
-LAST SESSION NOTE : 2026-06-12 — M1 CPU tier done per user directive to proceed with
-                    M0 left open (Section 6 #3): operator framework + O1/O6/O11 with
-                    QA 5.2 gates, surrogate backend, monitor v0, FSM + shield stubs,
-                    loop + run_demo. 69 unit tests green, ruff clean.
+CURRENT MILESTONE : M4 — Kino-Tokens extractor (privileged distillation)
+                    (M0, M1, M2, M3 COMPLETE, all GPU/Isaac verified on RTX 3060)
+CURRENT TASK      : Begin M4 (CLAUDE.md §3): 500 ms sliding-window logger; 1D-CNN +
+                    Perceiver Resampler; privileged θ regression heads + contrastive
+                    text head; anomaly-gated injection; residual OOD score (spec §9).
+                    Wire the online μ̂ estimate into the shield's friction constraint via
+                    the already-built CbfShield.set_mu_estimate() hook (spec §6.5 coupling
+                    point — the M3 shield runs on nominal μ until this lands).
+DEMO STATUS       : GREEN on surrogate (CI + tests/test_demo.py) AND Isaac (M2 trained
+                    policy), now with the CBF-QP shield (spec §6) adjudicating every
+                    command. `pytest -m sim` 2/2 green on the RTX 3060 (M0 stand + M2/M3
+                    walking-skeleton demo). The shield is transparent at cruise (0.8 m/s
+                    < trot capture bound 0.96) so the demo behaviour is unchanged; it only
+                    bites hostile/hard-decel commands.
+LAST SESSION NOTE : 2026-06-14 — M3 COMPLETE. Built the CBF-QP Safety Shield (spec §6.1–6.9)
+                    + Primitive Compiler (§5): LIP/DCM model, per-mode support polygons
+                    (virtual polygon for trot), an EXACT 2-D projection QP (CBF + ZMP-
+                    realizability + friction cone), DCM-tracking nominal ZMP + back-solve,
+                    mode-switch admission, infeasibility fallback→brace→halt, latency
+                    table. Exit criteria met: QP p99 0.11–0.16 ms (<1 ms); adversarial
+                    dry-ground 0 falls shielded / 20 bypassed; admission rejects unsafe
+                    switch; latency table auto-generated (outputs/shield/latency_budget.md).
+                    A multi-agent adversarial review (deviations #14) caught a CRITICAL bug
+                    — the §6.6 guarantee held for ZMP control but the back-solved velocity
+                    could settle in the δ−δ_u margin OUTSIDE C on a fast tracker — now fixed
+                    by clamping the commanded equilibrium DCM onto C (+ ideal-tracker
+                    property test), plus a NaN/Inf→HALT guard and yaw-zeroing on halt.
 ```
 
 Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 
-- [ ] **M0** — Repo scaffolding, env, CI
-- [ ] **M1** — Kino-Fail operator library v0 + walking skeleton demo ← _first deliverable_
-- [ ] **M2** — Kino-Monitor + Reflex loop + low-level locomotion baseline
-- [ ] **M3** — CBF-QP Safety Shield + Primitive Compiler + latency instrumentation
+- [x] **M0** — Repo scaffolding, env, CI
+- [x] **M1** — Kino-Fail operator library v0 + walking skeleton demo ← _first deliverable_
+- [x] **M2** — Kino-Monitor + Reflex loop + low-level locomotion baseline
+- [x] **M3** — CBF-QP Safety Shield + Primitive Compiler + latency instrumentation
 - [ ] **M4** — Kino-Tokens extractor (privileged distillation)
 - [ ] **M5** — Semantic traversability map
 - [ ] **M6** — Hindsight CoT data pipeline + truth-consistency filter
@@ -139,6 +153,29 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 2026-06-12 | M1 | scripted FSM recovery stub (Backstep + box-detour Replan_Waypoint, avoid-radius growth) + pass-through shield stub | tests/test_fsm_recovery.py, tests/test_shield_stub.py
 2026-06-12 | M1 | walking skeleton: kino_vla/loop.py + skeleton.py + scripts/run_demo.py, green on surrogate, asserted in CI | tests/test_demo.py, .github/workflows/ci.yml
 2026-06-12 | M1 | Isaac kinematic backend authored blind (PhysX material patch + μ readback; root-velocity drive until M2) — GPU-deferred | tests/test_sim_operators.py (manual gate, QA 5.1.3)
+2026-06-13 | M0 | GPU env brought up on RTX 3060 (Miniforge py3.11 `kinovla`, torch 2.7.0+cu126, Isaac Sim 5.1.0.0, Isaac Lab 2.3.0 core + isaaclab_assets editable from source) | scripts/check_env.py green; Section 6 #6
+2026-06-13 | M0 | fix(stand_go2): config-driven stiff hold gains (Kp/Kd in go2_flat.yaml stand_hold), apply PD every physics step, compute verdict before close(), watchdog close + os._exit (Isaac Sim 5.1 close() busy-spin) | manual run: base 0.311 m / tilt 0.028 rad, PASS
+2026-06-13 | M0 | M0 EXIT CRITERION MET: Go2 stands headless in Isaac Lab on flat terrain | `pytest -m sim tests/test_sim_bringup.py` PASSED (27.9 s); 69 fast tests green; ruff clean
+2026-06-13 | M1 | fix(isaac_backend): kinematic POSE drive mirroring the surrogate (old root-velocity write left planted feet anchored, robot never moved); feet float clear, μ from PhysX readback | run_demo --backend isaac PASS
+2026-06-13 | M1 | fix(run_demo): close()-hang force-exit on the isaac path (mirror stand_go2), so results print + process exits 0 | scripts/run_demo.py
+2026-06-13 | M1 | M1 EXIT CRITERION MET: walking skeleton runs end-to-end on Isaac (monitor fires on ice slip 0.56>0.40, FSM backstep+replan, goal reached, no fall) + O1 μ readback θ-gate | `pytest -m sim tests/test_sim_operators.py` PASSED; full `pytest -m sim` 2/2 (59 s); 69 fast green; ruff clean
+2026-06-13 | M2 | operators O3 Collapse, O5 Payload, O8 Invisible-Collider, O9 High-Centering, O10 Effort-Decay + θ-application/determinism/composability gates (QA 5.2) | tests/test_operators_m2.py (24 tests); registry updated
+2026-06-13 | M2 | generalized traction model (friction-slip + actuator-effort-saturation), Obs.effort_ratio/support_ratio, backend operator-effect hooks (collapse/blocking/support-loss/payload/effort-scale) | tests/test_traction.py, tests/test_operators_m2.py
+2026-06-13 | M2 | 3-channel Kino-Monitor (slip+tracking+effort), anomaly_score, step <1ms budget; Monitor ROC over labeled rollouts AUC 1.0 + plot | kino_vla/monitor/roc.py, scripts/monitor_roc.py, tests/test_monitor_roc.py
+2026-06-13 | M2 | Reflex layer (damping/widen/lower stance) + survival protocol: 2.1s→20s (9.4x) survival extension; push-recovery 39→45 Ns | kino_vla/monitor/reflex.py, scripts/reflex_eval.py, tests/test_reflex.py
+2026-06-13 | M2 | in-repo RSL-RL Go2 flat training (DR friction/mass + feet_slide anti-skating reward → upright planting trot); exported JIT policy | scripts/train_locomotion.py, configs/locomotion/go2_flat_ppo.yaml, outputs/locomotion/policy.pt
+2026-06-13 | M2 | IsaacPolicyBackend: trained policy walks the Go2 in the real ManagerBasedRLEnv (physics fidelity), 48-dim obs reconstruction, measured contact-slip; retired M1 kinematic backend | kino_vla/sim/isaac_policy_backend.py
+2026-06-13 | M2 | backend-specific monitor/FSM calibration (real Go2 push-off slip transient + intermittent ice slip vs surrogate point-robot) | configs/monitor/rule_v0_isaac.yaml, configs/recovery/fsm_isaac.yaml, kino_vla/skeleton.py
+2026-06-13 | M2 | M2 EXIT CRITERIA MET: trained policy replaces kinematic stub; Isaac demo green (slip 0.48>0.40 on PhysX ice, FSM detour, goal reached, no fall); push-recovery/ROC/Reflex/operator gates pass | `pytest -m sim` 2/2; 95 fast green; ruff clean
+2026-06-14 | M3 | LIP/DCM reduced-order model (ξ=p+v/ω, DCM tracking u_nom=ξ+K_ξ(ξ-ξ_des), back-solve v_cmd*=v+(ω/K_ξ)(ξ-u*), exact DCM integrator) — spec §6.1/§6.4 | kino_vla/shield/lip.py, tests/test_cbf_shield.py
+2026-06-14 | M3 | per-mode support polygons incl. virtual polygon for trot (spec §6.7); δ>δ_u invariant for QP feasibility at the safe-set boundary | kino_vla/shield/modes.py, configs/shield/cbf_v0.yaml
+2026-06-14 | M3 | EXACT 2-D projection CBF-QP (CBF + ZMP-realizability + friction-cone inner-polygon), machine-precision constraint satisfaction, empty-set detection, non-finite guard | kino_vla/shield/qp.py, tests/test_cbf_qp.py (10 tests, p99 budget gate)
+2026-06-14 | M3 | CbfShield: filter (project u_nom, back-solve), steady-state-DCM clamp onto C (velocity-loop §6.6), mode-switch admission (§6.7), infeasibility fallback→brace→halt + reflex coupling (§6.8), NaN/Inf→HALT, μ̂ hook (§6.5) | kino_vla/shield/cbf_shield.py, tests/test_cbf_shield.py (11), tests/test_admission.py (6)
+2026-06-14 | M3 | Primitive Compiler — full §5 library (Backstep/Replan/Switch_Gait/Adjust_Posture/Set_Constraint/Update_Topology/Hold_and_Request) w/ admission-gated mode switches + structured rejection codes | kino_vla/shield/primitive_compiler.py, tests/test_primitive_compiler.py (12)
+2026-06-14 | M3 | latency budget instrumentation (spec §6.9) + auto-generated table; adversarial-command harness (5 hostile profiles, shielded vs bypassed) | kino_vla/shield/{latency,adversarial}.py, scripts/shield_adversarial.py, tests/test_latency.py (4), tests/test_shield_adversarial.py (3)
+2026-06-14 | M3 | swapped pass-through stub → CbfShield in the walking skeleton (both backends); demo stays green (shield transparent at cruise) | kino_vla/skeleton.py, kino_vla/loop.py, tests/test_demo.py
+2026-06-14 | M3 | multi-agent adversarial review (19 agents) → fixed CRITICAL velocity-loop §6.6 leak (steady-DCM clamp + ideal-tracker property test), HIGH NaN/Inf passthrough, yaw-on-halt | deviations #14; tests/test_cbf_shield.py
+2026-06-14 | M3 | M3 EXIT CRITERIA MET: QP p99 0.11–0.16 ms (<1 ms); adversarial dry-ground 0 falls shielded / 20 bypassed; admission rejects unsafe switch; latency table auto-generated | `pytest -m sim` 2/2 (67 s); 139 fast green (44 M3); ruff clean; outputs/shield/latency_budget.md
 ```
 
 ---
@@ -188,6 +225,9 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    tests/test_sim_bringup.py) but UNVERIFIED until run on the RTX 5090 machine.
    M0 checkbox stays open until then. RTX 5090 is Blackwell (sm_120): requires
    Isaac Sim >= 5.x and torch cu128+ (pinned in README); Isaac Sim <= 4.5 will not run.
+   → RESOLVED 2026-06-13 (see #6): the GPU box is actually an RTX 3060 (Ampere,
+   sm_86), NOT a 5090; Isaac Sim 5.1 + torch 2.7.0/cu126 run fine on it. M0 stand
+   VERIFIED (`pytest -m sim tests/test_sim_bringup.py`), M0 checkbox now [x].
 #2 2026-06-12 | M0 | No GPU CI runner available -> CI has lint+unit only; sim smoke
    is a documented manual gate (`pytest -m sim` on GPU machine), per M0 scope
    ("sim smoke test if GPU runner available") and QA 5.1.3.
@@ -207,4 +247,98 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    while the legs hold stance; O1's μ is still a real PhysX material (set + read
    back from the prim). Replaced by the trained policy at M2. Authored blind —
    record any Isaac Lab API mismatches found on the 5090 here.
+   → UPDATED 2026-06-13 (see #7): the root-velocity write did NOT move the Go2
+   (planted feet anchored it). Rewrote the backend to a kinematic POSE drive (feet
+   float clear of contact). Still a stub — replaced by the trained policy at M2.
+#6 2026-06-13 | M0 | GPU stack installed on this RTX 3060 (Ubuntu 26.04, system
+   py3.14): Miniforge conda env `~/miniforge3/envs/kinovla` (py3.11), torch
+   2.7.0+cu126, Isaac Sim 5.1.0.0, Isaac Lab 2.3.0. Setup gotchas: (a) `isaaclab`
+   pip ships core only — `isaaclab_assets` (UNITREE_GO2_CFG) installed editable from
+   the IsaacLab v2.3.0 source clone at `~/IsaacLab`; (b) Isaac needs
+   OMNI_KIT_ACCEPT_EULA=YES (persisted in the env's activate.d) or imports hang on
+   the EULA stdin prompt; (c) `flatdict` needs `pip --no-build-isolation`. Isaac Lab
+   API mismatches found running stand_go2 (per #5): SimulationApp.close() busy-spins
+   and never returns (now force-exit via os._exit after a watchdog thread); the
+   asset's RL DCMotor gains (Kp=25/Kd=0.5) are too soft for a static stand — stand_go2
+   now applies stiffer config gains (go2_flat.yaml `stand_hold`) every physics step,
+   yielding a clean level stand (base 0.311 m, tilt 0.028 rad).
+#7 2026-06-13 | M1 | M1 GPU-VERIFIED. The blind-authored Isaac backend's root-velocity
+   kinematic drive did not translate the Go2 — the legs hold the default stance, so the
+   planted feet anchored the body and it never left the start (spurious early monitor
+   trigger, goal never reached). Rewrote kino_vla/sim/isaac_backend.py to integrate the
+   pose in Python through the same traction model as the surrogate and write the root
+   POSE each step (z pinned at the spawn height so the feet float clear of contact); μ is
+   still read back from the real O1 PhysX material. run_demo.py also got the close()-hang
+   force-exit. `pytest -m sim` now 2/2 (M0 stand + M1 demo). The kinematic drive remains
+   an M1 stub — M2 replaces it with the trained locomotion policy.
+#8 2026-06-13 | M2 | Isaac backend rewritten from the M1 kinematic stub to drive the Go2
+   inside the *real* ManagerBasedRLEnv (flat velocity task) with the trained policy. A
+   hand-built SimulationContext (mirroring the M1 backend) did NOT reproduce the env's
+   contact/solver fidelity — the same policy degenerated to a sagging crawl. Driving the
+   policy through the env (the exact training physics/obs/action path) fixed it.
+   kino_vla/sim/isaac_backend.py deleted; kino_vla/sim/isaac_policy_backend.py is the M2
+   backend.
+#9 2026-06-13 | M2 | DEGENERATE SKATING GAIT (the M2 time-sink). The RSL-RL Go2 flat
+   policy, trained with the stock reward set + friction DR, learned to *skate* (feet slide
+   while in contact) → a low (~0.13–0.15 m base) friction-ROBUST gait that crossed the
+   μ=0.10 O1 ice patch with ZERO measurable slip, so the monitor could not see the very
+   failure it must detect. Diagnosed across several trainings (friction-DR floor sets the
+   crawl height: 0.25→0.13 m, 0.4→0.2 m). FIX: add an IsaacLab `feet_slide` reward penalty
+   (penalizes sliding contact feet, omitted by the stock flat config) + boosted
+   feet_air_time → a clean upright (~0.40 m) planting trot that walks slip-free on good
+   ground and genuinely slips on ice (slip≈1.0). Trade-off: planting is less stable than
+   skating (base_contact 0.6%→3%); a high friction-DR floor made the policy OOD-fragile and
+   it toppled during recovery, so the final policy uses a WIDE friction-DR floor (0.3) +
+   feet_slide → planted AND robust enough to survive the ice while recovering. All in
+   configs/locomotion/go2_flat_ppo.yaml (reproducible from config+seed).
+#10 2026-06-13 | M2 | BACKEND-SPECIFIC MONITOR/FSM CALIBRATION. The real Go2 differs from
+   the surrogate point-robot in proprioception: it slips ~0.4 pushing off from rest (the
+   surrogate has no startup slip) and its ice slip is intermittent across the gait cycle;
+   and being friction-robust it crosses moderate ice instead of failing (spec §2.5 Class-A
+   behavior), so the M1 FSM's aggressive backstep+detour thrashes. Resolved with per-robot
+   calibration (same monitor→FSM→shield pipeline, different constants): configs/monitor/
+   rule_v0_isaac.yaml (arm_delay 2.5 s to skip the push-off transient, debounce 3 for the
+   intermittent slip) + configs/recovery/fsm_isaac.yaml (wide avoid circle + long post-
+   replan grace so one detour clears the patch). skeleton.py selects them for backend=isaac.
+   The surrogate keeps the M1 calibration. NOTE for M3/M7: the proper fix for "robust policy
+   on Class-A ice" is the recoverability-aware planner (VLA) + CBF shield, not a scripted
+   detour — the FSM stub's Class-A/B-blindness is the placeholder this milestone exposes.
+#11 2026-06-14 | M3 | QP SOLVER CHOICE. The spec §6.5 CBF-QP is a 2-variable Euclidean
+   projection of u_nom onto an intersection of half-planes. Implemented as an EXACT analytic
+   projection (enumerate point + per-constraint feet + pairwise vertices, take nearest
+   feasible) instead of osqp/quadprog: it satisfies every safety constraint to machine
+   precision (no ADMM slack that could violate h_j≥0), is deterministic, dependency-free,
+   and p99 0.11–0.16 ms ≪ the 1 ms budget. Empty feasible set (support-polygon collapse) is
+   detected and routed to the §6.8 fallback. kino_vla/shield/qp.py.
+#12 2026-06-14 | M3 | TWO SIZING INVARIANTS the spec leaves implicit but the implementation
+   needs. (a) δ > δ_u per mode: as the barrier saturates (h→0 at a·ξ=b−δ) the CBF needs
+   a·u≥b−δ while ZMP-realizability caps a·u≤b−δ_u; jointly feasible iff δ≥δ_u, else the QP
+   spuriously falls back at the boundary. (b) K_ξ ≤ (lx−δ_u)·ω/v_cruise (≈1.27 for trot): the
+   cruise command must be realizable from rest (u_nom=K_ξ·v/ω inside the polygon), else the
+   shield throttles normal walking and the demo can't reach the goal. Both in
+   configs/shield/cbf_v0.yaml with derivations; K_ξ=1.0.
+#13 2026-06-14 | M3 | ICE/SLIP IS OUTSIDE THE CAPTURE-POINT GUARANTEE (honest scope). The
+   §6.6 CBF guarantees 0-step capturability (no TOPPLE) under any command — VERIFIED:
+   adversarial dry-ground 0 falls shielded / 20 bypassed. On extreme low-μ ice the failure
+   is sustained SLIP, not a capture-point topple, so the CBF does not prevent it and can even
+   be anti-protective (its halt-then-creep cycle). This is the spec's division of labor: ice
+   needs the planner's Set_Constraint(low_speed)/Hold_and_Request (M7) fed by the μ̂ head
+   (M4, via the built CbfShield.set_mu_estimate hook). The M3 adversarial GATE is therefore
+   dry-ground only; the ice runs are reported honestly as out-of-scope (tests/
+   test_shield_adversarial.py, scripts/shield_adversarial.py). The §6.5 μ̂→friction coupling
+   IS wired and unit-tested; its in-demo payoff lands at M4.
+#14 2026-06-14 | M3 | ADVERSARIAL REVIEW FINDINGS (19-agent workflow, all verified against
+   code). FIXED: (CRITICAL) the §6.6 forward-invariance proof is for the ZMP input u, but the
+   deployed input is the back-solved VELOCITY; on a fast/uncapped tracker the commanded
+   equilibrium ξ_ss=v_cmd*/ω could settle in the δ−δ_u annulus OUTSIDE the safe set C (the
+   surrogate masked it via its max-speed clip). Fixed by projecting ξ_ss onto C (using δ, not
+   δ_u) in CbfShield._solve_for_mode + an ideal-tracker property test (realized ξ never leaves
+   C). (HIGH) NaN/Inf commands passed through (polytope vertices are point-independent) → added
+   a finite-value guard that HALTs. (MEDIUM) yaw passed through during HALT → zeroed on halt.
+   ACCEPTED AS LATENT (documented, not reachable in the shield, which only feeds unit/ω-scaled
+   constraint normals): project_onto_polytope drops a perpendicular-foot candidate for rows
+   with ‖a_j‖²≤1e-12 (contract "feasible iff empty" is only general-case-imperfect), and the
+   feas_tol=1e-7 lets an empty polytope read feasible when the gap <100 nm. Non-finite-point
+   guard added to qp.py as defense-in-depth. lip-math dimension found ZERO issues (the §6.1–6.5
+   equations are spec-faithful).
 ```
