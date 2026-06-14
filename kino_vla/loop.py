@@ -13,6 +13,7 @@ arrives with M3 (spec §6.9 latency budget).
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -67,13 +68,22 @@ def run_episode(
     goal_xy: np.ndarray,
     goal_tol_m: float,
     max_time_s: float,
+    on_step: Callable[[Obs, MonitorEvent | None, np.ndarray, ShieldDecision], None] | None = None,
 ) -> EpisodeResult:
-    """Run one seeded episode to goal, fall, or timeout."""
+    """Run one seeded episode to goal, fall, or timeout.
+
+    ``on_step`` (optional) is called once per control step after the shield decision
+    and before the backend steps, with ``(obs_measured, event, cmd, decision)`` — a
+    non-invasive hook for telemetry recording (scripts/record_demo.py). Default None
+    keeps the demo/CI path untouched.
+    """
     wall_start = time.perf_counter()
     goal_xy = np.asarray(goal_xy, dtype=np.float64)
     obs = backend.reset(seed)
     operators.on_reset(backend)
     monitor.reset()
+    if hasattr(shield, "reset"):
+        shield.reset()  # per-episode isolation of CBF intervention/latency stats
 
     events: list[MonitorEvent] = []
     interventions = 0
@@ -91,6 +101,17 @@ def run_episode(
         cmd = policy.step(obs_measured)
         decision = shield.filter(cmd, obs_measured)
         interventions += int(decision.intervened)
+        # Spec §6.8 fallback coupling: when the shield escalates to the brace stance
+        # or halts (QP infeasible at the nominal mode), engage the physical Reflex
+        # stance so the robot's real support/capture limits match the mode the shield
+        # adjudicated against. No-op for the pass-through stub (empty codes) and for
+        # backends without a Reflex hook.
+        if hasattr(backend, "set_reflex"):
+            backend.set_reflex(
+                any(c.startswith(("INFEASIBLE_FALLBACK", "HALT")) for c in decision.codes)
+            )
+        if on_step is not None:
+            on_step(obs_measured, event, cmd, decision)
         operators.on_step(backend, obs.t)
         obs = backend.step(decision.cmd)
         positions.append(obs.pos.copy())

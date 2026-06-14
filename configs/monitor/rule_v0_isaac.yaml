@@ -1,0 +1,14 @@
+# Kino-Monitor calibration for the Isaac backend (real Go2 + trained policy).
+# The physically-simulated Go2 differs from the surrogate point-robot: it slips ~0.4
+# pushing off from rest (a longer arm window skips that transient), and its ice slip
+# is intermittent across the gait cycle (a shorter debounce catches the spikes). The
+# real ice slip spikes to ~1.0, well clear of the 0.4 threshold. (spec §3: thresholds
+# calibrated per robot.)
+ema_alpha: 0.3
+debounce_steps: 3        # short: real ice slip is intermittent across the gait cycle
+arm_delay_s: 2.5         # skip the push-off slip transient (gone by ~2 s; ice is hit ~2.7 s at cruise 0.8)
+cooldown_s: 1.5
+thresholds:
+  slip_ratio: 0.4        # above the push-off transient (~0.42); ice slip spikes to ~1.0
+  tracking_error: 0.35
+  effort_ratio: 0.25

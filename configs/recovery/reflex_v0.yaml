@@ -1,0 +1,21 @@
+# M2 Reflex layer (kino_vla/monitor/reflex.py) — fast self-stabilization (spec §6.9).
+# The physical stance response (how much widen/lower helps) lives in
+# configs/sim/surrogate.yaml `reflex`; this file is the Reflex *control* policy and
+# the validation protocols (survival, push-recovery).
+hold_s: 1.5              # protective-stance hold after a monitor event
+
+# Survival protocol: repeated O6 pushes to a standing robot, measure time-to-fall
+# with vs without the Reflex stance (the T_safe extension, spec §6.9 groundwork).
+survival:
+  impulse_ns: 27.0        # per-push impulse (Δv = J/m = 1.8 m/s, past the nominal capture limit 1.2)
+  push_period_s: 0.5      # faster than instability decays, so the nominal stance accumulates to a fall
+  push_dir_rad: 0.0       # forward pushes
+  max_time_s: 20.0
+
+# Push-recovery sweep (operator O6 [A]): largest single impulse recovered from a stand.
+push_recovery:
+  start_ns: 6.0
+  stop_ns: 45.0
+  step_ns: 3.0
+  push_dir_rad: 0.0
+  settle_s: 3.0

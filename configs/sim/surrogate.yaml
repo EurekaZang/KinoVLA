@@ -13,8 +13,21 @@ gravity: 9.81
 mu_nominal: 0.8          # ground friction outside operator regions
 gait_demand_per_speed: 3.0   # [m/s^2 per m/s] cyclic stance-force demand of a walking gait
 skid_noise_std: 0.05     # seeded lateral skid noise, scaled by slip ratio
+# M2: actuator-effort budget (m/s^2-equivalent). > friction budget (mu*g) at nominal
+# mu so friction binds first on good ground; O10 scales it down, O5 raises demand.
+effort_budget_mps2: 8.0
+payload_com_demand_gain: 4.0   # extra accel-demand [m/s^2] per metre of payload CoM offset
 fall:
   instability_gain: 1.0
   decay_per_s: 0.3
   threshold: 0.9
   min_speed_mps: 0.05
+  capture_speed_mps: 1.2   # speed the nominal stance can still brake (0-step capturability)
+  capture_gain: 3.0        # instability accrual per (m/s) of excess speed past the capture limit
+# M2 Reflex stance response (physics side; the control policy lives in recovery/reflex_v0.yaml):
+# damping stand drops the gait's self-generated demand; widen+lower raises the fall
+# threshold and the capture limit. These make Reflex measurably extend survival time.
+reflex:
+  gait_demand_scale: 0.2   # standing-damping cuts cyclic gait demand
+  stability_factor: 1.8    # wider/lower stance raises the instability threshold
+  capture_factor: 1.6      # wider support polygon raises the capturable-speed limit

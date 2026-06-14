@@ -2,14 +2,17 @@
 
 A planar point-robot (unicycle with lateral velocity) that tracks Sport-Client
 velocity commands through the shared friction-limited traction model. It exists
-so the M1 demo, its assertions, and the operator gates run end-to-end on machines
-without a GPU (dev laptop, CI) — the Isaac Lab backend is the deliverable and
-replaces it wherever a GPU is present (CLAUDE.md Section 6 issue #4).
+so the M1/M2 demo, its assertions, and the operator gates run end-to-end on
+machines without a GPU (dev laptop, CI) — the Isaac Lab backend is the deliverable
+and replaces it wherever a GPU is present (CLAUDE.md Section 6 issue #4).
 
-Failure modeling: sustained slip at speed accumulates an instability integrator;
-crossing the configured threshold is scored as a fall. This makes the demo's
-"robot did not fall" assertion falsifiable on CPU (tests prove a non-recovering
-policy falls on the ice patch with the same seed).
+M2 generalizes the single friction budget into two: contact friction (O1/O3) and
+actuator effort (O5/O10), plus geometric effects — impassable colliders (O8),
+foot-support loss (O9) — and a Reflex stance that trades cruising for stability.
+Failure modeling: sustained slip *or* a post-push velocity excursion the stance
+cannot capture accumulates an instability integrator; crossing the configured
+threshold is a fall. The Reflex stance widens/lowers (raising the threshold) and
+drops the gait's self-generated demand, so it measurably extends survival time.
 """
 
 from __future__ import annotations
@@ -17,7 +20,13 @@ from __future__ import annotations
 import numpy as np
 
 from kino_vla.sim.traction import traction_step
-from kino_vla.sim.types import FrictionRegion, Obs
+from kino_vla.sim.types import (
+    BlockingRegion,
+    CollapseRegion,
+    FrictionRegion,
+    Obs,
+    SupportLossRegion,
+)
 from kino_vla.utils.config import Config
 from kino_vla.utils.geometry import body_to_world, world_to_body, wrap_angle
 from kino_vla.utils.seeding import rng
@@ -29,10 +38,15 @@ class SurrogateBackend:
     def __init__(self, cfg: Config, start_pos: np.ndarray, start_heading: float) -> None:
         self._cfg = cfg
         self.dt = 1.0 / float(cfg.control_hz)
-        self.mass_kg = float(cfg.mass_kg)
+        self._base_mass_kg = float(cfg.mass_kg)
+        self.mass_kg = self._base_mass_kg
+        self._effort_budget_nominal = float(cfg.effort_budget_mps2)
         self._start_pos = np.asarray(start_pos, dtype=np.float64).copy()
         self._start_heading = float(start_heading)
         self._regions: list[FrictionRegion] = []
+        self._collapse: list[_CollapseState] = []
+        self._blocking: list[BlockingRegion] = []
+        self._support: list[SupportLossRegion] = []
         self._rng = rng(0)
         self._init_state()
 
@@ -44,22 +58,58 @@ class SurrogateBackend:
         self._yaw_rate = 0.0
         self._cmd_prev = np.zeros(3)
         self._slip = 0.0
+        self._effort = 0.0
+        self._support_ratio = 1.0
         self._instability = 0.0
         self._fallen = False
+        # Operator-set dynamics state (cleared on reset; mass/regions re-added by ops).
+        self.mass_kg = self._base_mass_kg
+        self._effort_scale = 1.0
+        self._payload_com_demand = 0.0
+        self._reflex_active = False
 
     def reset(self, seed: int) -> Obs:
         self._rng = rng(seed)
         self._regions = []
+        self._collapse = []
+        self._blocking = []
+        self._support = []
         self._init_state()
         return self._obs()
 
+    # ------------------------------------------------------------ operator API
+
     def add_friction_regions(self, regions: list[FrictionRegion]) -> None:
         self._regions.extend(regions)
+
+    def add_collapse_regions(self, regions: list[CollapseRegion]) -> None:
+        self._collapse.extend(_CollapseState(region=r) for r in regions)
+
+    def add_blocking_regions(self, regions: list[BlockingRegion]) -> None:
+        self._blocking.extend(regions)
+
+    def add_support_loss_regions(self, regions: list[SupportLossRegion]) -> None:
+        self._support.extend(regions)
+
+    def add_payload(self, mass_kg: float, com_offset_m: np.ndarray) -> None:
+        self.mass_kg = self.mass_kg + float(mass_kg)
+        offset = float(np.linalg.norm(np.asarray(com_offset_m, dtype=np.float64)))
+        self._payload_com_demand += float(self._cfg.payload_com_demand_gain) * offset
+
+    def set_effort_scale(self, scale: float) -> None:
+        self._effort_scale = float(scale)
+
+    def set_reflex(self, active: bool) -> None:
+        """Engage the Reflex damping/widen/lower stance (spec §6.8 fallback)."""
+        self._reflex_active = bool(active)
 
     def friction_at(self, pos: np.ndarray) -> float:
         for region in self._regions:
             if region.rect.contains(pos):
                 return region.mu_d
+        for state in self._collapse:
+            if state.region.rect.contains(pos):
+                return state.region.mu_collapsed if state.collapsed else state.region.mu_intact
         return float(self._cfg.mu_nominal)
 
     def apply_push(self, impulse_xy_ns: np.ndarray, yaw_impulse_nms: float) -> None:
@@ -67,6 +117,8 @@ class SurrogateBackend:
             self.mass_kg
         )
         self._yaw_rate += float(yaw_impulse_nms) / float(self._cfg.yaw_inertia_kgm2)
+
+    # ------------------------------------------------------------ dynamics
 
     def step(self, cmd_vel: np.ndarray) -> Obs:
         if self._fallen:
@@ -78,18 +130,43 @@ class SurrogateBackend:
         cmd[2] = float(np.clip(cmd[2], -max_w, max_w))
         self._cmd_prev = cmd
 
+        self._update_collapse_triggers()
         mu = self.friction_at(self._pos)
+        support = self._support_at(self._pos)
+        self._support_ratio = support
+        reflex = self._reflex_active
+        gait_scale = float(self._cfg.reflex.gait_demand_scale) if reflex else 1.0
+        # Effort budget in accel units: O10 scales the actuator force (effort_scale),
+        # O5 raises the mass it must drive (base/total) — both shrink the achievable
+        # accel and saturate torque, which is the constructive O5↔O10 ambiguity.
+        effort_budget = (
+            self._effort_budget_nominal * self._effort_scale * (self._base_mass_kg / self.mass_kg)
+        )
+
         vel_body = world_to_body(self._vel_world, self._heading)
         result = traction_step(
             vel_body,
             cmd[:2],
             mu,
             tau_track_s=float(self._cfg.tau_track_s),
-            gait_demand_per_speed=float(self._cfg.gait_demand_per_speed),
+            gait_demand_per_speed=float(self._cfg.gait_demand_per_speed) * gait_scale,
             gravity=float(self._cfg.gravity),
+            effort_budget=effort_budget,
+            extra_demand=self._payload_com_demand,
         )
         self._slip = result.slip_ratio
-        vel_body = vel_body + result.accel_body * self.dt
+        self._effort = result.effort_ratio
+        # Foot-support loss (O9) scales delivered authority below the friction/effort cap.
+        accel_body = result.accel_body * support
+        vel_body = vel_body + accel_body * self.dt
+        # Support-loss drag (O9): feet that cannot grip cannot sustain the gait, so a
+        # beached robot bleeds speed instead of coasting through — this is what turns
+        # the high-centering region into a measurable stall (tracking-error spike).
+        if support < 1.0:
+            drag_factor = max(
+                0.0, 1.0 - (1.0 - support) * float(self._cfg.gait_demand_per_speed) * self.dt
+            )
+            vel_body = vel_body * drag_factor
         # Lateral skid: seeded noise proportional to slip (ice drift), body-frame y.
         vel_body[1] += (
             float(self._cfg.skid_noise_std)
@@ -97,23 +174,85 @@ class SurrogateBackend:
             * np.sqrt(self.dt)
             * self._rng.standard_normal()
         )
-        # Yaw tracking shares the traction authority: a slipping robot also steers poorly.
-        yaw_accel = (cmd[2] - self._yaw_rate) / float(self._cfg.tau_yaw_s) * result.authority
+        # Yaw tracking shares the (support-scaled) traction authority.
+        yaw_auth = result.authority * support
+        yaw_accel = (cmd[2] - self._yaw_rate) / float(self._cfg.tau_yaw_s) * yaw_auth
         self._yaw_rate += yaw_accel * self.dt
         self._heading = wrap_angle(self._heading + self._yaw_rate * self.dt)
         self._vel_world = body_to_world(vel_body, self._heading)
-        self._pos = self._pos + self._vel_world * self.dt
+
+        proposed = self._pos + self._vel_world * self.dt
+        proposed, blocked = self._apply_blocking(self._pos, proposed)
+        if blocked:
+            # Measured velocity reflects the hard stop, so the command/measured gap
+            # (tracking error) is what reveals the invisible wall (O8).
+            self._vel_world = (proposed - self._pos) / self.dt
+        self._pos = proposed
         self._t += self.dt
 
+        self._update_instability(world_to_body(self._vel_world, self._heading))
+        return self._obs()
+
+    def _support_at(self, pos: np.ndarray) -> float:
+        support = 1.0
+        for region in self._support:
+            if region.rect.contains(pos):
+                support = min(support, region.residual_support)
+        return support
+
+    def _update_collapse_triggers(self) -> None:
+        for state in self._collapse:
+            if state.collapsed:
+                continue
+            if state.region.rect.contains(self._pos):
+                state.dwell += self.dt
+                if state.dwell >= state.region.trigger_dwell_s:
+                    state.collapsed = True
+
+    def _apply_blocking(self, cur: np.ndarray, proposed: np.ndarray) -> tuple[np.ndarray, bool]:
+        """Hard-stop motion that would cross into a blocking region (O8 invisible wall)."""
+        blocked = False
+        out = proposed.copy()
+        for region in self._blocking:
+            rect = region.rect
+            if rect.contains(cur):
+                continue  # already inside (shouldn't happen): don't trap
+            if rect.contains(out):
+                blocked = True
+                # Clamp the axis with the larger penetration to the rect boundary.
+                dx = out[0] - cur[0]
+                dy = out[1] - cur[1]
+                if abs(dx) >= abs(dy) and dx != 0.0:
+                    edge = rect.cx - np.sign(dx) * rect.hx
+                    out[0] = edge - np.sign(dx) * 1e-3
+                elif dy != 0.0:
+                    edge = rect.cy - np.sign(dy) * rect.hy
+                    out[1] = edge - np.sign(dy) * 1e-3
+        return out, blocked
+
+    def _update_instability(self, vel_body: np.ndarray) -> None:
         speed = float(np.linalg.norm(vel_body))
         fall = self._cfg.fall
+        threshold = float(fall.threshold)
+        if self._reflex_active:
+            threshold *= float(self._cfg.reflex.stability_factor)
+        # Capture limit: the speed the current stance can brake within its support
+        # polygon (proxy for 0-step capturability, spec §6.2). A push past it threatens
+        # a topple even on dry ground; the Reflex stance widens it.
+        v_cap = float(fall.capture_speed_mps)
+        if self._reflex_active:
+            v_cap *= float(self._cfg.reflex.capture_factor)
+        excite = 0.0
         if self._slip > 0.0 and speed > float(fall.min_speed_mps):
-            self._instability += float(fall.instability_gain) * self._slip * speed * self.dt
+            excite += float(fall.instability_gain) * self._slip * speed
+        if speed > v_cap:
+            excite += float(fall.capture_gain) * (speed - v_cap)
+        if excite > 0.0:
+            self._instability += excite * self.dt
         else:
             self._instability = max(0.0, self._instability - float(fall.decay_per_s) * self.dt)
-        if self._instability > float(fall.threshold):
+        if self._instability > threshold:
             self._fallen = True
-        return self._obs()
 
     def _obs(self) -> Obs:
         return Obs(
@@ -127,4 +266,17 @@ class SurrogateBackend:
             base_height=float(self._cfg.base_height_m),
             tilt=0.0,
             fallen=self._fallen,
+            effort_ratio=self._effort,
+            support_ratio=self._support_ratio,
         )
+
+
+class _CollapseState:
+    """Mutable per-region dwell/trigger state for O3 collapse regions."""
+
+    __slots__ = ("region", "dwell", "collapsed")
+
+    def __init__(self, region: CollapseRegion) -> None:
+        self.region = region
+        self.dwell = 0.0
+        self.collapsed = False

@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import os
 import sys
+import threading
 
 
 def _isaac_available() -> bool:
@@ -63,27 +65,37 @@ def main() -> int:
     sim_utils.DomeLightCfg(intensity=2000.0).func(
         "/World/light", sim_utils.DomeLightCfg(intensity=2000.0)
     )
-    robot = Articulation(UNITREE_GO2_CFG.replace(prim_path="/World/Go2"))
+    # Hold the default stance with a stiffer PD than the asset's RL DCMotor gains
+    # (Kp=25, Kd=0.5): those assume an active locomotion policy and let the legs sag
+    # and lean into a crouch under a pure static hold (configs/sim/go2_flat.yaml).
+    go2_cfg = UNITREE_GO2_CFG.replace(prim_path="/World/Go2")
+    go2_cfg.actuators["base_legs"].stiffness = cfg.stand_hold.stiffness
+    go2_cfg.actuators["base_legs"].damping = cfg.stand_hold.damping
+    robot = Articulation(go2_cfg)
 
     sim.reset()
 
-    decimation = defaults.sim.control_decimation
     n_steps = int(cfg.episode.duration_s / defaults.sim.physics_dt)
     base_heights: list[float] = []
     base_quats: list[list[float]] = []
 
-    for step in range(n_steps):
-        if step % decimation == 0:
-            # Hold the default standing pose: PD targets = default joint positions.
-            robot.set_joint_position_target(robot.data.default_joint_pos.clone())
-            robot.write_data_to_sim()
+    for _step in range(n_steps):
+        # Hold the default standing pose every physics step: PD targets = default
+        # joint positions. The explicit DCMotor actuators only apply torque when
+        # write_data_to_sim() runs, so gating this behind control_decimation left
+        # stale torque between updates and let the stance sag/tilt below the pass
+        # band; re-applying every 1 kHz step holds a clean stand.
+        robot.set_joint_position_target(robot.data.default_joint_pos.clone())
+        robot.write_data_to_sim()
         sim.step()
         robot.update(defaults.sim.physics_dt)
         base_heights.append(float(robot.data.root_pos_w[0, 2]))
         base_quats.append(robot.data.root_quat_w[0].tolist())
 
-    simulation_app.close()
-
+    # Compute the verdict from data gathered during the hold *before* shutting the
+    # app down: Isaac Sim 5.1's SimulationApp.close() can busy-spin and never return
+    # on this headless Go2 / RTX 30xx setup (verified 2026-06-13), which would hang
+    # the bring-up after the result is already decided.
     import numpy as np
 
     heights = np.asarray(base_heights)
@@ -96,7 +108,10 @@ def main() -> int:
     cos_tilt = 1.0 - 2.0 * (x**2 + y**2)
     tilt_max = float(np.arccos(np.clip(cos_tilt, -1.0, 1.0)).max())
 
-    print(f"base height in judged window: [{h_min:.3f}, {h_max:.3f}] m")
+    print(
+        f"base height in judged window: [{h_min:.3f}, {h_max:.3f}] m "
+        f"(mean {float(heights[judged].mean()):.3f})"
+    )
     print(f"max tilt in judged window   : {tilt_max:.3f} rad")
     print(f"trajectory hash             : {trajectory_hash(heights, quats)}")
 
@@ -106,7 +121,15 @@ def main() -> int:
         and tilt_max <= cfg.stand_check.max_tilt_rad
     )
     print("PASS: Go2 standing check" if ok else "FAIL: Go2 standing check")
-    return 0 if ok else 1
+
+    # Best-effort clean shutdown on a watchdog thread, then force-exit so the gate
+    # always terminates with a deterministic code even if close() hangs (Isaac Sim
+    # 5.1 teardown busy-spins here; the verdict above is already final).
+    sys.stdout.flush()
+    closer = threading.Thread(target=simulation_app.close, daemon=True)
+    closer.start()
+    closer.join(timeout=15.0)
+    os._exit(0 if ok else 1)
 
 
 if __name__ == "__main__":

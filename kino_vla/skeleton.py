@@ -4,7 +4,7 @@ Single construction point for the M1 deliverable so the demo script, the tests,
 and later milestones (which each swap exactly one stub) build the identical
 pipeline:
 
-    SurrogateBackend | IsaacKinematicBackend  (Go2 + one O1 ice patch)
+    SurrogateBackend | IsaacPolicyBackend  (Go2 + one O1 ice patch)
       -> RuleMonitor (text anomaly summary stub)
       -> FsmRecovery (scripted Backstep + Replan stub)
       -> PassThroughShield (stub)
@@ -20,7 +20,7 @@ import numpy as np
 
 from kino_vla.loop import EpisodeResult, run_episode
 from kino_vla.monitor.rule_monitor import RuleMonitor
-from kino_vla.shield.passthrough import PassThroughShield
+from kino_vla.shield.cbf_shield import CbfShield
 from kino_vla.sim.backend import LocomotionBackend
 from kino_vla.sim.operators import MuField, OperatorStack
 from kino_vla.sim.surrogate import SurrogateBackend
@@ -37,7 +37,7 @@ class WalkingSkeleton:
     operators: OperatorStack
     monitor: RuleMonitor
     policy: FsmRecovery
-    shield: PassThroughShield
+    shield: CbfShield
     demo_cfg: Config
     terrain: TerrainSpec
 
@@ -46,8 +46,12 @@ def build_walking_skeleton(
     seed: int,
     backend: str = "surrogate",
     demo_overrides: dict[str, Any] | None = None,
+    record_cam: bool = False,
 ) -> WalkingSkeleton:
-    """Assemble the full skeleton for one episode; ``backend`` is surrogate|isaac."""
+    """Assemble the full skeleton for one episode; ``backend`` is surrogate|isaac.
+
+    ``record_cam`` (isaac only) adds a passive RGB camera for video recording.
+    """
     demo_cfg = load_config("demo/walking_skeleton.yaml", demo_overrides)
     terrain = generate_flat_with_patch(demo_cfg.terrain, seed)
     ice = MuField(
@@ -65,26 +69,36 @@ def build_walking_skeleton(
         backend_obj = SurrogateBackend(sim_cfg, start_pos, start_heading)
     elif backend == "isaac":
         # Imported lazily: requires a running Isaac app (see scripts/run_demo.py).
-        from kino_vla.sim.isaac_backend import IsaacKinematicBackend
+        # M2: the trained RSL-RL policy walks the Go2 (replaces the M1 kinematic stub).
+        from kino_vla.sim.isaac_policy_backend import IsaacPolicyBackend
 
-        backend_obj = IsaacKinematicBackend(
-            load_config("sim/go2_skeleton.yaml"), start_pos, start_heading
+        backend_obj = IsaacPolicyBackend(
+            load_config("sim/go2_skeleton.yaml"), start_pos, start_heading, record_cam=record_cam
         )
     else:
         raise ValueError(f"unknown backend {backend!r}; expected 'surrogate' or 'isaac'")
 
-    monitor = RuleMonitor(load_config("monitor/rule_v0.yaml"), dt=backend_obj.dt)
+    # Per-robot calibration: the real Go2 (Isaac) has a push-off slip transient and
+    # intermittent ice slip the surrogate point-robot does not, so it uses its own
+    # monitor/recovery constants (same pipeline, different thresholds).
+    monitor_cfg = "monitor/rule_v0_isaac.yaml" if backend == "isaac" else "monitor/rule_v0.yaml"
+    fsm_cfg = "recovery/fsm_isaac.yaml" if backend == "isaac" else "recovery/fsm_v0.yaml"
+    monitor = RuleMonitor(load_config(monitor_cfg), dt=backend_obj.dt)
     policy = FsmRecovery(
-        load_config("recovery/fsm_v0.yaml"),
+        load_config(fsm_cfg),
         goal_xy=np.asarray(demo_cfg.goal.pos, dtype=np.float64),
         dt=backend_obj.dt,
     )
+    # M3: the CBF-QP shield replaces the M1 pass-through stub (spec §6). It is
+    # transparent at the FSM cruise speed (~0.8 m/s ≪ the trot capture bound) so the
+    # demo's qualitative behaviour is unchanged; it only bites hostile commands.
+    shield = CbfShield(load_config("shield/cbf_v0.yaml"))
     return WalkingSkeleton(
         backend=backend_obj,
         operators=OperatorStack([ice]),
         monitor=monitor,
         policy=policy,
-        shield=PassThroughShield(),
+        shield=shield,
         demo_cfg=demo_cfg,
         terrain=terrain,
     )

@@ -25,7 +25,11 @@ def test_demo_episode_end_to_end():
     assert result.monitor_fired, "monitor must fire on the ice patch"
     assert not result.fell, "robot must not fall"
     assert result.goal_reached, "robot must reach the goal"
-    assert result.shield_interventions == 0  # pass-through stub never intervenes
+    # M3: the CBF-QP shield (spec §6) replaced the pass-through stub. It is transparent
+    # at the FSM cruise speed and only bites hard-decel/backstep transients, so it must
+    # not dominate the episode (goal_reached above already rules out a strangling shield,
+    # e.g. an over-aggressive K_ξ that throttles the cruise command).
+    assert 0 <= result.shield_interventions < result.n_steps // 2
     assert skeleton.policy.backstep_count >= 1
     assert result.events[0].channel == "slip_ratio"
     # The event fired on the patch, not on nominal ground.

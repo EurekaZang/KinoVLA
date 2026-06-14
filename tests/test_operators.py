@@ -42,8 +42,18 @@ def run_stack(stack, seed, n_steps=300, cmd=(0.6, 0.0, 0.0), start=(0.0, 0.0)):
 # ---------------------------------------------------------------- framework
 
 
-def test_registry_contains_m1_operators():
-    assert set(OPERATORS) == {"O1_mu_field", "O6_push", "O11_obs_bias"}
+def test_registry_contains_operators():
+    # M1: O1, O6, O11; M2 adds O3, O5, O8, O9, O10 (spec §8.2).
+    assert set(OPERATORS) == {
+        "O1_mu_field",
+        "O3_collapse",
+        "O5_payload",
+        "O6_push",
+        "O8_invisible_collider",
+        "O9_high_centering",
+        "O10_effort_decay",
+        "O11_obs_bias",
+    }
     for name, cls in OPERATORS.items():
         assert cls.name == name
         assert cls.axis  # every operator declares its mechanism axis (spec §8.2)

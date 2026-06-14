@@ -1,0 +1,36 @@
+# CBF-QP Safety Shield (kino_vla/shield/cbf_shield.py, spec §6).
+# LLM/FSM proposes a velocity command; the barrier function adjudicates it at the
+# ZMP level of the LIP model so the capture point never leaves the contracted
+# support polygon (0-step capturability — spec §6.2/§6.6). Sizing rationale:
+#   ω = √(g/z_c) = √(9.81/0.31) ≈ 5.63 rad/s for the trot posture.
+#   Steady-state speed cap ≈ ω·(lx − delta_u) = 5.63·0.18 ≈ 1.01 m/s, which sits
+#   below the surrogate's capture_speed_mps (1.2) — so "DCM in polygon" ⟹ no
+#   capture-induced fall — yet above the FSM cruise (0.8 m/s), so nominal walking
+#   passes through the shield untouched (zero intervention on the demo path).
+gravity: 9.81
+alpha: 8.0            # linear class-K gain α (CBF aggressiveness) [1/s] (spec §6.3)
+# DCM tracking gain K_ξ (spec §6.4). Bounded above by ZMP-realizability: commanding
+# the cruise speed from rest needs a nominal ZMP u_nom = K_ξ·v/ω inside the support
+# polygon, i.e. K_ξ ≤ (lx−delta_u)·ω/v_cruise ≈ 0.18·5.63/0.8 ≈ 1.27. At K_ξ=1.0 the
+# whole FSM command envelope (cruise, accelerate-from-rest, gentle backstep) is
+# realizable, so the shield is transparent on the demo and only bites hostile commands.
+k_xi: 1.0
+friction_facets: 8   # inner regular-polygon approx of the friction cone (spec §6.5)
+mu_nominal: 0.8      # friction estimate until Kino-Tokens μ̂ feeds set_mu_estimate (M4, §6.5)
+epsilon_switch: 0.03 # mode-switch admission margin ε_switch [m] (spec §6.7)
+default_mode: trot
+fallback_modes: [brace]   # §6.8 infeasibility escalation before halt
+modes:
+  # z_c CoM height [m]; lx/ly support half-length/half-width [m]; delta barrier
+  # contraction δ_σ [m]; delta_u ZMP-realizability margin [m].
+  # INVARIANT: delta > delta_u in every mode. As the barrier saturates (h_j → 0 at
+  # a_j·ξ = b_j − delta) the CBF needs a_j·u ≥ b_j − delta while ZMP-realizability caps
+  # a_j·u ≤ b_j − delta_u; these are jointly feasible iff delta ≥ delta_u, which keeps
+  # the QP feasible right up to the safe-set boundary (otherwise it spuriously falls back).
+  trot:      {z_c: 0.31, lx: 0.22, ly: 0.16, delta: 0.05, delta_u: 0.03}
+  crawl:     {z_c: 0.22, lx: 0.26, ly: 0.22, delta: 0.05, delta_u: 0.03}
+  high_step: {z_c: 0.34, lx: 0.20, ly: 0.15, delta: 0.06, delta_u: 0.04}
+  # brace = lowest/widest fallback stance (spec §6.8). Its speed cap
+  # ω·(lx−delta_u) = 7.00·0.24 ≈ 1.68 m/s stays below the surrogate's *braced*
+  # capture speed (1.2·1.6 = 1.92), so the fallback + Reflex stance is self-consistent.
+  brace:     {z_c: 0.20, lx: 0.28, ly: 0.24, delta: 0.06, delta_u: 0.04}

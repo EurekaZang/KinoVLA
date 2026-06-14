@@ -1,8 +1,8 @@
 """Walking-skeleton demo — the permanent M1 deliverable (CLAUDE.md §1).
 
 Go2 walks toward the goal, crosses onto an O1 ice patch, the Kino-Monitor fires,
-the scripted FSM backsteps and replans a detour, the pass-through shield forwards
-every command, and the robot reaches the goal without falling.
+the scripted FSM backsteps and replans a detour, the CBF-QP shield (spec §6)
+adjudicates every command, and the robot reaches the goal without falling.
 
 Pinned output contract (asserted by tests/test_demo.py and CI):
     monitor fired: True ...
@@ -12,8 +12,8 @@ Pinned output contract (asserted by tests/test_demo.py and CI):
 
 Backends:
     --backend surrogate  CPU planar model — runs anywhere, used by CI.
-    --backend isaac      Isaac Lab Go2 (GPU; kinematic root drive until the M2
-                         locomotion policy lands). Verified on the RTX 5090 box.
+    --backend isaac      Isaac Lab Go2 (GPU) physically simulated and walked by the
+                         trained RSL-RL velocity policy (M2).
     --backend auto       isaac when isaaclab is importable, else surrogate.
 
 Usage:
@@ -25,7 +25,9 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import os
 import sys
+import threading
 
 
 def _isaac_available() -> bool:
@@ -66,8 +68,6 @@ def main() -> int:
     seed = args.seed if args.seed is not None else int(load_config("default.yaml").seed)
     seed_everything(seed)
     result, skeleton = run_walking_skeleton(seed, backend)
-    if simulation_app is not None:
-        simulation_app.close()
 
     first = result.events[0] if result.events else None
     patch = skeleton.terrain.hazard_patch
@@ -80,7 +80,7 @@ def main() -> int:
     print(f"monitor fired: {result.monitor_fired}{fired_detail}")
     for line in skeleton.policy.transitions:
         print(f"recovery: {line}")
-    print(f"shield interventions: {result.shield_interventions} (pass-through stub)")
+    print(f"shield interventions: {result.shield_interventions} (CBF-QP shield)")
     print(f"fall: {result.fell}")
     print(f"goal reached: {result.goal_reached} dist={result.final_dist_m:.2f}m")
     print(f"sim time: {result.sim_time_s:.1f}s steps={result.n_steps}")
@@ -95,6 +95,16 @@ def main() -> int:
         and result.wall_time_s < budget
     )
     print("PASS: walking skeleton demo" if ok else "FAIL: walking skeleton demo")
+
+    if simulation_app is not None:
+        # Isaac Sim 5.1's SimulationApp.close() can busy-spin and never return on this
+        # headless setup; the results above are already printed, so flush and force-exit
+        # after a best-effort close on a watchdog thread (mirrors scripts/stand_go2.py).
+        sys.stdout.flush()
+        closer = threading.Thread(target=simulation_app.close, daemon=True)
+        closer.start()
+        closer.join(timeout=15.0)
+        os._exit(0 if ok else 1)
     return 0 if ok else 1
 
 
