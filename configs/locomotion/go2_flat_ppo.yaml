@@ -1,0 +1,45 @@
+# M2 low-level locomotion: Go2 flat velocity-tracking policy (RSL-RL PPO).
+# Trained in-repo by scripts/train_locomotion.py; the exported JIT policy
+# (outputs/locomotion/policy.pt) drives the Isaac backend, replacing the M1
+# kinematic stub (CLAUDE.md M2 scope). Reproducible from this config + seed.
+task: "Isaac-Velocity-Flat-Unitree-Go2-v0"
+num_envs: 2048
+max_iterations: 800
+seed: 42
+device: "cuda:0"
+experiment_name: "go2_flat_kino"
+out_dir: "outputs/locomotion"      # checkpoints + exported policy (gitignored)
+export_filename: "policy.pt"
+
+# Domain randomization (spec §12 — "the room's elephant": the high-freq channel
+# must survive sim-to-real). Widen the contact-friction buckets so the policy is
+# robust to low-μ ground (it must cross the O1 ice patch and slip-recover rather
+# than faceplant); randomize base mass (O5 groundwork) and inject periodic pushes
+# (O6 / push-recovery robustness, complementing the Reflex layer).
+dr:
+  # Minimal DR around nominal so the policy learns a clean *upright* trot (planted
+  # stance feet → near-zero slip on good ground, which the slip channel needs). An
+  # over-low friction floor or training-time pushes drove a degenerate low/foot-
+  # dragging crawl (floor 0.25 → 0.13 m, floor 0.4 → 0.2 m). The O1 ice patch (μ=0.10)
+  # is deliberately OOD — the failure to detect, not something to train away.
+  # Wide-but-not-degenerate friction DR: the feet_slide penalty keeps the gait
+  # planted (so it slips detectably on ice) while the low floor makes the policy
+  # robust enough to survive the O1 patch (μ=0.10) during recovery instead of
+  # toppling. (A high floor → fragile-on-ice; feet_slide alone keeps it from skating.)
+  static_friction_range: [0.3, 1.0]
+  dynamic_friction_range: [0.3, 0.9]
+  restitution_range: [0.0, 0.0]
+  add_base_mass_range: [-1.0, 2.0]    # kg, added to the ~15 kg base
+  enable_push: false                  # training pushes encourage a low defensive stance
+  push_interval_s: [9.0, 13.0]
+  push_velocity_range: [-0.6, 0.6]
+
+# Reward shaping for a clean foot-planting trot. The stock flat reward set lets the
+# policy *skate* (feet slide while in contact), which yields a low, friction-robust
+# gait that crosses the O1 ice patch with zero measurable slip — hiding the very
+# failure the Kino-Monitor must see. feet_slide penalizes sliding contact; the boosted
+# feet_air_time rewards clean lift-off. Together they force planted stance feet, so the
+# feet genuinely slide (slip) on ice.
+rewards:
+  feet_slide_weight: -0.25
+  feet_air_time_weight: 0.5      # stock flat default is 0.125

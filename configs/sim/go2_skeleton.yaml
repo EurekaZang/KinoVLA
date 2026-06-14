@@ -1,21 +1,31 @@
-# Isaac Lab walking-skeleton backend (kino_vla/sim/isaac_backend.py) — M1 tier.
-# The Go2 root is driven kinematically through the same traction model as the
-# surrogate until the M2 locomotion policy lands (CLAUDE.md Section 6 issue #5).
+# Isaac Lab walking-skeleton backend (kino_vla/sim/isaac_policy_backend.py) — M2 tier.
+# The Go2 is physically simulated and walked by the trained RSL-RL velocity policy
+# (scripts/train_locomotion.py); the M1 kinematic root drive is retired.
 physics_dt: 0.005        # 200 Hz physics
-control_hz: 50           # -> decimation 4
+control_hz: 50           # -> decimation 4 (matches the policy's training control rate)
 device: "cuda:0"
-mass_fallback_kg: 15.0   # used only if the PhysX mass query API differs (verify on 5090)
+mass_fallback_kg: 15.0   # used only if the PhysX mass query API differs
 yaw_inertia_kgm2: 0.65
 max_speed_mps: 1.0
 max_yaw_rate_radps: 1.5
-# Traction model — keep in sync with configs/sim/surrogate.yaml so both backends
-# present the same closed-loop dynamics to the monitor/FSM at M1.
-tau_track_s: 0.25
-tau_yaw_s: 0.15
 gravity: 9.81
 mu_nominal: 0.8
-gait_demand_per_speed: 3.0
-patch_thickness_m: 0.02  # O1 patch collider plate height
+patch_thickness_m: 0.006  # O1 patch collider plate height (thin: a gentle lip for the walker)
+
+# M2 policy backend (kino_vla/sim/isaac_policy_backend.py)
+policy_path: "outputs/locomotion/policy.pt"   # exported JIT actor (gitignored)
+action_scale: 0.5         # env JointPositionAction scale (joint_target = default + 0.5*action)
+settle_steps: 10          # zero-command steps to settle the stance before the episode
+slip_force_threshold_n: 2.0  # net foot contact force above which a foot counts as load-bearing
+slip_ref_speed_mps: 0.30  # load-bearing-foot horizontal speed that maps to slip_ratio = 1
+effort_limit_nm: 23.5     # Go2 DCMotor effort limit (for the measured effort-saturation channel)
+effort_sat_floor: 0.7     # torque fraction below which effort_ratio reads 0 (nominal walking)
+# Fall detection is primarily the env's own base_contact termination (authoritative);
+# these are backstops for a near-ground collapse / topple that hasn't contacted yet.
+# The trained policy trots low (~0.13 m base), so the height backstop sits well under it.
 fall_check:
-  min_base_height_m: 0.18
-  max_tilt_rad: 0.6
+  min_base_height_m: 0.07
+  max_tilt_rad: 0.8
+# Recording camera (scripts/record_demo.py; passive sensor, off by default)
+cam_height: 640
+cam_width: 960

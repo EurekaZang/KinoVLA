@@ -9,6 +9,14 @@ episode:
   # Simulated seconds the robot must hold a stand for the bring-up check to pass.
   duration_s: 3.0
 
+stand_hold:
+  # Static-hold PD gains for the bring-up. The asset's RL DCMotor gains
+  # (Kp=25, Kd=0.5) are tuned for an active locomotion policy and let the legs sag
+  # into a leaning crouch under a pure default-pose hold; a stiffer PD holds the
+  # nominal stance firmly and level. (Effort still saturates at the motor's 23.5 Nm.)
+  stiffness: 80.0
+  damping: 4.0
+
 stand_check:
   # Nominal Go2 standing base height is ~0.32-0.34 m; pass band absorbs settling.
   min_base_height_m: 0.25
