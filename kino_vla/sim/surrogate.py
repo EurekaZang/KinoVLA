@@ -112,6 +112,27 @@ class SurrogateBackend:
                 return state.region.mu_collapsed if state.collapsed else state.region.mu_intact
         return float(self._cfg.mu_nominal)
 
+    def privileged_physics(self) -> dict[str, float]:
+        """God's-eye physical truth at the current step (spec §4 distillation target).
+
+        The canonical, operator-agnostic physics vector the Kino-Tokens extractor (M4)
+        regresses from a 500 ms proprioception window — the privileged supervision of
+        the teacher-student distillation. All four channels are sampled at the robot's
+        *current* state, so time-/location-varying operators (O3 collapse drops μ
+        mid-crossing, O10 decays effort, O9 is region-gated) are supervised correctly:
+
+        - ``mu``: effective dynamic friction at the CoM ground projection (O1/O3).
+        - ``payload_kg``: extra rigidly-attached mass above the base (O5).
+        - ``effort_scale``: actuator-effort budget fraction in (0, 1] (O10).
+        - ``support_ratio``: fraction of nominal foot support in (0, 1] (O9).
+        """
+        return {
+            "mu": self.friction_at(self._pos),
+            "payload_kg": float(self.mass_kg - self._base_mass_kg),
+            "effort_scale": float(self._effort_scale),
+            "support_ratio": float(self._support_at(self._pos)),
+        }
+
     def apply_push(self, impulse_xy_ns: np.ndarray, yaw_impulse_nms: float) -> None:
         self._vel_world = self._vel_world + np.asarray(impulse_xy_ns, dtype=np.float64) / (
             self.mass_kg

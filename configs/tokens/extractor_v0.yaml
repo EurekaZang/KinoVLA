@@ -1,0 +1,82 @@
+# Kino-Tokens extractor v0 (spec §4, M4). Window logger + 1D-CNN + Perceiver
+# Resampler + privileged-θ regression / Kino-Text contrastive / OOD-residual heads.
+# No magic numbers in module code (QA 5.1.5) — every knob lives here.
+
+window:
+  window_ms: 500.0      # spec §4 sliding window
+  control_hz: 50.0      # surrogate control rate (configs/sim/surrogate.yaml)
+  stride: 3             # offline window stride (steps) when slicing rollouts
+
+# Scripted dataset driver (kino_vla/tokens/dataset.py): drive straight +x across a
+# hazard that straddles the path, so the robot actually experiences the failure.
+drive:
+  n_steps: 320
+  # Bang-bang square-wave speed profile (kino_vla/tokens/dataset.py): hi for `speed_duty`
+  # of each period, then lo. The sharp high→low decel spikes the effort demand past the
+  # budget so payload mass / effort-decay leave a proprioceptive trace (a flat or gently
+  # ramped cruise never saturates demand → O5/O10 are unidentifiable, the M4 v0 failure).
+  speed_lo: 0.1
+  speed_hi: 1.0
+  speed_period_s: 1.0
+  speed_duty: 0.5
+  hazard_cx: 2.5
+  hazard_hx: 1.5        # hazard spans x in [1.0, 4.0]
+  hazard_hy: 2.0        # wide in y so the jittered path stays inside
+  decay_t_start_s: 1.0  # O10 begins decaying after the start transient
+  collapse_dwell_s: 0.5 # O3 thin ice breaks 0.5 s after first contact
+  collapse_mu_intact: 0.8
+
+# In-distribution θ ranges sampled per training episode (one operator each).
+param_ranges:
+  mu: [0.05, 0.5]            # O1/O3 dynamic friction
+  payload_kg: [2.0, 12.0]    # O5 extra mass
+  com_off: [0.05, 0.25]      # O5 CoM offset [m]
+  decay_rate: [0.3, 1.5]     # O10 effort decay rate [1/s]
+  effort_scale: [0.2, 0.8]   # O10 floor (terminal effort fraction)
+  support_ratio: [0.1, 0.7]  # O9 residual foot support
+
+# Window-label thresholds for the Kino-Text contrastive head (semantics.regime_of).
+regime_thresholds:
+  mu_nominal: 0.8
+  mu_low: 0.5
+  payload_min_kg: 1.5
+  effort_low: 0.9
+  support_low: 0.9
+
+model:
+  conv_channels: [48, 48]
+  conv_kernels: [5, 3]
+  latent_dim: 96        # Perceiver latent/token width D
+  n_latents: 6          # K fixed-length tokens (spec §4 "压缩为定长 Token")
+  n_heads: 4
+  mlp_hidden: 96
+
+train:
+  seed: 0
+  epochs: 220
+  batch_size: 256
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  std_eps: 1.0e-3       # standardizer std floor (zero-variance channels)
+  w_regression: 1.0     # main supervision (spec §4 #1)
+  w_reconstruction: 0.4 # self-supervised — its residual is the OOD score (spec §9)
+  w_contrastive: 0.1    # auxiliary Kino-Text alignment (spec §4 #2), aux weight only
+  contrastive_temp: 0.2
+  n_train_seeds: 300    # disjoint from eval (build_token_dataset assigns ranges)
+  n_eval_seeds: 90
+
+# Online μ̂→shield coupler (kino_vla/tokens/coupler.py, spec §4 #4, §6.5).
+coupler:
+  gate_threshold: 0.8   # Kino-Monitor anomaly_score that opens the injection gate
+  mu_ema_alpha: 0.2     # μ̂ smoothing (per step)
+  hold_s: 2.0           # keep the gate open this long after the last arousal
+  nominal_mu: 0.8       # μ̂ relaxes here at steady state (= shield mu_nominal)
+
+# Parameter-extrapolation OOD sweep (spec §9): μ marched from the training boundary
+# outward; the reconstruction residual must rise monotonically off-manifold.
+ood:
+  sweep_param: mu
+  sweep_regime: low_friction
+  sweep_values: [0.05, 0.04, 0.03, 0.02, 0.015, 0.01]
+  n_seeds: 24
+  in_dist_values: [0.5, 0.4, 0.3, 0.2, 0.1]   # baseline for the separation check

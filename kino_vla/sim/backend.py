@@ -79,3 +79,10 @@ class LocomotionBackend(Protocol):
     def set_effort_scale(self, scale: float) -> None:
         """Scale the actuator-effort budget in (0, 1] (operator O10, Axis IV)."""
         ...
+
+    # ---- M4 privileged-distillation target (spec §4) ----------------------------
+
+    def privileged_physics(self) -> dict[str, float]:
+        """God's-eye physics truth at the current step — the Kino-Tokens regression
+        target (``mu``, ``payload_kg``, ``effort_scale``, ``support_ratio``; spec §4)."""
+        ...

@@ -41,6 +41,17 @@ class Shield(Protocol):
     def filter(self, cmd: np.ndarray, obs: Obs) -> ShieldDecision: ...
 
 
+class Coupler(Protocol):
+    """Online perception→safety coupler (M4): updates the shield's μ̂ each step.
+
+    Called after the monitor and before the shield so the tightened friction
+    constraint applies on the same step. Default ``None`` keeps the torch-free
+    CI/demo path untouched (the shield runs on nominal μ).
+    """
+
+    def step(self, obs: Obs, monitor: RuleMonitor) -> object: ...
+
+
 @dataclass(frozen=True)
 class EpisodeResult:
     """Everything the demo assertions and the QA determinism gates need."""
@@ -69,6 +80,7 @@ def run_episode(
     goal_tol_m: float,
     max_time_s: float,
     on_step: Callable[[Obs, MonitorEvent | None, np.ndarray, ShieldDecision], None] | None = None,
+    coupler: Coupler | None = None,
 ) -> EpisodeResult:
     """Run one seeded episode to goal, fall, or timeout.
 
@@ -84,6 +96,8 @@ def run_episode(
     monitor.reset()
     if hasattr(shield, "reset"):
         shield.reset()  # per-episode isolation of CBF intervention/latency stats
+    if coupler is not None and hasattr(coupler, "reset"):
+        coupler.reset()  # per-episode window/μ̂ state
 
     events: list[MonitorEvent] = []
     interventions = 0
@@ -98,6 +112,11 @@ def run_episode(
         if event is not None:
             events.append(event)
             policy.on_event(event)
+        # M4 perception→safety coupling: update the shield's μ̂ from the proprioception
+        # window (anomaly-gated) *before* the shield filters, so a detected ice patch
+        # tightens the friction cone on this same step (spec §6.5).
+        if coupler is not None:
+            coupler.step(obs_measured, monitor)
         cmd = policy.step(obs_measured)
         decision = shield.filter(cmd, obs_measured)
         interventions += int(decision.intervened)

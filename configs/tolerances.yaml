@@ -1,0 +1,29 @@
+# M4 exit-criterion gates for the Kino-Tokens extractor (spec §4, §9; CLAUDE.md §3).
+# Held-out regression error must fall below per-target tolerances; the OOD residual
+# must rise monotonically off-manifold; inference must fit the latency budget.
+# These thresholds are the contract scripts/train_extractor.py reports against and
+# tests/test_extractor.py asserts. Never weaken to make a run pass — fix the model.
+
+regression:
+  # Mean absolute error in physical units on the held-out (disjoint-seed) split.
+  # μ is only observable while slipping, so the bar reflects "tell ice from firm
+  # ground", not perfect recovery of an unobservable parameter on dry ground.
+  mu_mae: 0.10            # friction coefficient
+  payload_kg_mae: 1.5     # extra payload mass [kg]
+  effort_scale_mae: 0.10  # actuator-effort fraction
+  support_ratio_mae: 0.12 # residual foot support
+
+ood:
+  # Spearman ρ between parameter extremeness (−μ as μ extrapolates below training min)
+  # and the reconstruction-residual OOD score, over the sweep, averaged per value.
+  min_spearman: 0.9
+  # OOD samples must score strictly above the in-distribution baseline.
+  min_separation_ratio: 1.10  # mean(OOD residual) / mean(in-dist residual)
+
+latency:
+  inference_ms_p99: 10.0  # spec §6.9 / CLAUDE.md §5.3 extractor budget
+
+coupling:
+  # μ̂→shield demo (spec §6.5): on detected ice the friction-cone radius must shrink.
+  max_mu_hat_on_ice: 0.35     # extractor must call the demo ice patch "low friction"
+  min_mu_hat_on_firm: 0.55    # and firm ground "high friction" (no false ice)
