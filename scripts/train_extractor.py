@@ -77,8 +77,7 @@ def train_and_eval(
     # ---- Exit criterion 1: held-out θ regression below per-target tolerances ----------
     mae = regression_mae(extractor, eval_ds)
     reg_pass = {
-        name: bool(value <= float(tol.regression.get(f"{name}_mae")))
-        for name, value in mae.items()
+        name: bool(value <= float(tol.regression.get(f"{name}_mae"))) for name, value in mae.items()
     }
 
     # ---- Exit criterion 2: OOD residual monotonic off-manifold ------------------------

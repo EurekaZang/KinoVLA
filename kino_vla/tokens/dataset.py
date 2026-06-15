@@ -78,9 +78,7 @@ def _path_region(cfg: Config) -> Rect:
     )
 
 
-def _build_operators(
-    regime: str, params: dict[str, float], cfg: Config
-) -> list[FailureOperator]:
+def _build_operators(regime: str, params: dict[str, float], cfg: Config) -> list[FailureOperator]:
     """Instantiate the single operator (if any) realizing ``regime`` with ``params``."""
     if regime == "normal":
         return []

@@ -52,6 +52,22 @@ class Coupler(Protocol):
     def step(self, obs: Obs, monitor: RuleMonitor) -> object: ...
 
 
+class NavMap(Protocol):
+    """Semantic traversability map (M5): persistent topological memory fed to the planner.
+
+    Each step the map observes the visible scene (visual prior); on a monitor event the
+    failure site is overwritten untraversable and propagated to visually-homogeneous
+    neighbours, and the resulting avoid hazards are handed to the planner (spec §7).
+    Default ``None`` keeps the demo path untouched.
+    """
+
+    def observe(self, pose_xy: np.ndarray, heading: float) -> int: ...
+
+    def mark_failure(self, world_xy: np.ndarray, embedding: object = None) -> dict: ...
+
+    def nav_hazards(self) -> list[tuple[np.ndarray, float]]: ...
+
+
 @dataclass(frozen=True)
 class EpisodeResult:
     """Everything the demo assertions and the QA determinism gates need."""
@@ -81,6 +97,7 @@ def run_episode(
     max_time_s: float,
     on_step: Callable[[Obs, MonitorEvent | None, np.ndarray, ShieldDecision], None] | None = None,
     coupler: Coupler | None = None,
+    nav_map: NavMap | None = None,
 ) -> EpisodeResult:
     """Run one seeded episode to goal, fall, or timeout.
 
@@ -108,10 +125,20 @@ def run_episode(
 
     for _ in range(max_steps):
         obs_measured = operators.transform_obs(obs)
+        # M5 semantic map: paint the visual prior from the current view (persistent in the
+        # odometry frame, so a later turn-around cannot erase a marked region, spec §7).
+        if nav_map is not None:
+            nav_map.observe(obs_measured.pos, obs_measured.heading)
         event = monitor.step(obs_measured)
         if event is not None:
             events.append(event)
             policy.on_event(event)
+            # Physics writes the map: overwrite the failure site untraversable, propagate to
+            # visually-homogeneous cells, and hand the resulting hazards to the planner.
+            if nav_map is not None:
+                nav_map.mark_failure(event.pos)
+                if hasattr(policy, "adopt_map_hazards"):
+                    policy.adopt_map_hazards(nav_map.nav_hazards())
         # M4 perception→safety coupling: update the shield's μ̂ from the proprioception
         # window (anomaly-gated) *before* the shield filters, so a detected ice patch
         # tightens the friction cone on this same step (spec §6.5).

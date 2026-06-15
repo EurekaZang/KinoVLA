@@ -1,0 +1,24 @@
+# Semantic traversability map (spec §7; kino_vla/map). Surrogate perception tier
+# (CLAUDE.md deviation #16): CLIP/SAM stand-ins, costmap geometry, propagation/hazard
+# thresholds. No magic numbers in module code (QA 5.5) — all map behaviour is here.
+
+costmap:
+  resolution_m: 0.25      # grid cell size
+  extent: [16.0, 10.0]    # odometry-frame walkable area (matches demo terrain extent)
+
+camera:
+  fov_rad: 1.5708         # 90° horizontal field of view
+  max_range_m: 5.0        # back-projection range gate
+
+# Physical-failure overwrite (high-confidence, sticky):
+failure_cost: 1.0         # cost stamped at an attributed failure site
+failure_radius_m: 0.6     # disc radius around the site (covers the contact footprint)
+
+# CLIP-similarity label propagation to visually-homogeneous neighbours:
+propagation_sim_threshold: 0.9   # cosine-similarity bar to count as "same surface"
+propagation_cost: 0.8            # cost raised on propagated (not directly-stepped) cells
+
+# Planner hand-off (map crop + avoid discs):
+crop_half_extent_m: 4.0    # half-size of the local map window served to the planner
+hazard_threshold: 0.5      # cells above this cost become avoid discs
+hazard_merge_radius_m: 1.0 # greedy single-link cluster radius for disc merging

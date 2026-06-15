@@ -25,6 +25,7 @@ from kino_vla.sim.types import (
     CollapseRegion,
     FrictionRegion,
     Obs,
+    ResistanceRegion,
     SupportLossRegion,
 )
 from kino_vla.utils.config import Config
@@ -47,6 +48,7 @@ class SurrogateBackend:
         self._collapse: list[_CollapseState] = []
         self._blocking: list[BlockingRegion] = []
         self._support: list[SupportLossRegion] = []
+        self._resistance: list[_ResistanceState] = []
         self._rng = rng(0)
         self._init_state()
 
@@ -67,6 +69,9 @@ class SurrogateBackend:
         self._effort_scale = 1.0
         self._payload_com_demand = 0.0
         self._reflex_active = False
+        self._base_height_offset = 0.0  # O2 compliance sink (lowers measured base height)
+        for state in self._resistance:
+            state.reset()
 
     def reset(self, seed: int) -> Obs:
         self._rng = rng(seed)
@@ -74,6 +79,7 @@ class SurrogateBackend:
         self._collapse = []
         self._blocking = []
         self._support = []
+        self._resistance = []
         self._init_state()
         return self._obs()
 
@@ -90,6 +96,10 @@ class SurrogateBackend:
 
     def add_support_loss_regions(self, regions: list[SupportLossRegion]) -> None:
         self._support.extend(regions)
+
+    def add_resistance_regions(self, regions: list[ResistanceRegion]) -> None:
+        """Append tangential-resistance regions (operators O2 compliance / O4 tether)."""
+        self._resistance.extend(_ResistanceState(region=r) for r in regions)
 
     def add_payload(self, mass_kg: float, com_offset_m: np.ndarray) -> None:
         self.mass_kg = self.mass_kg + float(mass_kg)
@@ -188,6 +198,11 @@ class SurrogateBackend:
                 0.0, 1.0 - (1.0 - support) * float(self._cfg.gait_demand_per_speed) * self.dt
             )
             vel_body = vel_body * drag_factor
+        # Tangential resistance (O2 compliance sink / O4 elastic tether): a displacement-
+        # dependent decelerating force opposing motion (spec §8.2). The two operators share
+        # this force law with matched coefficients, so their proprioceptive traces are
+        # identical (the constructive ambiguity pair, P4) — only the visual map separates them.
+        vel_body = self._apply_resistance(vel_body)
         # Lateral skid: seeded noise proportional to slip (ice drift), body-frame y.
         vel_body[1] += (
             float(self._cfg.skid_noise_std)
@@ -213,6 +228,39 @@ class SurrogateBackend:
 
         self._update_instability(world_to_body(self._vel_world, self._heading))
         return self._obs()
+
+    def _apply_resistance(self, vel_body: np.ndarray) -> np.ndarray:
+        """Decelerate by the tangential-resistance force of any region underfoot (O2/O4).
+
+        Resistance grows with path length travelled inside the region: ``F = k*s + c*|v|``.
+        It opposes the current velocity (capped so a single step can't reverse it) and
+        accumulates a sink offset (O2). On exit the per-region path/anchor state resets.
+        """
+        sink = 0.0
+        for state in self._resistance:
+            region = state.region
+            inside = region.rect.contains(self._pos)
+            if not inside:
+                state.reset()
+                continue
+            speed = float(np.linalg.norm(vel_body))
+            s_eff = max(0.0, state.path_len - region.slack_length_m)
+            force = region.stiffness_n_per_m * s_eff + region.damping_ns_per_m * speed
+            if force > region.break_force_n:
+                state.broken = True
+            if state.broken:
+                # Tether snapped (O4): no further resistance, but the region still "feels"
+                # different (sink persists for O2; O4 has none).
+                sink = max(sink, region.sink_depth_m)
+                continue
+            if speed > 1e-9:
+                decel = force / self.mass_kg
+                dv = min(decel * self.dt, speed)
+                vel_body = vel_body - (vel_body / speed) * dv
+            state.path_len += float(np.linalg.norm(vel_body)) * self.dt
+            sink = max(sink, region.sink_depth_m)
+        self._base_height_offset = sink
+        return vel_body
 
     def _support_at(self, pos: np.ndarray) -> float:
         support = 1.0
@@ -284,7 +332,7 @@ class SurrogateBackend:
             yaw_rate=self._yaw_rate,
             cmd_prev=self._cmd_prev.copy(),
             slip_ratio=self._slip,
-            base_height=float(self._cfg.base_height_m),
+            base_height=float(self._cfg.base_height_m) - self._base_height_offset,
             tilt=0.0,
             fallen=self._fallen,
             effort_ratio=self._effort,
@@ -301,3 +349,18 @@ class _CollapseState:
         self.region = region
         self.dwell = 0.0
         self.collapsed = False
+
+
+class _ResistanceState:
+    """Mutable per-region path-length / break state for O2/O4 resistance regions."""
+
+    __slots__ = ("region", "path_len", "broken")
+
+    def __init__(self, region: ResistanceRegion) -> None:
+        self.region = region
+        self.path_len = 0.0
+        self.broken = False
+
+    def reset(self) -> None:
+        self.path_len = 0.0
+        self.broken = False

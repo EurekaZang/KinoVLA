@@ -20,6 +20,7 @@ from kino_vla.sim.types import (
     CollapseRegion,
     FrictionRegion,
     Obs,
+    ResistanceRegion,
     SupportLossRegion,
 )
 
@@ -70,6 +71,10 @@ class LocomotionBackend(Protocol):
 
     def add_support_loss_regions(self, regions: list[SupportLossRegion]) -> None:
         """Append foot-support-loss regions (operator O9, Axis III)."""
+        ...
+
+    def add_resistance_regions(self, regions: list[ResistanceRegion]) -> None:
+        """Append tangential-resistance regions (operators O2 compliance / O4 tether, M5)."""
         ...
 
     def add_payload(self, mass_kg: float, com_offset_m: np.ndarray) -> None:

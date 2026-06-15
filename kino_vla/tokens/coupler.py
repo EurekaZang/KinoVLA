@@ -54,9 +54,7 @@ class CouplerRecord:
 class MuEstimateCoupler:
     """Feeds anomaly-gated μ̂ from the extractor into the CBF shield (spec §6.5)."""
 
-    def __init__(
-        self, cfg: Config, extractor: _ExtractorLike, shield: _ShieldLike
-    ) -> None:
+    def __init__(self, cfg: Config, extractor: _ExtractorLike, shield: _ShieldLike) -> None:
         self._cfg = cfg
         self._ex = extractor
         self._shield = shield

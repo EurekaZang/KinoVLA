@@ -30,6 +30,7 @@ from kino_vla.sim.types import (
     CollapseRegion,
     FrictionRegion,
     Obs,
+    ResistanceRegion,
     SupportLossRegion,
 )
 from kino_vla.utils.config import REPO_ROOT, Config
@@ -48,6 +49,23 @@ def _read_material_friction(prim_path: str) -> tuple[float, float]:
         dynamic_attr = prim.GetAttribute("physics:dynamicFriction")
         if static_attr.IsValid() and dynamic_attr.IsValid():
             return float(static_attr.Get()), float(dynamic_attr.Get())
+    raise RuntimeError(f"no physics material attributes found under {prim_path}")
+
+
+def _set_material_friction(prim_path: str, mu_s: float, mu_d: float) -> None:
+    """Mutate a spawned plate's PhysX friction at runtime (O3 collapse collider-swap)."""
+    import omni.usd
+    from pxr import Usd
+
+    stage = omni.usd.get_context().get_stage()
+    root = stage.GetPrimAtPath(prim_path)
+    for prim in Usd.PrimRange(root):
+        static_attr = prim.GetAttribute("physics:staticFriction")
+        dynamic_attr = prim.GetAttribute("physics:dynamicFriction")
+        if static_attr.IsValid() and dynamic_attr.IsValid():
+            static_attr.Set(float(mu_s))
+            dynamic_attr.Set(float(mu_d))
+            return
     raise RuntimeError(f"no physics material attributes found under {prim_path}")
 
 
@@ -76,6 +94,14 @@ class IsaacPolicyBackend:
         self._start_pos = np.asarray(start_pos, dtype=np.float64).copy()
         self._start_heading = float(start_heading)
         self._regions: list[FrictionRegion] = []
+        self._resistance: list[dict] = []
+        self._collapse: list[dict] = []  # O3 trigger-and-swap collider states
+        self._blocking: list[BlockingRegion] = []  # O8 invisible colliders
+        self._support: list[SupportLossRegion] = []  # O9 high-centering regions
+        self._payload_kg = 0.0  # O5 attached payload
+        self._effort_scale = 1.0  # O10 actuator-effort fraction
+        self._nominal_effort: dict = {}  # actuator effort limits before O10 scaling
+        self._effort_limit_nm = float(cfg.effort_limit_nm)  # current (O10-scaled) torque cap
         self._n_patches = 0
         self._record_cam = bool(record_cam)
         self._camera = None
@@ -120,7 +146,13 @@ class IsaacPolicyBackend:
         self._contact_foot_ids, contact_foot_names = self._contact.find_bodies(".*_foot")
         # find_bodies sorts by name, so the articulation and sensor foot lists align.
         assert foot_names == contact_foot_names, (foot_names, contact_foot_names)
-        print(f"[isaac] policy backend (env-driven): {len(self._foot_ids)} feet {foot_names}")
+        # Trunk body for the O2/O4 resistance/tether external wrench (spec §8.2 Axis I/II).
+        base_ids, base_names = self._robot.find_bodies("base")
+        self._base_id = base_ids if base_ids else [0]
+        print(
+            f"[isaac] policy backend (env-driven): {len(self._foot_ids)} feet {foot_names}; "
+            f"wrench body {base_names or '[body0]'}"
+        )
         self._spawn_z = float(self._robot.data.default_root_state[0, 2].cpu())
         try:
             self.mass_kg = float(self._robot.root_physx_view.get_masses().sum())
@@ -135,6 +167,10 @@ class IsaacPolicyBackend:
         self._slip = 0.0
         self._effort = 0.0
         self._fallen = False
+        for state in getattr(self, "_resistance", []):
+            state["path_len"] = 0.0
+            state["broken"] = False
+            state["inside"] = False
 
     # ------------------------------------------------------------ episode API
 
@@ -197,6 +233,10 @@ class IsaacPolicyBackend:
         self._obs = self._env.observation_manager.compute()["policy"]
         with torch.no_grad():
             action = self._policy(self._obs)
+        # O2/O4 tangential-resistance/tether wrench on the trunk (re-applied each control
+        # step; persists across the env's physics substeps via write_data_to_sim).
+        self._apply_resistance_wrench()
+        self._update_collapse()  # O3: swap intact→collapsed friction on dwell
         obs_dict, _, terminated, _truncated, _ = self._env.step(action)
         self._obs = obs_dict["policy"]
         self._slip = self._measure_slip()
@@ -226,11 +266,25 @@ class IsaacPolicyBackend:
         return float(np.clip(slip / float(self._cfg.slip_ref_speed_mps), 0.0, 1.0))
 
     def _measure_effort(self) -> float:
-        """Measured actuator-effort saturation above a floor (O5/O10 channel on Isaac)."""
+        """Measured actuator-effort saturation above a floor (O5/O10 channel on Isaac).
+
+        Saturation is the applied torque relative to the *current* effort cap, which O10
+        scales down — so a decayed budget drives the same locomotion torque demand toward
+        the cap and the saturation reading rises (it would fall if measured against the
+        fixed nominal cap, since the cap itself clamps the torque)."""
         tau = self._torch.abs(self._robot.data.applied_torque[0])
-        sat = float((tau.mean() / float(self._cfg.effort_limit_nm)).item())
+        sat = float((tau.mean()).item()) / max(1e-6, self._effort_limit_nm)
         floor = float(self._cfg.effort_sat_floor)
         return float(np.clip((sat - floor) / max(1e-6, 1.0 - floor), 0.0, 1.0))
+
+    def _measure_support(self) -> float:
+        """Fraction of feet bearing load (O9 high-centering channel): 1.0 = all four planted."""
+        if not self._contact_foot_ids:
+            return 1.0
+        forces = self._contact.data.net_forces_w[0, self._contact_foot_ids]
+        thr = float(self._cfg.slip_force_threshold_n)
+        in_contact = self._torch.linalg.norm(forces, dim=1) > thr
+        return float(int(in_contact.sum().item()) / len(self._contact_foot_ids))
 
     def _make_obs(self) -> Obs:
         data = self._robot.data
@@ -254,6 +308,7 @@ class IsaacPolicyBackend:
             tilt=math.acos(cos_tilt),
             fallen=self._fallen,
             effort_ratio=self._effort,
+            support_ratio=self._measure_support(),
         )
 
     # ------------------------------------------------------------ recording
@@ -324,10 +379,26 @@ class IsaacPolicyBackend:
                 )
             )
 
+    def privileged_physics(self) -> dict[str, float]:
+        """God's-eye physics truth at the current step — the Kino-Tokens M4 regression
+        target on the real Go2 (spec §4): μ at the CoM ground projection (O1/O3), attached
+        payload (O5), actuator-effort fraction (O10), and measured foot-support (O9)."""
+        env_origin = self._env.scene.env_origins[0].cpu().numpy()
+        pos = self._robot.data.root_pos_w[0].cpu().numpy()[:2] - env_origin[:2]
+        return {
+            "mu": self.friction_at(pos),
+            "payload_kg": float(self._payload_kg),
+            "effort_scale": float(self._effort_scale),
+            "support_ratio": self._measure_support(),
+        }
+
     def friction_at(self, pos: np.ndarray) -> float:
         for region in self._regions:
             if region.rect.contains(pos):
                 return region.mu_d
+        for st in self._collapse:
+            if st["region"].contains(pos):
+                return st["mu_collapsed"] if st["collapsed"] else st["mu_intact"]
         return float(self._cfg.mu_nominal)
 
     def apply_push(self, impulse_xy_ns: np.ndarray, yaw_impulse_nms: float) -> None:
@@ -339,27 +410,216 @@ class IsaacPolicyBackend:
         root_state[0, 12] += float(yaw_impulse_nms) / float(self._cfg.yaw_inertia_kgm2)
         self._robot.write_root_state_to_sim(root_state)
 
-    # M2 operator hooks whose PhysX mechanism lands post-M2 (surrogate-validated now).
-    def _isaac_deferred(self, name: str) -> None:
-        raise NotImplementedError(
-            f"{name} has no Isaac mechanism at M2 (validated on the surrogate); "
-            "the Isaac demo exercises O1/O6 only."
-        )
-
     def add_collapse_regions(self, regions: list[CollapseRegion]) -> None:
-        self._isaac_deferred("O3 add_collapse_regions")
+        """Spawn an intact-μ plate per region; its PhysX friction is swapped to the
+        collapsed value at runtime once the Go2 dwells on it (O3 collider-swap + hysteresis)."""
+        env_origin = self._env.scene.env_origins[0].cpu().numpy()
+        for region in regions:
+            prim_path = f"/World/collapse_{self._n_patches}"
+            self._n_patches += 1
+            thickness = float(self._cfg.patch_thickness_m)
+            plate_cfg = self._sim_utils.CuboidCfg(
+                size=(2.0 * region.rect.hx, 2.0 * region.rect.hy, thickness),
+                collision_props=self._sim_utils.CollisionPropertiesCfg(),
+                physics_material=self._sim_utils.RigidBodyMaterialCfg(
+                    static_friction=region.mu_intact,
+                    dynamic_friction=region.mu_intact,
+                    friction_combine_mode="min",
+                ),
+                visual_material=self._sim_utils.PreviewSurfaceCfg(diffuse_color=(0.7, 0.9, 1.0)),
+            )
+            plate_cfg.func(
+                prim_path,
+                plate_cfg,
+                translation=(
+                    region.rect.cx + float(env_origin[0]),
+                    region.rect.cy + float(env_origin[1]),
+                    float(env_origin[2]) + thickness / 2.0,
+                ),
+            )
+            mu_s_applied, _ = _read_material_friction(prim_path)
+            print(f"[isaac] O3 collapse plate: intact mu={mu_s_applied:.3f} (swaps on dwell)")
+            self._collapse.append(
+                {
+                    "region": region.rect,
+                    "prim_path": prim_path,
+                    "mu_intact": region.mu_intact,
+                    "mu_collapsed": region.mu_collapsed,
+                    "trigger_dwell_s": region.trigger_dwell_s,
+                    "dwell": 0.0,
+                    "collapsed": False,
+                }
+            )
+
+    def _update_collapse(self) -> None:
+        """Swap intact→collapsed friction once the Go2 has dwelled past the threshold (O3)."""
+        if not self._collapse:
+            return
+        env_origin = self._env.scene.env_origins[0].cpu().numpy()
+        pos = self._robot.data.root_pos_w[0].cpu().numpy()[:2] - env_origin[:2]
+        for st in self._collapse:
+            if st["collapsed"] or not st["region"].contains(pos):
+                continue
+            st["dwell"] += self.dt
+            if st["dwell"] >= st["trigger_dwell_s"]:
+                _set_material_friction(st["prim_path"], st["mu_collapsed"], st["mu_collapsed"])
+                st["collapsed"] = True
+                print(f"[isaac] O3 collapse triggered: mu -> {st['mu_collapsed']:.3f}")
 
     def add_blocking_regions(self, regions: list[BlockingRegion]) -> None:
-        self._isaac_deferred("O8 add_blocking_regions")
+        """Spawn a tall collision wall per region — a real PhysX collider the Go2 cannot
+        cross (O8 invisible collider; the visual is faint, render-suppression is cosmetic)."""
+        env_origin = self._env.scene.env_origins[0].cpu().numpy()
+        h_wall = float(getattr(self._cfg, "wall_height_m", 0.8))
+        for region in regions:
+            prim_path = f"/World/wall_{self._n_patches}"
+            self._n_patches += 1
+            wall_cfg = self._sim_utils.CuboidCfg(
+                size=(2.0 * region.rect.hx, 2.0 * region.rect.hy, h_wall),
+                collision_props=self._sim_utils.CollisionPropertiesCfg(),
+                physics_material=self._sim_utils.RigidBodyMaterialCfg(
+                    static_friction=1.0, dynamic_friction=1.0
+                ),
+                visual_material=self._sim_utils.PreviewSurfaceCfg(
+                    diffuse_color=(0.9, 0.9, 0.9), opacity=0.15
+                ),
+            )
+            wall_cfg.func(
+                prim_path,
+                wall_cfg,
+                translation=(
+                    region.rect.cx + float(env_origin[0]),
+                    region.rect.cy + float(env_origin[1]),
+                    float(env_origin[2]) + h_wall / 2.0,
+                ),
+            )
+            print(f"[isaac] O8 collider wall at ({region.rect.cx:.2f}, {region.rect.cy:.2f})")
+            self._blocking.append(region)
 
-    def add_support_loss_regions(self, regions: list[SupportLossRegion]) -> None:
-        self._isaac_deferred("O9 add_support_loss_regions")
+    def add_support_loss_regions(
+        self, regions: list[SupportLossRegion], height_m: float | None = None
+    ) -> None:
+        """Spawn a low ridge per region: the Go2 high-centers (belly grounds, feet partially
+        clear), so the measured foot-support fraction drops (O9 high-centering).
+
+        ``height_m`` overrides the config ridge height for this call (taller lip ⇒ more feet
+        unloaded ⇒ lower support); ``None`` keeps ``cfg.ridge_height_m`` so existing callers
+        (the O9 operator, the M2 gate) are unchanged. The M4 gate uses it to span a range of
+        graded support levels for the support-channel regression."""
+        env_origin = self._env.scene.env_origins[0].cpu().numpy()
+        h_ridge = float(
+            height_m if height_m is not None else getattr(self._cfg, "ridge_height_m", 0.18)
+        )
+        for region in regions:
+            prim_path = f"/World/ridge_{self._n_patches}"
+            self._n_patches += 1
+            # A narrow ridge along y so the mid-body grounds while feet straddle/clear it.
+            ridge_cfg = self._sim_utils.CuboidCfg(
+                size=(2.0 * region.rect.hx, 2.0 * region.rect.hy, h_ridge),
+                collision_props=self._sim_utils.CollisionPropertiesCfg(),
+                physics_material=self._sim_utils.RigidBodyMaterialCfg(
+                    static_friction=0.8, dynamic_friction=0.8
+                ),
+                visual_material=self._sim_utils.PreviewSurfaceCfg(diffuse_color=(0.8, 0.6, 0.4)),
+            )
+            ridge_cfg.func(
+                prim_path,
+                ridge_cfg,
+                translation=(
+                    region.rect.cx + float(env_origin[0]),
+                    region.rect.cy + float(env_origin[1]),
+                    float(env_origin[2]) + h_ridge / 2.0,
+                ),
+            )
+            print(f"[isaac] O9 high-centering ridge at ({region.rect.cx:.2f},{region.rect.cy:.2f})")
+            self._support.append(region)
+
+    def add_resistance_regions(self, regions: list[ResistanceRegion]) -> None:
+        """Register O2/O4 tangential-resistance regions applied as a base external wrench.
+
+        Spec §8.2 names a D6 spring-damper for O4 and compliant contact for O2; on the
+        physically-simulated Go2 we apply the *equivalent* Hooke's-law restoring/viscous
+        wrench (F = k·s + c·|v|, opposing motion, with O4's break force) directly to the
+        trunk via the PhysX external-force API. This is numerically robust (no runtime joint
+        prim creation/destruction) and produces the real measurable effect — a tracking-error
+        / velocity deficit the monitor and the M5 map see. The wrench is applied in
+        ``_policy_step`` whenever the trunk is inside a region (see deviation #20).
+        """
+        for r in regions:
+            self._resistance.append(
+                {"region": r, "path_len": 0.0, "broken": False, "inside": False}
+            )
+
+    def _apply_resistance_wrench(self) -> None:
+        """Apply the O2/O4 base wrench for the region underfoot, else clear it (PhysX)."""
+        if not self._resistance:
+            return
+        torch = self._torch
+        env_origin = self._env.scene.env_origins[0].cpu().numpy()
+        pos_w = self._robot.data.root_pos_w[0].cpu().numpy()
+        pos = pos_w[:2] - env_origin[:2]
+        vel_b = self._robot.data.root_lin_vel_b[0].cpu().numpy()[:2]
+        speed = float(np.linalg.norm(vel_b))
+        force_b = np.zeros(3)
+        for state in self._resistance:
+            region = state["region"]
+            if not region.rect.contains(pos):
+                state["inside"] = False
+                continue
+            if not state["inside"]:
+                state["inside"] = True  # path length accrues from region entry
+            s_eff = max(0.0, state["path_len"] - region.slack_length_m)
+            mag = region.stiffness_n_per_m * s_eff + region.damping_ns_per_m * speed
+            if mag > region.break_force_n:
+                state["broken"] = True
+            if not state["broken"] and speed > 1e-6:
+                # Oppose the body-frame planar velocity (Hooke's-law + viscous drag).
+                force_b[:2] += -(vel_b / speed) * mag
+            state["path_len"] += speed * self.dt
+        forces = torch.from_numpy(force_b.reshape(1, 1, 3).astype(np.float32)).to(
+            self._device
+        )  # (env=1, body=1, 3)
+        torques = torch.zeros((1, 1, 3), dtype=torch.float32, device=self._device)
+        # is_global=False ⇒ the wrench is expressed in the trunk body frame (matches vel_b).
+        # Older Isaac Lab lacks the kwarg (defaulting to local-frame), so fall back to it.
+        try:
+            self._robot.set_external_force_and_torque(
+                forces, torques, body_ids=self._base_id, is_global=False
+            )
+        except TypeError:
+            self._robot.set_external_force_and_torque(forces, torques, body_ids=self._base_id)
 
     def add_payload(self, mass_kg: float, com_offset_m: np.ndarray) -> None:
-        self._isaac_deferred("O5 add_payload")
+        """Add rigidly-attached mass to the trunk via the PhysX mass API (O5 payload)."""
+        view = self._robot.root_physx_view
+        masses = view.get_masses().clone()  # (num_instances, num_links), CPU
+        base = self._base_id[0]
+        masses[0, base] += float(mass_kg)
+        try:
+            view.set_masses(masses, self._torch.tensor([0]))
+        except TypeError:
+            view.set_masses(masses)
+        self._payload_kg += float(mass_kg)
+        self.mass_kg = float(masses.sum())
+        print(f"[isaac] O5 payload: +{mass_kg:.2f} kg on trunk; total mass {self.mass_kg:.2f} kg")
 
     def set_effort_scale(self, scale: float) -> None:
-        self._isaac_deferred("O10 set_effort_scale")
+        """Scale every actuator's effort limit (O10 effort-decay); 1.0 restores nominal."""
+        scale = float(scale)
+        # Scale every torque-cap attribute the actuator clamps against. Go2 uses an explicit
+        # DCMotor actuator whose compute() clips to effort_limit AND shapes torque by
+        # saturation_effort, so both must shrink for the decay to bind.
+        for name, act in self._robot.actuators.items():
+            if name not in self._nominal_effort:
+                self._nominal_effort[name] = {
+                    attr: getattr(act, attr).clone()
+                    for attr in ("effort_limit", "saturation_effort")
+                    if hasattr(act, attr) and hasattr(getattr(act, attr), "clone")
+                }
+            for attr, nominal in self._nominal_effort[name].items():
+                setattr(act, attr, nominal * scale)
+        self._effort_scale = scale
+        self._effort_limit_nm = float(self._cfg.effort_limit_nm) * scale
 
     def set_reflex(self, active: bool) -> None:  # noqa: B027
         # Reflex stance on the real robot would crouch/widen; the M2 survival gate runs

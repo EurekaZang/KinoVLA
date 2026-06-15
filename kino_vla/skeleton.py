@@ -19,6 +19,7 @@ from typing import Any
 import numpy as np
 
 from kino_vla.loop import EpisodeResult, run_episode
+from kino_vla.map import SemanticRegion, TraversabilityMap
 from kino_vla.monitor.rule_monitor import RuleMonitor
 from kino_vla.shield.cbf_shield import CbfShield
 from kino_vla.sim.backend import LocomotionBackend
@@ -26,6 +27,7 @@ from kino_vla.sim.operators import MuField, OperatorStack
 from kino_vla.sim.surrogate import SurrogateBackend
 from kino_vla.sim.terrain import TerrainSpec, generate_flat_with_patch
 from kino_vla.utils.config import Config, load_config
+from kino_vla.utils.geometry import Rect
 from kino_vla.vla.fsm_recovery import FsmRecovery
 
 
@@ -40,6 +42,7 @@ class WalkingSkeleton:
     shield: CbfShield
     demo_cfg: Config
     terrain: TerrainSpec
+    nav_map: TraversabilityMap | None = None
 
 
 def build_walking_skeleton(
@@ -47,10 +50,16 @@ def build_walking_skeleton(
     backend: str = "surrogate",
     demo_overrides: dict[str, Any] | None = None,
     record_cam: bool = False,
+    use_map: bool = True,
 ) -> WalkingSkeleton:
     """Assemble the full skeleton for one episode; ``backend`` is surrogate|isaac.
 
     ``record_cam`` (isaac only) adds a passive RGB camera for video recording.
+    ``use_map`` (M5, default on) builds the semantic traversability map (spec §7): the
+    ice patch is grounded as a homogeneous "ice_sheet" region, the on-ground slip
+    overwrites the costmap, the mark propagates over the sheet, and the avoid discs feed
+    the recovery planner. The map is backend-agnostic (numpy), so it runs identically on
+    the surrogate and on the physically-simulated Isaac Go2.
     """
     demo_cfg = load_config("demo/walking_skeleton.yaml", demo_overrides)
     terrain = generate_flat_with_patch(demo_cfg.terrain, seed)
@@ -93,6 +102,22 @@ def build_walking_skeleton(
     # transparent at the FSM cruise speed (~0.8 m/s ≪ the trot capture bound) so the
     # demo's qualitative behaviour is unchanged; it only bites hostile commands.
     shield = CbfShield(load_config("shield/cbf_v0.yaml"))
+    # M5: the semantic traversability map grounds the ice patch as a homogeneous visual
+    # region so the physical slip can overwrite + propagate over the whole sheet (spec §7).
+    nav_map = None
+    if use_map:
+        scene = [
+            SemanticRegion(
+                Rect(
+                    terrain.hazard_patch.cx,
+                    terrain.hazard_patch.cy,
+                    terrain.hazard_patch.hx,
+                    terrain.hazard_patch.hy,
+                ),
+                "ice_sheet",
+            )
+        ]
+        nav_map = TraversabilityMap(load_config("map/traversability_v0.yaml"), scene=scene)
     return WalkingSkeleton(
         backend=backend_obj,
         operators=OperatorStack([ice]),
@@ -101,6 +126,7 @@ def build_walking_skeleton(
         shield=shield,
         demo_cfg=demo_cfg,
         terrain=terrain,
+        nav_map=nav_map,
     )
 
 
@@ -121,5 +147,6 @@ def run_walking_skeleton(
         goal_xy=np.asarray(skeleton.demo_cfg.goal.pos, dtype=np.float64),
         goal_tol_m=float(skeleton.demo_cfg.goal.tol_m),
         max_time_s=float(skeleton.demo_cfg.max_time_s),
+        nav_map=skeleton.nav_map,
     )
     return result, skeleton
