@@ -336,6 +336,59 @@ class IsaacPolicyBackend:
             rgb = rgb.clamp(0.0, 1.0) * 255.0
         return rgb.to(self._torch.uint8).cpu().numpy()
 
+    def aim_record_camera(self, eye_xyz: np.ndarray, target_xyz: np.ndarray) -> None:
+        """Re-aim the record camera (eye, target in the start frame) — M5 perception (spec §7)."""
+        if self._camera is None:
+            raise RuntimeError("record camera not enabled (construct with record_cam=True)")
+        origin = self._env.scene.env_origins[0]
+        eye = (
+            self._torch.tensor(
+                [[float(eye_xyz[0]), float(eye_xyz[1]), float(eye_xyz[2])]], device=self._device
+            )
+            + origin
+        )
+        target = (
+            self._torch.tensor(
+                [[float(target_xyz[0]), float(target_xyz[1]), float(target_xyz[2])]],
+                device=self._device,
+            )
+            + origin
+        )
+        self._camera.set_world_poses_from_view(eye, target)
+
+    def add_visual_plate(
+        self, center_xy: np.ndarray, rgb: tuple[float, float, float], half_size_m: float = 0.8
+    ) -> str:
+        """Spawn a flat colour-rendered material plate (M5 real-perception encoder, spec §7).
+
+        A thin static cuboid with a PreviewSurface diffuse colour, so the record camera sees
+        the *rendered* material — the pixel appearance encoder consumes real RGB instead of a
+        class label. Returns the prim path."""
+        env_origin = self._env.scene.env_origins[0].cpu().numpy()
+        prim_path = f"/World/vplate_{self._n_patches}"
+        self._n_patches += 1
+        thickness = 0.02
+        plate_cfg = self._sim_utils.CuboidCfg(
+            size=(2.0 * half_size_m, 2.0 * half_size_m, thickness),
+            collision_props=self._sim_utils.CollisionPropertiesCfg(),
+            physics_material=self._sim_utils.RigidBodyMaterialCfg(
+                static_friction=0.8, dynamic_friction=0.8
+            ),
+            visual_material=self._sim_utils.PreviewSurfaceCfg(
+                diffuse_color=tuple(float(c) for c in rgb), roughness=0.9
+            ),
+        )
+        plate_cfg.func(
+            prim_path,
+            plate_cfg,
+            translation=(
+                float(center_xy[0]) + float(env_origin[0]),
+                float(center_xy[1]) + float(env_origin[1]),
+                float(env_origin[2]) + thickness / 2.0,
+            ),
+        )
+        return prim_path
+
     # ------------------------------------------------------------ operator API
 
     def add_friction_regions(self, regions: list[FrictionRegion]) -> None:
