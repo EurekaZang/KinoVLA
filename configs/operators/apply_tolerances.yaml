@@ -19,3 +19,20 @@ o9_high_centering:
   support_abs_tol: 1.0e-6  # measured support_ratio == residual_support inside the ridge
 o10_effort_decay:
   scale_abs_tol: 1.0e-9    # scheduled effort scale is applied exactly
+# M5 operators (QA 5.2a): set parameter -> measure effect on the surrogate -> assert.
+o2_compliance:
+  theta_abs_tol: 1.0e-9        # (k_c, c_c, d_sink) round-trip through get_privileged_state
+  base_height_abs_tol: 1.0e-6  # measured base-height drop inside the patch == d_sink
+  resistance_monotone_margin_m: 0.05  # higher k_c ⇒ measurably shorter distance travelled
+o4_tether:
+  theta_abs_tol: 1.0e-9        # (k, d, L_0, F_break, d_sink) round-trip
+  break_speedup_margin_mps: 0.1  # after F>F_break the tether snaps ⇒ speed recovers
+o7_visual_remap:
+  mu_abs_tol: 0.02             # friction_at on the patch == mu_d
+  depth_bias_abs_tol: 1.0e-9   # scene-region depth_bias == set value (back-projection offset)
+# O4↔O2 constructive ambiguity pair (spec §8.1 P4) — the paper-artifact matching gate.
+ambiguity_o4_o2:
+  resistance_curve_max_abs_diff_n: 0.05  # tangential-resistance(s) curves match (proprioception)
+  base_height_max_abs_diff_m: 1.0e-6     # base-height traces match
+  slip_max_abs_diff: 1.0e-9              # slip traces match
+  min_appearance_separation: 0.30        # 1 − cosine(appearance) — vision MUST separate them

@@ -107,6 +107,19 @@ class CbfShield:
         """
         self._mu = max(1e-3, float(mu))
 
+    @property
+    def mu_estimate(self) -> float:
+        """The friction estimate currently feeding the cone constraint (spec §6.5)."""
+        return self._mu
+
+    def friction_radius(self) -> float:
+        """Friction-cone radius r = μ̂·z_c the QP enforces on the active mode (spec §6.5).
+
+        Read-only telemetry: shrinks as the Kino-Tokens μ̂ falls on detected ice — the
+        logged artifact of the M4 perception↔safety coupling. Does not touch solve state.
+        """
+        return self._mu * self._modes[self._mode_name].z_c
+
     def reset(self) -> None:
         self._mode_name = str(self._cfg.default_mode)
         self._mu = float(self._cfg.mu_nominal)

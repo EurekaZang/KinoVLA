@@ -43,12 +43,15 @@ def run_stack(stack, seed, n_steps=300, cmd=(0.6, 0.0, 0.0), start=(0.0, 0.0)):
 
 
 def test_registry_contains_operators():
-    # M1: O1, O6, O11; M2 adds O3, O5, O8, O9, O10 (spec §8.2).
+    # M1: O1, O6, O11; M2 adds O3, O5, O8, O9, O10; M5 adds O2, O4, O7 (spec §8.2).
     assert set(OPERATORS) == {
         "O1_mu_field",
+        "O2_compliance",
         "O3_collapse",
+        "O4_tether",
         "O5_payload",
         "O6_push",
+        "O7_visual_remap",
         "O8_invisible_collider",
         "O9_high_centering",
         "O10_effort_decay",

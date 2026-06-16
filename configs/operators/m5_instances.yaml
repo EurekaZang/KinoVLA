@@ -1,0 +1,37 @@
+# M5 operator instances (spec §8.2/§8.3): A/B class labels, Suite-Bound sweep ranges,
+# and the constructive O4↔O2 ambiguity pair. Per the operator skill, A/B labels and
+# boundary-sweep ranges live here, never in code.
+
+# --- O4↔O2 constructive ambiguity pair (spec §8.1 P4, §8.3 Suite-Sem pair 1) ----------
+# O2 (k_c, c_c, d_sink) and O4 (k=k_c, d=c_c, L_0=0, d_sink) share an IDENTICAL tangential-
+# resistance-vs-displacement curve AND base-height sink by construction → proprioceptively
+# indistinguishable. Only the appearance (brown mud vs yellow adhesive board) separates
+# them, driving opposite recoveries (high-step through vs back off / route around).
+ambiguity_o4_o2:
+  region: {cx: 3.0, cy: 0.0, hx: 1.0, hy: 1.5}
+  stiffness: 14.0       # k_c (O2) == k (O4)  [N/m]
+  damping: 6.0          # c_c (O2) == d (O4)  [N·s/m]
+  sink_depth: 0.08      # d_sink, shared      [m]
+  o4_l0: 0.0            # tether free length (0 in the matched regime)
+  o4_f_break: 1.0e9     # no break in the matched regime
+  o2_appearance: brown_mud
+  o4_appearance: yellow_adhesive
+
+# --- O2 Compliance-Field A/B classes + Suite-Bound sweep (spec §8.3 Suite-Bound) -------
+# A: shallow firm mud (low-level locomotion adapts). B: deep bog (semantic intervention).
+o2_class_a:   {k_c: 6.0,  c_c: 3.0,  d_sink: 0.03}
+o2_class_b:   {k_c: 30.0, c_c: 12.0, d_sink: 0.18}
+o2_bound_sweep:
+  param: k_c              # primary sweep axis (stiffness ~ how hard it grips)
+  values: [6.0, 10.0, 14.0, 18.0, 22.0, 26.0, 30.0]
+  c_c: 6.0
+  d_sink: 0.10
+
+# --- O7 Visual-Physics Remap instance (spec §8.3 Suite-Sem) ---------------------------
+# Looks like solid ground, physically ice; depth corruption offsets the back-projection.
+o7_deceptive_cliff:
+  region: {cx: 3.0, cy: 0.0, hx: 1.0, hy: 1.0}
+  mu_s: 0.12
+  mu_d: 0.10
+  depth_bias_m: 0.6
+  appearance_class: solid_ground

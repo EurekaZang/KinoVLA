@@ -81,6 +81,33 @@ class BlockingRegion:
 
 
 @dataclass(frozen=True)
+class ResistanceRegion:
+    """A region applying a displacement-dependent tangential resistance (operators O2/O4).
+
+    Models the shared mechanical signature of compliant sinking (O2) and elastic
+    adhesion/tether (O4): a force opposing motion that grows linearly with the path
+    length ``s`` travelled inside the region plus a viscous term:
+
+        ``F_resist(s, v) = stiffness * s + damping * |v|``
+
+    The two operators differ in *kind* (privileged truth) and *appearance* (mud vs
+    adhesive board) but, by construction (matched ``stiffness``/``damping``), produce an
+    **identical tangential-resistance-vs-displacement curve** — the spec §8.1 P4 ambiguity
+    pair: proprioception alone cannot separate them, so the visual map must. ``sink_depth_m``
+    lowers the measured base height (O2 geometric sink, 0 for O4); ``break_force_n`` snaps
+    the resistance once exceeded (O4 tether break, ``inf`` for O2).
+    """
+
+    rect: Rect
+    stiffness_n_per_m: float
+    damping_ns_per_m: float
+    sink_depth_m: float = 0.0
+    break_force_n: float = float("inf")
+    slack_length_m: float = 0.0  # O4 tether free length L_0 before the spring engages
+    kind: str = "compliance"
+
+
+@dataclass(frozen=True)
 class SupportLossRegion:
     """A region where feet lose ground support (operator O9: high-centering / beaching).
 

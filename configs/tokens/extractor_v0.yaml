@@ -1,0 +1,133 @@
+# Kino-Tokens extractor v0 (spec §4, M4). Window logger + 1D-CNN + Perceiver
+# Resampler + privileged-θ regression / Kino-Text contrastive / OOD-residual heads.
+# No magic numbers in module code (QA 5.1.5) — every knob lives here.
+
+window:
+  window_ms: 500.0      # spec §4 sliding window
+  control_hz: 50.0      # surrogate control rate (configs/sim/surrogate.yaml)
+  stride: 3             # offline window stride (steps) when slicing rollouts
+
+# Scripted dataset driver (kino_vla/tokens/dataset.py): drive straight +x across a
+# hazard that straddles the path, so the robot actually experiences the failure.
+drive:
+  n_steps: 320
+  # Bang-bang square-wave speed profile (kino_vla/tokens/dataset.py): hi for `speed_duty`
+  # of each period, then lo. The sharp high→low decel spikes the effort demand past the
+  # budget so payload mass / effort-decay leave a proprioceptive trace (a flat or gently
+  # ramped cruise never saturates demand → O5/O10 are unidentifiable, the M4 v0 failure).
+  speed_lo: 0.1
+  speed_hi: 1.0
+  speed_period_s: 1.0
+  speed_duty: 0.5
+  hazard_cx: 2.5
+  hazard_hx: 1.5        # hazard spans x in [1.0, 4.0]
+  hazard_hy: 2.0        # wide in y so the jittered path stays inside
+  decay_t_start_s: 1.0  # O10 begins decaying after the start transient
+  collapse_dwell_s: 0.5 # O3 thin ice breaks 0.5 s after first contact
+  collapse_mu_intact: 0.8
+
+# In-distribution θ ranges sampled per training episode (one operator each).
+param_ranges:
+  mu: [0.05, 0.5]            # O1/O3 dynamic friction
+  payload_kg: [2.0, 12.0]    # O5 extra mass
+  com_off: [0.05, 0.25]      # O5 CoM offset [m]
+  decay_rate: [0.3, 1.5]     # O10 effort decay rate [1/s]
+  effort_scale: [0.2, 0.8]   # O10 floor (terminal effort fraction)
+  support_ratio: [0.1, 0.7]  # O9 residual foot support
+
+# Window-label thresholds for the Kino-Text contrastive head (semantics.regime_of).
+regime_thresholds:
+  mu_nominal: 0.8
+  mu_low: 0.5
+  payload_min_kg: 1.5
+  effort_low: 0.9
+  support_low: 0.9
+
+model:
+  conv_channels: [48, 48]
+  conv_kernels: [5, 3]
+  latent_dim: 96        # Perceiver latent/token width D
+  n_latents: 6          # K fixed-length tokens (spec §4 "压缩为定长 Token")
+  n_heads: 4
+  mlp_hidden: 96
+
+train:
+  seed: 0
+  epochs: 220
+  batch_size: 256
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  std_eps: 1.0e-3       # standardizer std floor (zero-variance channels)
+  w_regression: 1.0     # main supervision (spec §4 #1)
+  w_reconstruction: 0.4 # self-supervised — its residual is the OOD score (spec §9)
+  w_contrastive: 0.1    # auxiliary Kino-Text alignment (spec §4 #2), aux weight only
+  contrastive_temp: 0.2
+  n_train_seeds: 300    # disjoint from eval (build_token_dataset assigns ranges)
+  n_eval_seeds: 90
+
+# Online μ̂→shield coupler (kino_vla/tokens/coupler.py, spec §4 #4, §6.5).
+coupler:
+  gate_threshold: 0.8   # Kino-Monitor anomaly_score that opens the injection gate
+  mu_ema_alpha: 0.2     # μ̂ smoothing (per step)
+  hold_s: 2.0           # keep the gate open this long after the last arousal
+  nominal_mu: 0.8       # μ̂ relaxes here at steady state (= shield mu_nominal)
+
+# Parameter-extrapolation OOD sweep (spec §9): μ marched from the training boundary
+# outward; the reconstruction residual must rise monotonically off-manifold.
+ood:
+  sweep_param: mu
+  sweep_regime: low_friction
+  sweep_values: [0.05, 0.04, 0.03, 0.02, 0.015, 0.01]
+  n_seeds: 24
+  in_dist_values: [0.5, 0.4, 0.3, 0.2, 0.1]   # baseline for the separation check
+
+# --- Strict four-channel Isaac gate (kino_vla/tokens/isaac_gate.py; CLAUDE.md §6 #22) ---
+# Closes the M4 strict-GPU gap: all four θ regress below configs/tolerances.yaml on the
+# real Go2, each scored on the single-operator lane/phase where it actually varies.
+isaac_gate:
+  train_frac: 0.7   # per-drive temporal train fraction; eval is the disjoint tail (1-window gap)
+  # Observable regime per channel (measured: outputs/gpu_audit/m4_diagnostic.txt). μ is only
+  # recoverable while the robot slips (deep ice) or on firm ground — at the friction-robustness
+  # knee (μ≈0.2–0.5) the SAME μ yields slipping AND non-slipping windows (pred 0.43±0.28), so
+  # it is aleatorically unobservable per window. Effort only binds once the cut exceeds the
+  # slow trot's >2× torque headroom (#21c): scales 0.5–0.9 are proprioceptively identical to
+  # healthy (vx≈0.53, effort_ratio=0). These bands are a DOCUMENTED unobservable floor, not a
+  # weakened tolerance — the gate excludes them (and logs every excluded level + its per-level
+  # prediction, so the floor is transparent), matching tolerances.yaml's "tell ice from firm".
+  mu_ice_max: 0.16        # μ at/below this slips clearly ⇒ gated as recoverable "ice"
+  mu_firm_min: 0.75       # μ at/above this is firm ⇒ gated
+  effort_bind_max: 0.40   # effort scale at/below this binds ⇒ gated
+  effort_healthy_min: 0.99  # healthy actuator anchor ⇒ gated
+
+isaac_collect:
+  n_steps: 300              # per single-operator drive (recorded steps)
+  settle_steps: 25          # reach steady cruise before recording each drive
+  patch_cx: 2.2             # friction patch centre along travel [m]
+  patch_hx: 1.2             # half-length along travel [m]  (patch spans x in [1.0, 3.4])
+  patch_hy: 1.0             # half-width across travel [m]
+  # μ lanes (lane_y, mu_d): firm (mu>=0.75) drives bare ground; the ice sweep marches THROUGH
+  # the observability knee (0.07…0.30) so the gate can be scored on the recoverable band and
+  # the knee/dry-ground unobservability is visible in the per-level report.
+  mu_lanes: [[0.0, 0.80], [3.0, 0.07], [-3.0, 0.11], [6.0, 0.15], [-6.0, 0.20], [9.0, 0.30]]
+  mu_speed_hi: 1.0
+  mu_speed_lo: 0.1
+  # support lanes (lane_y, ridge_height_m): height 0 = firm baseline (no ridge); graded
+  # heights high-centre the Go2 by graded amounts → a graded support-fraction target. The
+  # broad-platform geometry (hx=0.5, hy=0.6) is the M2 O9 setup that empirically unloaded the
+  # feet (support→0.25, #21b); a narrow rail just gets straddled (measured: no effect).
+  support_lanes: [[12.0, 0.0], [15.0, 0.07], [-12.0, 0.11], [-15.0, 0.15]]
+  support_speed: 0.6        # steady push so the Go2 dwells high-centred on the ridge
+  ridge_hx: 0.5             # platform length along travel (the Go2 mounts and grinds on it)
+  ridge_hy: 0.6             # broad across travel so the chassis grounds out and feet unload
+  # effort levels (set_effort_scale): healthy anchor + a sweep through the binding knee.
+  effort_levels: [1.0, 0.5, 0.38, 0.32, 0.26, 0.2]
+  effort_lane_y: 18.0
+  effort_speed_hi: 1.4
+  effort_speed_lo: 0.1
+  # payload levels [kg] — ascending cumulative (add_payload is irreversible in-process).
+  payload_levels: [0.0, 2.0, 4.0, 6.0, 8.0]
+  payload_lane_y: -18.0
+  payload_speed_hi: 1.4
+  payload_speed_lo: 0.1
+  speed_period_s: 1.0       # bang-bang square-wave period [s]
+  speed_duty: 0.5           # fraction of each period at speed_hi

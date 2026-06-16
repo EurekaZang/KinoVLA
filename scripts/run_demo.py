@@ -81,6 +81,12 @@ def main() -> int:
     for line in skeleton.policy.transitions:
         print(f"recovery: {line}")
     print(f"shield interventions: {result.shield_interventions} (CBF-QP shield)")
+    if skeleton.nav_map is not None:
+        nm = skeleton.nav_map
+        print(
+            f"semantic map: physical_cells={nm.costmap.n_physical} "
+            f"avoid_discs={len(nm.nav_hazards())} (spec §7 traversability map)"
+        )
     print(f"fall: {result.fell}")
     print(f"goal reached: {result.goal_reached} dist={result.final_dist_m:.2f}m")
     print(f"sim time: {result.sim_time_s:.1f}s steps={result.n_steps}")

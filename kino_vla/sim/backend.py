@@ -20,6 +20,7 @@ from kino_vla.sim.types import (
     CollapseRegion,
     FrictionRegion,
     Obs,
+    ResistanceRegion,
     SupportLossRegion,
 )
 
@@ -72,10 +73,21 @@ class LocomotionBackend(Protocol):
         """Append foot-support-loss regions (operator O9, Axis III)."""
         ...
 
+    def add_resistance_regions(self, regions: list[ResistanceRegion]) -> None:
+        """Append tangential-resistance regions (operators O2 compliance / O4 tether, M5)."""
+        ...
+
     def add_payload(self, mass_kg: float, com_offset_m: np.ndarray) -> None:
         """Rigidly attach a payload mass with a CoM offset to the base (operator O5, Axis II)."""
         ...
 
     def set_effort_scale(self, scale: float) -> None:
         """Scale the actuator-effort budget in (0, 1] (operator O10, Axis IV)."""
+        ...
+
+    # ---- M4 privileged-distillation target (spec §4) ----------------------------
+
+    def privileged_physics(self) -> dict[str, float]:
+        """God's-eye physics truth at the current step — the Kino-Tokens regression
+        target (``mu``, ``payload_kg``, ``effort_scale``, ``support_ratio``; spec §4)."""
         ...

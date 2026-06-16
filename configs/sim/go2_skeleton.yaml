@@ -11,6 +11,9 @@ max_yaw_rate_radps: 1.5
 gravity: 9.81
 mu_nominal: 0.8
 patch_thickness_m: 0.006  # O1 patch collider plate height (thin: a gentle lip for the walker)
+wall_height_m: 0.8        # O8 invisible-collider wall height (taller than the Go2 body)
+ridge_height_m: 0.10      # O9 high-centering ridge: climbable lip that lifts the chassis
+                          # (a taller step the trot just rams into and stalls against)
 
 # M2 policy backend (kino_vla/sim/isaac_policy_backend.py)
 policy_path: "outputs/locomotion/policy.pt"   # exported JIT actor (gitignored)

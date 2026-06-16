@@ -118,6 +118,23 @@ class FsmRecovery:
         )
         return True
 
+    def adopt_map_hazards(self, hazards: list[tuple[np.ndarray, float]]) -> None:
+        """Merge semantic-map avoid discs into the avoid set (spec §7 map→planner).
+
+        The map's discs cover the *whole* propagated homogeneous region (e.g. the entire
+        thin-ice sheet), not just the single point the monitor fired on — so the detour
+        routes around the region rather than nicking its edge. A disc already covered by an
+        existing avoid circle is skipped (idempotent across repeated event handling).
+        """
+        for center, radius in hazards:
+            center = np.asarray(center, dtype=np.float64)
+            covered = any(
+                float(np.linalg.norm(c.center - center)) + radius <= c.radius
+                for c in self.avoid_circles
+            )
+            if not covered:
+                self.avoid_circles.append(AvoidCircle(center=center.copy(), radius=float(radius)))
+
     def step(self, obs: Obs) -> np.ndarray:
         if self.phase is Phase.BACKSTEP:
             if obs.t >= self._backstep_until:

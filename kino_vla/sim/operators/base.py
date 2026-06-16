@@ -14,10 +14,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from kino_vla.sim.backend import LocomotionBackend
 from kino_vla.sim.types import Obs
+
+if TYPE_CHECKING:
+    from kino_vla.map.types import SemanticRegion
 
 
 class FailureOperator(ABC):
@@ -49,6 +52,17 @@ class FailureOperator(ABC):
         """Corrupt the measured observation. Default: identity."""
         return obs
 
+    def scene_region(self) -> SemanticRegion | None:
+        """Visual signature this operator contributes to the semantic map (spec §7).
+
+        Default: none (operator has no characteristic appearance the map should ground).
+        Operators that exercise the map (O2/O4/O7, M5) return a ``SemanticRegion`` so the
+        segmenter can paint their appearance — crucially, O2 and O4 return *different*
+        appearances over *identical* proprioception (the P4 ambiguity pair), and O7 returns
+        an appearance decoupled from its physics (visual-physics remap).
+        """
+        return None
+
 
 class OperatorStack:
     """Ordered composition of operators; θ vectors concatenate under slot-indexed keys."""
@@ -74,6 +88,15 @@ class OperatorStack:
         for op in self._operators:
             obs = op.transform_obs(obs)
         return obs
+
+    def scene_regions(self) -> list[SemanticRegion]:
+        """Collect the visual signatures of all operators that contribute one (spec §7)."""
+        regions: list[SemanticRegion] = []
+        for op in self._operators:
+            region = op.scene_region()
+            if region is not None:
+                regions.append(region)
+        return regions
 
     def get_privileged_state(self) -> dict[str, float]:
         """Concatenated θ: keys are ``op{i}.{operator_name}.{param}`` (deterministic schema)."""
