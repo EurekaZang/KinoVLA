@@ -45,6 +45,7 @@ N_FEATURES: int = len(FEATURE_SCHEMA)
 TARGET_SCHEMA: tuple[str, ...] = ("mu", "payload_kg", "effort_scale", "support_ratio")
 N_TARGETS: int = len(TARGET_SCHEMA)
 MU_INDEX: int = TARGET_SCHEMA.index("mu")
+SUPPORT_INDEX: int = TARGET_SCHEMA.index("support_ratio")
 
 
 def obs_to_features(obs: Obs) -> np.ndarray:
