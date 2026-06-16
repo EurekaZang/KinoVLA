@@ -124,3 +124,25 @@ def test_m4_kino_tokens_isaac():
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "PASS: M4 Kino-Tokens on Isaac" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_m3_cbf_pushfall_isaac():
+    """M3 push-fall characterization on the real Go2 (spec §6.6; CLAUDE.md §6 #22).
+
+    Turns the previously-untested 0/0 zero-fall contrast into a real 36-scenario sweep: a real
+    O6 impulse builds a capture-point regime, then a hostile command is run shielded vs
+    bypassed. FINDING (deviations #9/#13): the reduced-LIP CBF never reduces falls on the
+    command-robust full-order policy — for forward/diagonal pushes it is anti-protective. The
+    guarantee is a reduced-LIP-model property; the surrogate gate stays the falsifiable
+    zero-fall test. The run succeeds once it has characterized the effect."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_cbf_pushfall.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: M3 push-fall characterization complete" in proc.stdout

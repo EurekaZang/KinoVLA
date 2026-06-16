@@ -1,0 +1,30 @@
+# M3 push-fall contrast sweep on the real Go2 (spec §6.6; CLAUDE.md §6 #22 strict closure).
+#
+# The surrogate adversarial gate proves the CBF's zero-fall property on the reduced LIP
+# model (falsifiable fall model). This sweep tries to REALIZE that contrast on the full-order
+# physically-simulated Go2: a real O6 impulse (backend.apply_push) spikes the body velocity
+# into a capture-point regime; a hostile "keep accelerating in the push direction" command
+# then either topples the robot (bypassed) or is clamped by the shield to a brake (shielded).
+# We search push magnitudes/directions for the band where bypassed→fall and shielded→no-fall.
+#
+# This is NOT a weakened safety bar — the shield config (cbf_v0.yaml) is untouched. It is an
+# empirical search for the regime where the shield's guarantee is observable on the full
+# contact dynamics (the trained policy is command-robust, so a window may or may not exist;
+# the script reports the full table either way — deviations #9/#13/#22).
+
+cruise_speed_mps: 0.5        # forward cruise reached before the push
+cruise_steps: 60
+post_steps: 120              # recover-or-fall window after the push
+hostile_speed_mps: 2.5       # worst command: chase the displaced CoM at max speed
+max_speed_mps: 2.5           # backend command cap (raised so the hostile cmd exceeds the envelope)
+max_yaw_rate_radps: 3.0
+
+# Search grid (named directions resolved in the script).
+push_impulses_ns: [18.0, 28.0, 38.0, 48.0]
+push_dirs: [[1.0, 0.0], [0.0, 1.0], [0.7, 0.7]]   # forward, lateral, diagonal
+seeds: [0, 1, 2]
+
+# Strict PASS: some (magnitude, direction) topples the BYPASSED robot on a majority of seeds
+# while the SHIELDED robot never falls there — the shield prevents the command-induced topple.
+min_bypassed_falls: 2        # of len(seeds)
+max_shielded_falls: 0
