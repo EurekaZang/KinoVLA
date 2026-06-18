@@ -72,6 +72,21 @@ class SnapshotRecorder:
         if event is not None and self.snapshot is None and self._in_locus(obs.pos):
             self.snapshot = self._capture(event)
 
+    def buffer(self, obs: Obs) -> None:
+        """Buffer one control step WITHOUT capturing (the runtime closed-loop planner path).
+
+        The deployed VLA planner (M7) re-snapshots on *every* monitor event (multi-round
+        reflection, spec §10), so it buffers each step here and calls :meth:`capture` on demand,
+        instead of the M6 pipeline's one-shot in-locus capture."""
+        self._poses.append((obs.pos.copy(), float(obs.heading)))
+        self._window.push(obs)
+
+    def capture(self, event: MonitorEvent, *, prior_outputs: list[str] | None = None) -> Snapshot:
+        """Build a snapshot from the current buffer at ``event`` (public, multi-round capable)."""
+        if prior_outputs is not None:
+            self._prior_outputs = list(prior_outputs)
+        return self._capture(event)
+
     def _in_locus(self, pos: np.ndarray) -> bool:
         """True if the robot is at the failure locus (inside the hazard gate, if any)."""
         return self._gate_rect is None or self._gate_rect.contains(pos)

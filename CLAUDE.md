@@ -55,10 +55,30 @@ Milestones M2–M7 each swap one `[STUB]` for the real module. The demo command 
 ## 2. Progress State _(EDIT THIS SECTION EVERY SESSION)_
 
 ```
-CURRENT MILESTONE : M7 — VLA training (Kino-SFT + Embodied DPO)
-                    (M0–M6 COMPLETE on the real RTX 5090 / real-Go2 Isaac path. M6's CoT data is
-                    collected over real-Go2 snapshots + the real gpt-5.5 Oracle + the truth filter)
-CURRENT TASK      : M6 COMPLETE incl. the REAL Oracle-LLM CoT data, NOW with O10 + the O5↔O10 pair
+CURRENT MILESTONE : M7 — VLA training (Kino-SFT + Embodied DPO). SFT side COMPLETE on the real
+                    Qwen3-VL-4B (exit 1/2/4 met); Embodied DPO pipeline + §11 mechanism complete.
+                    (M0–M6 COMPLETE on the real RTX 5090 / real-Go2 Isaac path.)
+CURRENT TASK      : M7 IMPLEMENTED + trained on the REAL Qwen3-VL-4B (backbone #33; staged locally
+                    via KINOVLA_MODEL_ID — the HF downloader stalled, curl-resumed). New subsystem
+                    kino_vla/vla/ (output/prompt/dataset_build/projector/model/planner/rollout/dpo/
+                    scenarios) + eval/suite_sem + configs/vla + 11 scripts. EXIT 1+2 MET (real model,
+                    held-out real-Go2 Suite-Sem n=38): Kino-SFT (LoRA + Kino-Projector, latent B5)
+                    attribution 0.974 vs rule-FSM 0.237 (+0.737 — the B-class irreplaceability claim,
+                    §2.5/§5); parse-rate 1.000 (exit-2). EXIT 4: reproducible from config+seed (5.1
+                    min, input-cache). §3 ABLATION: text route B4 also 0.974 (attribution saturates
+                    on vision+proprio; the latent benefit is fine recovery-param precision, not
+                    attribution — honest). EXIT 3 (Embodied DPO §11): 242 in-distribution ambiguity-
+                    sibling preference pairs (Chosen=correct, Rejected=wrong-sibling, θ-grounded) →
+                    DPO pref_acc 0.88→1.00 (mechanism verified); held-out top-1 SATURATED by the
+                    strong SFT so DPO ties SFT @temp0.8 (0.912) & @1.2 (0.882) — no top-1 headroom;
+                    on-policy DPO diverged at this config (32 hard confusion pairs undertrained,
+                    0.724<0.912) ⇒ exit-3 "DPO improves" NOT demonstrated (SFT-ceiling + mechanism-
+                    verified; tuned on-policy DPO at scale = #34/M8). ISAAC CLOSED
+                    LOOP: the full VLA runs on the real Go2 (attribute from real RGB+proprio → CBF
+                    compile → execute); SFT temp-0 1/3 — limited by the M6 bang-bang→smooth proprio
+                    shift + unseen O8 (#34, honest). Strong paper support = exit-1 on real-Go2 Isaac
+                    data. Next: M8 eval harness.   [HISTORICAL M6 notes below.]
+                    --- M6 (done): M6 COMPLETE incl. the REAL Oracle-LLM CoT data, NOW O10 + O5↔O10 pair
                     (§6 #31/#32 resolved). 2026-06-18 fixed the O10-0-kept + O5↔O10-pair-missing gap
                     (user goal "彻底修复"): canonical dataset outputs/hindsight_isaac kept 369→413,
                     O10 0→22, O5 0→22, ALL 3 Suite-Sem pairs both_present. O10 was a CONDITIONING gap
@@ -194,8 +214,8 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 - [x] **M4** — Kino-Tokens extractor (privileged distillation)
 - [x] **M5** — Semantic traversability map
 - [x] **M6** — Hindsight CoT data pipeline + truth-consistency filter _(real CoT collected over real-Go2 snapshots + gpt-5.5 + filter; §6 #31. Dataset is proof-of-pipeline scale — M7-scale needs more Isaac runs)_
-- [ ] **M7** — VLA training: Kino-SFT + Embodied DPO
-- [ ] **M8** — Full evaluation harness, baselines, ablations, paper-ready results
+- [~] **M7** — VLA training: Kino-SFT + Embodied DPO _(Kino-SFT DONE on the real Qwen3-VL-4B: exit 1 [attribution 0.974 vs FSM 0.237], exit 2 [100% parse], exit 4 [reproducible] MET; §3 latent/text ablation; full code + 43 tests. Embodied DPO pipeline + §11 mechanism DONE [pref_acc→1.0] but exit-3 "DPO improves closed-loop over SFT" NOT demonstrated — SFT at ceiling, on-policy DPO undertrained; flagged §6 #34 → M8. Box left open per protocol.)_
+- [ ] **M8** — Full evaluation harness, baselines, ablations, paper-ready results _(+ tuned on-policy/scaled Embodied DPO to close M7 exit-3, #34)_
 
 ---
 
@@ -334,6 +354,13 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 2026-06-18 | M6 | VALIDATED the fix on REAL gpt-5.5 (not the filter): 49-snapshot val → O10 4/4 annotated→effort_decay (was 0/60), O5 9/9→overload, O3 collapse 4/4 intact (the key no-regression check). Scaled: 196 new-regime snapshots (4 shards) → 54 O5/O10 → O10 22/29 kept (22/22 annotated→effort_decay), O5 22/25 (22/23→overload, 1 genuine confab the filter dropped); true reject 2.2% (excl. 9 transient gateway 503s). The truth-consistency filter is UNCHANGED | outputs/hindsight_isaac_ops/
 2026-06-18 | M6 | MERGED O5/O10 into the canonical real-Go2 dataset (scripts/merge_hindsight_ops.py + pipeline.stats_from_records records-based card recompute, QA 5.4): kept 369→413, O10 0→22, O5 absent→22, ALL 3 Suite-Sem pairs both_present=True (incl. O5↔O10), A/B 199/214. Region ops keep their xhigh annotations (no re-annotate, no double-count). M6 sim gate refactored onto the shared collect_lane + re-run on the real Go2: 7/7 intercept, O10→effort_decay keep, O5→overload keep (pay=16.0 clean via clear_payload), θ confirms all. 257 fast green, demo hash cf455844… unchanged, ruff clean | tests/test_sim_operators.py::test_m6_hindsight_isaac PASS; outputs/hindsight_isaac/dataset_card.json
 2026-06-18 | M6 | PUBLICATION-GRADE HARDENING (independent adversarial audit → fix M1/M2 + 5 MINOR; user goal). M1 (metric integrity, the headline fix): Oracle API/transport failures were counted as filter `schema_invalid` rejections, inflating the reject-rate the paper cites — added an ORACLE_ERROR status (schema.py), annotate_snapshots emits it on exception, compute_stats/stats_from_records EXCLUDE it from reject_rate (kept in by_reason for transparency); card reports oracle_error separately. Canonical card: reject 22.5%→21.0% (10 API-fails reclassified; kept 413 unchanged). M2 (data-path tests): tests/test_hindsight_dataops.py (13) covers annotate_snapshots (keep / confab-drop / ORACLE_ERROR-excluded / cache / concurrency / no-interception), save↔load snapshots + meta, random_lanes, merge_datasets round-trip. MINOR: m1 merged-card throughput derived from summed component walls (no wall=0-vs-nonzero-rate contradiction); m2 card gains Intended-use/Collection/Limitations/License sections; m3 scale caveat auto-shown (kept < report.sft_scale_floor); m4 JSON parser tolerates prose-before-JSON (last balanced object); m5 collector saves n_attempted ⇒ card reports the true intercept rate. + provenance: card git_commit is the real SHA (dataset.git_commit_sha), not a "merge"/"retry" placeholder. merge_datasets factored into kino_vla/data (testable). M3-audit-finding (train/val/test split) is M7's job, NOT M6 (M6 exit has no split; M7 exit references the held-out validation suite) | tests/test_hindsight_dataops.py; 270 fast green, demo hash cf455844… unchanged, ruff clean; outputs/hindsight_isaac/dataset_card.md
+2026-06-19 | M7 | VLA subsystem kino_vla/vla/ (8 modules): output (parse-or-reject, exit-2), prompt (text/latent routes + <Thought>/<Action> target), dataset_build (seeded operator-stratified train/val/test split — the M6-deferred split), projector (Kino-Projector: §4 1D-CNN+resampler tokenizer + privileged-θ head → 2560-d VLM soft tokens), model (Qwen3-VL-4B + LoRA + projector; embedding forward-hook soft-token splice preserving native deepstack-vision + M-RoPE + mm_token_type_ids), planner (VlaPlanner RecoveryPolicy drop-in: snapshot→VLA→parse→compile→execute, multi-round escape-first), rollout (closed-loop sampler + run_closed_loop backend reuse), dpo (physical-outcome + §11 ambiguity-sibling + on-policy preference pairs; DPO loss w/ adapter-toggle reference + cached precompute), scenarios; eval/suite_sem | 43 VLA tests; 316 fast green; ruff clean
+2026-06-19 | M7 | configs/vla/{sft,dpo}.yaml + scripts/{train_vla_sft,eval_vla_suite_sem,build_dpo_pairs,build_dpo_ambiguity,dpo_onpolicy,train_vla_dpo,eval_vla_closed_loop,vla_model_smoke,isaac_vla_rollout,m7_results}.py + run_m7_experiments.sh; reproducible from config+seed (exit-4) | ruff clean
+2026-06-19 | M7 | REAL model: Qwen3-VL-4B staged locally (~/models, KINOVLA_MODEL_ID env; canonical id in configs). Smoke = load + LoRA(34.5M trainable) + projector, forward loss finite, backward grads to LoRA+projector, generate→valid <Thought>/<Action> that PARSES | scripts/vla_model_smoke.py
+2026-06-19 | M7 | EXIT 1+2 MET (real Qwen3-VL-4B): Kino-SFT (LoRA + Kino-Projector, latent route B5) on the 413-sample real-Go2+gpt-5.5 dataset (split 315/49/49, 4 ep, val 0.745→0.624, 5.1 min via input cache). Held-out test Suite-Sem (ambiguity pairs, n=38) attribution: VLA 0.974 vs FSM-majority 0.237 (margin +0.737); parse-rate 1.000 (exit-2); feasible-recovery 0.974; per-op O1 0.89 / O2 1.0 / O3 1.0 / O4 1.0 / O5 1.0 / O10 1.0 | outputs/vla/sft_latent, outputs/vla/suite_sem_latent.json
+2026-06-19 | M7 | ABLATION (spec §3 route A/B): text route B4 SFT (val 0.608) also hits Suite-Sem attribution 0.974 — on these snapshots vision+either-proprio-channel suffices for ATTRIBUTION; the latent channel's claimed benefit is fine recovery-parameter precision (not measured by attribution acc), reported honestly | outputs/vla/sft_text, suite_sem_text.json
+2026-06-19 | M7 | EXIT 3 (Embodied DPO, spec §11): built 242 in-distribution ambiguity-sibling preference pairs (Chosen=correct, Rejected=wrong-sibling strategy; θ-grounded — by the M6 disjoint-primitive design every Rejected lies outside the feasible set, the §11 "选错策略" Rejected) from the train Suite-Sem nodes → DPO (adapter-toggle reference, cached). pref_acc 0.88→1.00: DPO perfectly prefers the correct over the wrong-sibling strategy — the §11 mechanism is verified. Held-out test top-1 attribution is SATURATED by the strong SFT (ceiling 0.974@t0 / 0.912@0.8 / 0.882@1.2), so the canonical DPO ties SFT @0.8 and @1.2 (no regression, no top-1 headroom). On-policy DPO (sampling the model's own correct-vs-wrong outputs at the failure nodes — the literal §11 procedure; 32 pairs, mostly O1↔O3 confusions = the cases the SFT is confidently-wrong on) DIVERGED at this config (lr 5e-6, 2 ep, grad_accum 2 → loss 3.19, pref_acc 0.19; held-out 0.724 < SFT 0.912) — an undertraining failure on hard confidently-wrong cases, NOT a clean negative. NET EXIT-3 (honest): the strong SFT is at the attribution CEILING, so DPO has no top-1 headroom — the canonical DPO TIES SFT (no regression) and verifies the §11 mechanism (pref_acc 1.0), but a genuine DPO>SFT closed-loop margin is NOT demonstrated; it needs a tuned on-policy DPO at scale + a finer recovery-parameter metric (flagged #34 → M8). The DPO loss + pair construction are independently unit-tested | outputs/vla/dpo, suite_sem_{sft,dpo,dpoop}_t{08,12}.json
+2026-06-19 | M7 | EXIT 3 (Isaac closed loop, spec §11 "Isaac Lab 闭环"): the trained VLA runs IN the real-Go2 loop — monitor fires → VLA attributes from the real RGB + proprioception → parse (100%) → CBF/Primitive-Compiler executes → physical outcome; 3 Suite-Sem scenarios in lateral lanes. SFT temp-0 success 1/3 (O1 reached). HONEST LIMITS (#34): O8 invisible-collider is NOT in the M6 dataset (unseen → defaults overload); the M6 bang-bang excitation (#15) makes the smooth-cruise runtime proprio OOD → the latent route over-weights it. The clean quantitative exit-3 is the in-distribution attribution above; this is the full-stack demonstration | scripts/isaac_vla_rollout.py, outputs/vla/isaac_sft_eval/
 ```
 
 ---
@@ -901,4 +928,28 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    reasoning backbone. SPEC NOT EDITED (hard rule: spec changes are a human decision) — a human
    should update kino-vla-v2.md §10/§11 to match. CLAUDE.md §1 + M7 scope updated. M7 is not yet
    implemented (no configs/vla/ or training code); this fixes the model + size choice for when it is.
+#34 2026-06-19 | M7 | M7 HONEST SCOPE + engineering decisions. (a) Backbone Qwen3-VL-4B (#33)
+   staged to a local dir (~/models/Qwen3-VL-4B-Instruct): the HF python downloader stalled
+   repeatedly on this network (multiple resume attempts), so the 2 safetensors shards were
+   curl-resumed; KINOVLA_MODEL_ID env points the loader at the local dir (the canonical HF id stays
+   in configs for portability). (b) SFT/DPO are CPU-bottlenecked on the image processor (GPU ~1%
+   during training); an input cache (tokenize each sample once, reuse across epochs; DPO also caches
+   the fixed LoRA-off reference logprobs) cut SFT 24→5 min. (c) TRAIN/DEPLOY PROPRIO SHIFT: the M6
+   dataset's failure snapshots are captured under BANG-BANG excitation (#15, needed so O5/O10 are
+   observable for labeling), but the deployed planner navigates SMOOTHLY, so the closed-loop runtime
+   proprio is OOD for the model — in the surrogate closed loop it collapses to overload (0/4) and on
+   Isaac mis-attributes O3/O8. THEREFORE the clean quantitative exit-3 is measured IN-DISTRIBUTION
+   (held-out test attribution @temperature, where the model is in-distribution); the Isaac closed
+   loop is the literal-spec full-stack demonstration (the VLA attributes from real RGB+proprio →
+   CBF-compiles → executes on the real Go2), reported with this caveat. (d) O8 invisible-collider
+   is NOT in the M6 dataset_lanes → unseen by the model (a leave-one-out), so it defaults to overload
+   in the closed loop; excluded from the in-distribution attribution metric. (e) The surrogate
+   closed loop excludes O1 (its A-class "slow + continue survives" is not surrogate-representable —
+   the surrogate fall model makes any ice crossing fatal). (f) SCALE: 413-sample SFT is
+   proof-of-pipeline (the dataset card flags < 1000); the exit-1 result is strong but the set is
+   small. (g) EXIT-3 nuance: the SFT is at the attribution CEILING (0.974 @temp0, 0.912 @0.8, 0.882
+   @1.2), so DPO has little top-1 headroom; the canonical-pair DPO reaches pref_acc 1.0 (the §11
+   mechanism — perfectly prefers correct over the wrong-sibling) but ties SFT on held-out top-1;
+   the on-policy DPO (sampling the model's own correct-vs-wrong outputs) is the principled attempt
+   at a genuine margin (see §4).
 ```
