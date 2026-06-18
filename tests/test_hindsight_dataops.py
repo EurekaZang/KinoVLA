@@ -364,3 +364,121 @@ def test_merge_datasets_folds_in_ops_and_separates_oracle_error(cfg, tax, tmp_pa
 
 def _read(path):
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+
+# ----------------------------------------------------- collect_lane orchestration (fake backend)
+class _FakeBackend:
+    """Minimal CPU stand-in for the Isaac backend — pins collect_lane's regime branching +
+    clear_payload isolation (the #32 logic) without a GPU. Real physics/regime are sim-gated."""
+
+    dt = 0.02
+
+    def __init__(self) -> None:
+        from kino_vla.sim.types import Obs
+
+        self._Obs = Obs
+        self._start_pos = np.zeros(2)
+        self._start_heading = 0.0
+        self._t = self._x = 0.0
+        self._payload = 0.0
+        self._effort = 1.0
+        self._rects: list = []
+        self.calls: list[str] = []
+
+    def reset(self, seed: int):  # noqa: ARG002 - reset does NOT clear payload (mimics #22)
+        self._t = self._x = 0.0
+        return self._obs()
+
+    def step(self, cmd):  # noqa: ARG002
+        self._t += self.dt
+        self._x += 0.05
+        return self._obs()
+
+    def _obs(self):
+        pos = np.array([self._x, float(self._start_pos[1])])
+        in_region = any(r.contains(pos) for r in self._rects)
+        return self._Obs(
+            t=self._t,
+            pos=pos,
+            heading=0.0,
+            vel_body=np.zeros(2),
+            yaw_rate=0.0,
+            cmd_prev=np.zeros(3),
+            slip_ratio=1.0 if in_region else 0.1,
+            base_height=0.25 if self._payload > 0 else 0.40,
+            tilt=0.0,
+            fallen=False,
+            effort_ratio=0.8 if self._effort < 1.0 else 0.0,  # a derated actuator saturates
+            support_ratio=1.0,
+        )
+
+    def clear_payload(self) -> None:
+        self.calls.append("clear_payload")
+        self._payload = 0.0
+
+    def set_effort_scale(self, s: float) -> None:
+        self._effort = float(s)
+
+    def add_payload(self, m: float, com) -> None:  # noqa: ARG002
+        self._payload += float(m)
+
+    def add_friction_regions(self, regions) -> None:
+        self._rects += [r.rect for r in regions]
+
+    def add_collapse_regions(self, regions) -> None:
+        self._rects += [r.rect for r in regions]
+
+    def add_resistance_regions(self, regions) -> None:
+        self._rects += [r.rect for r in regions]
+
+    def privileged_physics(self) -> dict[str, float]:
+        return {
+            "mu": 0.1,
+            "payload_kg": self._payload,
+            "effort_scale": self._effort,
+            "support_ratio": 1.0,
+        }
+
+
+@pytest.fixture(scope="module")
+def monitor_cfg(cfg):
+    return load_config(str(cfg.drive.monitor))
+
+
+def test_collect_lane_o10_effort_regime(cfg, monitor_cfg):
+    from kino_vla.data.isaac_rollout import collect_lane
+
+    be = _FakeBackend()
+    lane = {"op": "O10_effort_decay", "y": 0.0, "appearance": "solid_ground", "floor": 0.13}
+    snap, theta, fell = collect_lane(be, cfg, monitor_cfg, lane, seed=0)
+    assert snap is not None and not fell
+    assert "clear_payload" in be.calls  # clean slate at lane start
+    assert snap.privileged_theta["effort_scale"] == pytest.approx(0.13)  # captured mid-decay
+    assert snap.monitor_channel == "effort_ratio"
+    assert be._effort == 1.0  # restored after the lane
+    assert theta == {"floor": 0.13}
+
+
+def test_collect_lane_o5_payload_regime_and_clear(cfg, monitor_cfg):
+    from kino_vla.data.isaac_rollout import collect_lane
+
+    be = _FakeBackend()
+    be._payload = 99.0  # residue from a prior lane — clear_payload must wipe it (#22/#32)
+    lane = {"op": "O5_payload", "y": 0.0, "appearance": "solid_ground", "mass": 16.0}
+    snap, theta, _ = collect_lane(be, cfg, monitor_cfg, lane, seed=0)
+    assert snap is not None
+    assert snap.privileged_theta["payload_kg"] == pytest.approx(16.0)  # absolute, not 99+16
+    assert snap.monitor_channel == "tracking_err"
+    assert theta == {"mass_kg": 16.0}
+
+
+def test_collect_lane_region_op_runs_and_cleans(cfg, monitor_cfg):
+    from kino_vla.data.isaac_rollout import collect_lane
+
+    be = _FakeBackend()
+    lane = {"op": "O1_mu_field", "y": 0.0, "appearance": "ice_sheet", "mu": 0.1}
+    snap, _theta, _ = collect_lane(be, cfg, monitor_cfg, lane, seed=0)
+    assert "clear_payload" in be.calls  # every lane starts from the nominal robot
+    assert be._rects  # the friction region was installed via apply_operator
+    if snap is not None:  # the high-recall monitor fires on the sustained in-region slip
+        assert snap.privileged_theta["mu"] == pytest.approx(0.1)
