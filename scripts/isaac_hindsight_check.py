@@ -35,13 +35,9 @@ def main() -> int:
     app = AppLauncher(args).app
 
     from kino_vla.data import FailureTaxonomy, ScriptedOracle, TruthConsistencyFilter
-    from kino_vla.data.snapshot import SnapshotRecorder
-    from kino_vla.map.types import SemanticRegion
-    from kino_vla.monitor.rule_monitor import RuleMonitor
+    from kino_vla.data.isaac_rollout import collect_lane
     from kino_vla.sim.isaac_policy_backend import IsaacPolicyBackend
-    from kino_vla.sim.types import CollapseRegion, FrictionRegion, ResistanceRegion
     from kino_vla.utils.config import REPO_ROOT, load_config
-    from kino_vla.utils.geometry import Rect
 
     cfg = load_config("data/hindsight.yaml")
     cc = cfg.isaac_collect
@@ -51,116 +47,14 @@ def main() -> int:
     monitor_cfg = load_config(str(cfg.drive.monitor))
 
     backend = IsaacPolicyBackend(load_config("sim/go2_skeleton.yaml"), np.array([0.0, 0.0]), 0.0)
-    dt = backend.dt
-    period, duty = float(cc.speed_period_s), float(cc.speed_duty)
-    lo, margin = float(cc.speed_lo), float(cc.gate_margin_m)
-    region_ops = {"O1_mu_field", "O7_visual_remap", "O3_collapse", "O2_compliance", "O4_tether"}
 
-    def bangbang(hi: float):
-        return lambda k: hi if (((k * dt) / period) % 1.0) < duty else lo
-
-    def theta_for(lane: dict) -> dict[str, float]:
-        op = lane["op"]
-        if op == "O2_compliance":
-            return {"d_sink": float(lane["d_sink"])}
-        if op == "O5_payload":
-            return {"mass_kg": float(lane["mass"])}
-        if op == "O10_effort_decay":
-            return {"floor": float(lane["floor"])}
-        return {}
-
-    def apply_region(lane: dict, rect: Rect) -> None:
-        op = lane["op"]
-        if op in ("O1_mu_field", "O7_visual_remap"):
-            mu = float(lane["mu"])
-            backend.add_friction_regions([FrictionRegion(rect, mu, mu)])
-        elif op == "O3_collapse":
-            backend.add_collapse_regions(
-                [
-                    CollapseRegion(
-                        rect=rect,
-                        mu_intact=float(lane["mu_intact"]),
-                        mu_collapsed=float(lane["mu_collapsed"]),
-                        trigger_dwell_s=float(lane["dwell"]),
-                    )
-                ]
-            )
-        elif op == "O2_compliance":
-            backend.add_resistance_regions(
-                [
-                    ResistanceRegion(
-                        rect,
-                        float(lane["k"]),
-                        float(lane["c"]),
-                        sink_depth_m=float(lane["d_sink"]),
-                        kind="compliance",
-                    )
-                ]
-            )
-        elif op == "O4_tether":
-            backend.add_resistance_regions(
-                [
-                    ResistanceRegion(
-                        rect,
-                        float(lane["k"]),
-                        float(lane["c"]),
-                        break_force_n=float(lane["f_break"]),
-                        kind="tether",
-                    )
-                ]
-            )
-
+    # The lane drive (incl. the #31 O5/O10 embodiment regime) lives in the shared collect_lane, so
+    # the gate exercises the EXACT dataset rollout — not a divergent copy. It still uses the
+    # ScriptedOracle (deterministic, no API) + the truth filter to prove the pipeline runs on the
+    # real-Go2 snapshots; the real-gpt-5.5 attribution is validated separately (build_hindsight).
     def run_lane(lane: dict, seed: int):
-        op, y, appr = lane["op"], float(lane["y"]), str(lane["appearance"])
-        rect = Rect(float(cc.patch_cx), y, float(cc.patch_hx), float(cc.patch_hy))
-        if op in region_ops:
-            apply_region(lane, rect)
-        backend._start_pos = np.array([0.0, y])
-        backend._start_heading = 0.0
-        obs = backend.reset(seed)
-        speed_fn = bangbang(float(cc.effort_speed_hi if op == "O10_effort_decay" else cc.speed_hi))
-        if op == "O10_effort_decay":
-            backend.set_effort_scale(1.0)
-        for _ in range(int(cc.settle_steps)):
-            obs = backend.step(np.array([speed_fn(0), 0.0, 0.0]))
-        if op == "O10_effort_decay":
-            backend.set_effort_scale(float(lane["floor"]))  # cut after settling healthy
-        if op == "O5_payload":
-            backend.add_payload(float(lane["mass"]), np.zeros(2))
-        scene = (
-            [SemanticRegion(Rect(rect.cx, rect.cy, rect.hx, rect.hy), appr)]
-            if op in region_ops
-            else []
-        )
-        # Region operators gate to the patch (capture the in-region failure, not the bang-bang
-        # transient); global operators (O5/O10) have no locus — their θ is everywhere, so any
-        # post-arm interception confirms it (and the heavy/weak Go2 may stall before the patch).
-        gate_rect = (
-            Rect(rect.cx, rect.cy, rect.hx + margin, rect.hy + margin) if op in region_ops else None
-        )
-        recorder = SnapshotRecorder(
-            cfg,
-            scene=scene,
-            operator_name=op,
-            appearance_class=appr,
-            privileged_fn=backend.privileged_physics,
-            gate_rect=gate_rect,
-        )
-        monitor = RuleMonitor(monitor_cfg, dt=dt)
-        monitor.reset()
-        rng = np.random.default_rng(seed + 7)
-        for k in range(int(cc.n_steps)):
-            if obs.fallen:
-                break
-            event = monitor.step(obs)
-            recorder.observe(obs, event)
-            if recorder.snapshot is not None:
-                break
-            jit = 0.03 * rng.standard_normal(2)
-            obs = backend.step(np.array([speed_fn(k), jit[0], jit[1]]))
-        if op == "O10_effort_decay":
-            backend.set_effort_scale(1.0)  # restore before the next lane
-        return recorder.snapshot, tax.ground_truth(op, theta_for(lane)), bool(obs.fallen)
+        snap, op_theta, fell = collect_lane(backend, cfg, monitor_cfg, lane, seed)
+        return snap, tax.ground_truth(lane["op"], op_theta), fell
 
     def theta_confirms(op: str, th: dict[str, float]) -> bool:
         """The REAL privileged θ at the snapshot must reflect the operator's failure (it was

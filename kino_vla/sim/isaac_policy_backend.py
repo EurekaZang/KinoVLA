@@ -656,6 +656,28 @@ class IsaacPolicyBackend:
         self.mass_kg = float(masses.sum())
         print(f"[isaac] O5 payload: +{mass_kg:.2f} kg on trunk; total mass {self.mass_kg:.2f} kg")
 
+    def clear_payload(self) -> None:
+        """Strip any attached O5 payload, restoring the trunk's nominal mass.
+
+        ``reset()`` does NOT restore PhysX masses, so a payload added in one lane persists into
+        the next (#22). The M6 data collection drives many O5 lanes (and O5 mixed with other ops)
+        in one process, so each lane must start payload-free to log the mass it actually set —
+        otherwise the cumulative ``add_payload`` (+=) compounds across lanes. No-op when unloaded;
+        independent of the M4 token-gate's deliberate ascending-payload sweep (which never clears).
+        """
+        if self._payload_kg == 0.0:
+            return
+        view = self._robot.root_physx_view
+        masses = view.get_masses().clone()
+        base = self._base_id[0]
+        masses[0, base] -= float(self._payload_kg)
+        try:
+            view.set_masses(masses, self._torch.tensor([0]))
+        except TypeError:
+            view.set_masses(masses)
+        self._payload_kg = 0.0
+        self.mass_kg = float(masses.sum())
+
     def set_effort_scale(self, scale: float) -> None:
         """Scale every actuator's effort limit (O10 effort-decay); 1.0 restores nominal."""
         scale = float(scale)

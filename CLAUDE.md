@@ -58,9 +58,16 @@ Milestones M2–M7 each swap one `[STUB]` for the real module. The demo command 
 CURRENT MILESTONE : M7 — VLA training (Kino-SFT + Embodied DPO)
                     (M0–M6 COMPLETE on the real RTX 5090 / real-Go2 Isaac path. M6's CoT data is
                     collected over real-Go2 snapshots + the real gpt-5.5 Oracle + the truth filter)
-CURRENT TASK      : M6 COMPLETE incl. the REAL Oracle-LLM CoT data (§6 #31 resolved; user
-                    directive 2026-06-18 "在真实的isaac场景中制作数据集" — the dataset is now made
-                    on real Isaac, NOT surrogate).
+CURRENT TASK      : M6 COMPLETE incl. the REAL Oracle-LLM CoT data, NOW with O10 + the O5↔O10 pair
+                    (§6 #31/#32 resolved). 2026-06-18 fixed the O10-0-kept + O5↔O10-pair-missing gap
+                    (user goal "彻底修复"): canonical dataset outputs/hindsight_isaac kept 369→413,
+                    O10 0→22, O5 0→22, ALL 3 Suite-Sem pairs both_present. O10 was a CONDITIONING gap
+                    (expose base_height + effort-axis discriminators — its data already had effort-
+                    spikes+sag); O5 surfaces as a CROUCH under a heavy (~16 kg) load — both crouch
+                    (the ambiguity), split by effort-spikes+slip (O10) vs effort≈0+grip (O5). NO
+                    filter weakening, NO θ leak; M6 sim gate (refactored onto the shared collect_lane)
+                    PASS on the real Go2; demo hash cf455844… unchanged; 257 fast green. Earlier
+                    directive "在真实的isaac场景中制作数据集" — dataset is real Isaac, NOT surrogate.
                     Built the spec §10 Privileged-Grounded Hindsight CoT pipeline end-to-end:
                     PHASE 1 procedural counterfactual maze (kino_vla/data/maze.py, O7-style
                     physics↔visual decoupling) → PHASE 2 failure interception + multimodal
@@ -323,6 +330,9 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 2026-06-18 | M6 | REAL CoT dataset collected over REAL-Go2 snapshots + gpt-5.5 + truth filter (closes §6 #31, the surrogate-substitution gap on the Oracle axis): 19 real-Go2 snapshots → gpt-5.5 → kept 13 / reject 32% (after iterating the OBSERVABLE conditioning: per-channel time-series + sustained mean, category definitions + few-shot, reasoning_effort xhigh — NOT loosening the filter). O1 ice 3/3, O3 thin-ice 3/3 (slip-step trace ⇒ region_collapse), O4 adhesion 3/3 (yellow ⇒ Backstep, the 反直觉 case), O7 3/3; O5/O10 0/2 (#15 effort floor). 2 of 3 Suite-Sem pairs covered (O1↔O3, O4↔O2). Filter validated on GENUINE LLM confabulations | scripts/isaac_hindsight_collect.py + build_hindsight_dataset.py --from-snapshots --oracle api; outputs/hindsight_isaac/; §6 #31
 2026-06-18 | M6 | COMMITTED the M6 data subsystem + the M5 §7 rgbd closure to git (both were entirely untracked) on branch m6-hindsight-cot-dataset + ruff-format fix (data/isaac_rollout.py); strict-completion housekeeping. Verified before commit: 56 M6 tests + 256 fast green, surrogate demo hash cf455844… unchanged, ruff lint+format clean. Datasets stay out of git (outputs/ gitignored, QA §5.4) | git branch m6-hindsight-cot-dataset
 2026-06-18 | M6 | RETRY recovered the 43 gateway-503-failed annotations (background auto-wait-for-gateway job): real-Go2 dataset now KEPT 369/539, reject 31.5%, schema_invalid 43→1 (the lone remaining 1 is a genuinely unparseable CoT, NOT an API failure ⇒ effectively 538/539 annotated). O10 STILL 0 kept and O5↔O10 STILL uncovered after the recovery (confirms these are systematic Oracle-confabulation/observability limits, not 503 artifacts). Closes the "43 unannotated" item from line 322/§6 #31 | outputs/hindsight_isaac/dataset_card.json (kept 369, reject 0.3154)
+2026-06-18 | M6 | ROOT-CAUSED + FIXED the O10-0-data + O5↔O10-pair-missing gap (user goal; #31). O10 was a CONDITIONING gap, NOT data: the existing bang-bang O10 snapshots already carry effort-spikes (100%) + a trunk SAG (height 0.27 vs 0.42 for collapse), but base_height was never shown to the Oracle and bursty effort was dismissed ⇒ gpt-5.5 read every O10 as region_collapse. O5 sits at the genuine observability floor (#15): the Go2's healthy actuators compensate payload ≤13 kg (effort≈0, no sag) — overload only surfaces as a CROUCH under a heavy (~16 kg) load. Both failures crouch (the real ambiguity); they SPLIT on effort-spikes+slip (O10) vs effort≈0+grip (O5). FIXES (NO filter weakening, NO θ leak): backend.clear_payload (clean per-lane O5, #22); isaac_rollout per-op embodiment regime (O10 fast bang-bang + wait-for-effort-bind; O5 gentle heavy + fixed-delay onset; both straddle the fault onset so the trace shows the step); oracle exposes base_height + effort-axis discriminators. scripts/isaac_embodiment_probe.py is the diagnostic | kino_vla/{sim/isaac_policy_backend,data/isaac_rollout,data/oracle}.py, configs/data/hindsight.yaml
+2026-06-18 | M6 | VALIDATED the fix on REAL gpt-5.5 (not the filter): 49-snapshot val → O10 4/4 annotated→effort_decay (was 0/60), O5 9/9→overload, O3 collapse 4/4 intact (the key no-regression check). Scaled: 196 new-regime snapshots (4 shards) → 54 O5/O10 → O10 22/29 kept (22/22 annotated→effort_decay), O5 22/25 (22/23→overload, 1 genuine confab the filter dropped); true reject 2.2% (excl. 9 transient gateway 503s). The truth-consistency filter is UNCHANGED | outputs/hindsight_isaac_ops/
+2026-06-18 | M6 | MERGED O5/O10 into the canonical real-Go2 dataset (scripts/merge_hindsight_ops.py + pipeline.stats_from_records records-based card recompute, QA 5.4): kept 369→413, O10 0→22, O5 absent→22, ALL 3 Suite-Sem pairs both_present=True (incl. O5↔O10), A/B 199/214. Region ops keep their xhigh annotations (no re-annotate, no double-count). M6 sim gate refactored onto the shared collect_lane + re-run on the real Go2: 7/7 intercept, O10→effort_decay keep, O5→overload keep (pay=16.0 clean via clear_payload), θ confirms all. 257 fast green, demo hash cf455844… unchanged, ruff clean | tests/test_sim_operators.py::test_m6_hindsight_isaac PASS; outputs/hindsight_isaac/dataset_card.json
 ```
 
 ---
@@ -849,4 +859,25 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    dataset annotations are stale until a re-annotate (fold into the scale run). An M7-scale set = more
    Isaac lanes/runs over the OBSERVABLE ops (O1/O2/O3/O4/O7/O10; filter keeps ~80%+), O5 excluded; the
    bottleneck is GPU (sequential Isaac) + gpt-5.5 $ (parallelizable). NOTE: rotate the pasted API key.
+#32 2026-06-18 | M6 | RESOLVED the O10-0-kept + O5↔O10-pair-missing gap (#31's open sub-points; user
+   goal "彻底修复… O10 真实数据 0 条 + O5~O10 歧义对缺失"). Supersedes #31's "O5 genuinely unobservable /
+   excluded" and the stale O10 lanes. ROOT CAUSE re-diagnosed FROM the existing data (not re-assumed):
+   O10's bang-bang snapshots ALREADY carry effort-spikes (100% of them) + a trunk SAG (base height
+   0.27 vs 0.42 for collapse) — gpt-5.5 mislabeled every one region_collapse purely because
+   base_height was never shown to it AND bursty effort was dismissed (a CONDITIONING gap, not data).
+   O5 is at the genuine observability floor: the Go2's healthy actuators compensate payload ≤13 kg
+   (effort≈0, no sag) — overload only surfaces as a CROUCH under a heavy (~16 kg) load driven gently
+   enough not to topple. The two failures BOTH crouch (the real ambiguity) and SPLIT on
+   effort-spikes+slip (O10) vs effort≈0+grip (O5) — exactly the Kino-Tokens (privileged-θ)
+   disambiguation the O5↔O10 pair is meant to motivate (vision can't see either cause; the proprio θ
+   signature can). FIX (NO filter weakening, NO θ leak, demo hash unchanged): backend.clear_payload
+   (clean per-lane O5, #22); isaac_rollout per-op embodiment regime (O10 fast bang-bang +
+   wait-for-effort-bind; O5 gentle heavy + fixed-delay onset; both straddle the fault onset);
+   oracle._proprio_summary exposes base_height + build_prompt's effort-axis discriminators
+   (sag=overwhelmed; effort+slip⇒decay; grip+no-effort⇒overload; collapse=normal-height+effort0+
+   slip-STEP). RESULT on real gpt-5.5: O10 22/22-annotated→effort_decay (was 0/60), O5 22/23→overload;
+   canonical dataset (outputs/hindsight_isaac) kept 369→413, O10 0→22, O5 0→22, ALL 3 Suite-Sem pairs
+   both_present=True. M6 sim gate (refactored onto the shared collect_lane) PASS on the real Go2
+   (7/7 intercept, O10/O5 kept, θ confirms). The 9 still-failed O5/O10 annotations are transient
+   gateway 503s — scripts/retry_failed_annotations.py recovers them (not a balance/code issue).
 ```

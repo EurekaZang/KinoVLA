@@ -231,7 +231,9 @@ isaac_collect:
   patch_hy: 1.0
   speed_hi: 1.0
   speed_lo: 0.1
-  effort_speed_hi: 1.4   # effort-decay binds only under fast bang-bang demand (#15)
+  effort_speed_hi: 1.4   # O10 effort-decay: fast bang-bang drives the derated cap into saturation
+  o5_speed: 1.2          # O5 overload: a gentler bang-bang — a heavy load crouches the trunk (a
+                         # sag) + bogs the speed but the feet keep grip (low slip), no fast topple
   speed_period_s: 1.0
   speed_duty: 0.5
   gate_margin_m: 0.0     # intercept STRICTLY inside the region: on the real Go2 the bang-bang
@@ -245,8 +247,8 @@ isaac_collect:
     - { op: O2_compliance, y: 6.0, appearance: brown_mud, k: 20.0, c: 9.0, d_sink: 0.06 }
     - { op: O4_tether, y: 9.0, appearance: yellow_adhesive, k: 20.0, c: 9.0, f_break: 26.0 }
     - { op: O7_visual_remap, y: -3.0, appearance: solid_ground, mu: 0.10 }
-    - { op: O10_effort_decay, y: -6.0, appearance: solid_ground, floor: 0.20 }
-    - { op: O5_payload, y: -9.0, appearance: solid_ground, mass: 6.0 }
+    - { op: O10_effort_decay, y: -6.0, appearance: solid_ground, floor: 0.15 }
+    - { op: O5_payload, y: -9.0, appearance: solid_ground, mass: 16.0 }
   # Dataset lanes (scripts/isaac_hindsight_collect.py): the 7 operators × 2 θ each, spread in y
   # (3 m apart, no overlap). All payload (O5) lanes LAST — add_payload is irreversible in-process
   # (#22), so any earlier payload would contaminate later lanes; effort (O10) is restored per lane.
@@ -266,23 +268,32 @@ isaac_collect:
     - { op: O7_visual_remap, y: -12.0, appearance: solid_ground, mu: 0.07 }
     - { op: O7_visual_remap, y: -15.0, appearance: solid_ground, mu: 0.10 }
     - { op: O7_visual_remap, y: -18.0, appearance: solid_ground, mu: 0.12 }
-    # O10: SEVERE decay (floor ~0.14) so the torque cap drops below the trot's demand and the
-    # effort channel binds (probe: floor 0.15 => eff_max 0.91, walks; floor 0.10 => falls). This
-    # is the spec's B-class O10 instance. effort_capture_min (below) grabs the high-effort window.
+    # O10: SEVERE decay (floor 0.13-0.15) so the FAST bang-bang drives the derated cap into
+    # saturation — the effort channel SPIKES while the trunk SAGS (a crouch) and the feet SLIP
+    # (probe: floor 0.15 => height 0.40->0.15, effort spikes [0,0,0,0.1,0.19,0.13], slip 0.66-0.83,
+    # walks; 0.10 => falls). The spec's B-class O10. wait-for-effort-bind capture lands on it.
     - { op: O10_effort_decay, y: -21.0, appearance: solid_ground, floor: 0.13 }
     - { op: O10_effort_decay, y: -24.0, appearance: solid_ground, floor: 0.15 }
-    # O5: effort is UNOBSERVABLE on this Go2 (probe: eff_max 0.00 at every mass; >=6 kg falls) —
-    # the payload spreads across the legs so the mean torque never hits the 0.7 saturation floor.
-    # Kept for ambiguity-pair completeness but it will be dropped by the filter (honest #15 floor).
-    - { op: O5_payload, y: -27.0, appearance: solid_ground, mass: 5.0 }
-    - { op: O5_payload, y: 27.0, appearance: solid_ground, mass: 7.0 }
-  effort_capture_min: 0.25   # O10: force-capture the window once effort_ratio binds past this
-  effort_capture_delay_steps: 12  # ...then wait ~half a window so the binding fills the trace
+    # O5: a HEAVY load (~16 kg, B-class overload) under the gentler o5_speed bang-bang. The healthy
+    # motors never cap (effort ~0, the genuine #15 floor) but the load CROUCHES the trunk (a sag)
+    # while the feet keep grip (low slip) — it pairs with O10's sag and SPLITS on effort+slip
+    # (probe: 16 kg => sag ~0.15, slip ~0.23, effort 0, survives; 10-13 kg topple under fast accel).
+    - { op: O5_payload, y: -27.0, appearance: solid_ground, mass: 16.0 }
+    - { op: O5_payload, y: 27.0, appearance: solid_ground, mass: 18.0 }
+  # Embodiment ops (O5/O10) capture a window that STRADDLES the fault onset (#31 fix): drive a
+  # healthy baseline, install the fault, then capture `effort_capture_delay_steps` later so the
+  # proprio trace shows the STEP that names the cause. The bang-bang accel/decel drives the derated
+  # O10 actuator into its lowered torque cap (effort spikes AND the trunk SAGS — a give-way leaves
+  # the motors UNLOADED, so effort activity + sag = actuator failure, not region_collapse).
+  # base_height is exposed to the Oracle (oracle._proprio_summary) so it can read the sag.
+  embodiment_baseline_steps: 13   # healthy steps logged before the fault (fills the pre-onset window)
+  effort_capture_delay_steps: 12  # capture this many steps after the onset (window straddles it)
+  effort_capture_min: 0.25        # (legacy) retained for back-compat; the straddle capture is timed
 
   # Randomized-θ scale collection (scripts/isaac_hindsight_collect.py --random --n-lanes N --seed S).
-  # OBSERVABLE operators only (O5 excluded — effort unobservable, #15 floor); each lane samples θ
-  # from its range and gets a spaced y. The filter keeps ~80%+ of these. Many shards (one Isaac
-  # process each) merge into the dataset; gpt-5.5 annotates concurrently.
+  # ALL observable operators incl. O5 (now observable via the crouch/sag; clear_payload makes it
+  # composable in any shard, #22). Each lane samples θ from its range and gets a spaced y. Many
+  # shards (one Isaac process each) merge into the dataset; gpt-5.5 annotates concurrently.
   random:
     y_spacing_m: 3.0
     ops:
@@ -291,4 +302,5 @@ isaac_collect:
       - { op: O2_compliance, weight: 2, appearance: brown_mud, k: [16.0, 26.0], c: [7.0, 11.0], d_sink: [0.04, 0.20] }
       - { op: O4_tether, weight: 2, appearance: yellow_adhesive, k: [16.0, 26.0], c: [7.0, 11.0], f_break: [20.0, 32.0] }
       - { op: O7_visual_remap, weight: 2, appearance: solid_ground, mu: [0.06, 0.13] }
-      - { op: O10_effort_decay, weight: 1, appearance: solid_ground, floor: [0.12, 0.16] }
+      - { op: O10_effort_decay, weight: 2, appearance: solid_ground, floor: [0.12, 0.16] }
+      - { op: O5_payload, weight: 2, appearance: solid_ground, mass: [14.0, 18.0] }

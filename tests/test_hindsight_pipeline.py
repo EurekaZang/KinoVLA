@@ -106,6 +106,27 @@ def test_dataset_roundtrip(tmp_path):
     assert frames["proprio"].shape == tuple(kept[0].snapshot.proprio_window.shape)
 
 
+def test_stats_from_records_matches_compute_stats():
+    """The records-based recompute (the dataset-merge helper) agrees with the live compute_stats.
+
+    The merge tool (scripts/merge_hindsight_ops.py) regenerates the card from JSONL records so two
+    datasets can be combined without re-running the Oracle — it must produce identical stats."""
+    from kino_vla.data.pipeline import stats_from_records
+
+    cfg, result = _run(n_cells=40)
+    kept = [s.to_record() for s in result.samples if s.verdict.keep]
+    drop = [s.to_record() for s in result.samples if not s.verdict.keep]
+    rs = stats_from_records(cfg, kept, drop)
+    live = result.stats
+    assert rs.kept == live.kept
+    assert rs.dropped == live.dropped
+    assert rs.by_reason == live.by_reason
+    assert rs.per_operator_kept == live.per_operator_kept
+    assert rs.per_operator_total == live.per_operator_total
+    assert rs.ab_balance_kept == live.ab_balance_kept
+    assert rs.ambiguity_coverage == live.ambiguity_coverage
+
+
 def test_manifest_records_have_target_theta():
     cfg, result = _run()
     kept = [s for s in result.samples if s.verdict.keep]

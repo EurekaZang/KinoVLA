@@ -102,8 +102,10 @@ def build_prompt(
         "loss of support, not merely a slippery patch.\n"
         "- adhesion: a sticky or elastic surface (e.g. a glue board or a tether) that grips or "
         "pulls the body back.\n"
-        "- overload: the robot is carrying excessive EXTERNAL weight, saturating its motors.\n"
-        "- effort_decay: the robot's OWN actuators weaken over time (overheating).\n"
+        "- overload: excessive EXTERNAL weight that crouches the trunk and bogs the motion (the "
+        "healthy motors strain under the load but the feet keep their grip).\n"
+        "- effort_decay: the robot's OWN actuators weaken (overheating) so they hit their reduced "
+        "torque cap, the gait sags, and the feet start to slip.\n"
         "- external_push: a sudden external impulse/shove.\n"
         "- invisible_obstacle: an unseen rigid barrier blocks the path.\n"
         "- high_centering: the body is beached on a ridge with the feet partly unloaded.\n"
@@ -117,9 +119,13 @@ def build_prompt(
         "=> Switch_Gait(high_step).\n"
         "- low slip, a brief resistance then it eases, a yellow/sticky-looking surface => "
         "adhesion => Backstep.\n"
-        "- sustained high effort with little slip => overload (carrying external weight) or "
-        "effort_decay (own motors fading) => Hold_and_Request or Switch_Gait(crawl).\n"
-        "- sustained tracking deficit, no slip, no effort, no visible obstacle => "
+        "- the trunk height SAGS (a crouch) with the feet SLIPPING and the effort trace SPIKING "
+        "toward saturation => effort_decay (the actuators are capped and can no longer hold the "
+        "gait) => Switch_Gait(crawl).\n"
+        "- the trunk height SAGS (a crouch) but the feet keep GRIP (low slip) and effort stays "
+        "~0, with a speed deficit on plain ground => overload (a heavy external load the healthy "
+        "motors strain under) => Hold_and_Request.\n"
+        "- a speed deficit with NO slip, NO effort, and trunk height NORMAL (no sag) => "
         "invisible_obstacle => Update_Topology.\n"
         f"'action.primitive' must be exactly one of: {', '.join(primitives)} "
         "(one atomic action per round).\n\n"
@@ -136,9 +142,14 @@ def build_prompt(
         "surface) prioritize escaping first (Backstep) and marking the region "
         "(Update_Topology); do NOT replan a detour (Replan_Waypoint) in the same round.\n"
         "Integrate BOTH the visible material and the proprioception. The proprioception is given "
-        "as a short per-channel TIME-SERIES (a few bins, oldest to newest) logged under a "
-        "bang-bang gait excitation: read its SHAPE and sustained level, where a single-bin spike "
-        "is a gait artifact but a sustained level or a monotone step/ramp is a real signature. "
+        "as a short per-channel TIME-SERIES (a few bins, oldest to newest): read its SHAPE and "
+        "sustained level, where a single-bin spike is a gait artifact but a sustained level or a "
+        "monotone step/ramp is a real signature. A SAG in the 'base_height_trace' (the trunk "
+        "crouching to a lower level) means the legs are overwhelmed: by a heavy external load "
+        "(overload) when the feet still GRIP (low slip) and the 'effort_trace' stays ~0, or by "
+        "weakened actuators (effort_decay) when the feet SLIP and the effort trace SPIKES toward "
+        "its cap. A give-way (region_collapse) instead leaves the trunk at NORMAL height and the "
+        "motors UNLOADED (effort ~0) while the feet slip in a STEP (low then high). "
         "Appearance can be deceptive (a reflective ice sheet can look like solid ground), so when "
         "the sustained physics and the appearance conflict, trust the physics; but when the "
         "physics is ambiguous (e.g. a velocity deficit with low slip that could be mud or an "
@@ -166,12 +177,13 @@ def _proprio_summary(snapshot: Snapshot) -> dict[str, object]:
     """Proprioceptive window as a short TIME-SERIES (Method A: richer, less-lossy conditioning).
 
     A 4-scalar mean discards the temporal SHAPE — which is exactly what separates the proprio-
-    matched pairs: O3 thin-ice shows a slip STEP (intact → collapsed) where O1 uniform ice is
-    flat-high, and O5/O10 show a rising effort ramp. So we report each channel down-sampled to a
-    few time-bins (oldest → newest, normalized): the Oracle reads the shape itself (we do NOT tell
-    it which shape means which category). The bang-bang gait spikes single bins on any surface, so
-    a one-bin blip is not a signature; a sustained level or a monotone step is. Observable
-    Sport-Client signals only, never privileged truth.
+    matched pairs: O3 thin-ice shows a slip STEP (intact -> collapsed) where O1 uniform ice is
+    flat-high; both O10 effort-decay and O5 overload CROUCH the trunk (a base_height sag), split by
+    the feet+effort — O10 SLIPS with the effort trace spiking to its derated cap, O5 keeps grip
+    (low slip) with effort ~0. So we report each channel down-sampled to a few time-bins (oldest ->
+    newest): the Oracle reads the shape itself (we do NOT tell it which shape means which category).
+    A one-bin blip is a gait artifact; a sustained level or a monotone step is a real signature.
+    base_height is the crouch discriminator — Observable Sport-Client signals only, never truth.
     """
     w = snapshot.proprio_window
     if w.size == 0:
@@ -192,6 +204,10 @@ def _proprio_summary(snapshot: Snapshot) -> dict[str, object]:
         "effort_mean": round(float(mean[_F["effort_ratio"]]), 3),
         "tracking_trace": trace("tracking_err"),  # velocity deficit (resistance/blocking)
         "tracking_mean": round(float(mean[_F["tracking_err"]]), 3),
+        # trunk height: a sustained DROP (a crouch) ⇒ the legs are overwhelmed (overload OR
+        # effort_decay); normal ⇒ a give-way/obstacle. Pairs with effort+slip to split O5↔O10.
+        "base_height_trace": trace("base_height"),
+        "base_height_mean": round(float(mean[_F["base_height"]]), 3),
         "tilt_peak": round(float(w[:, _F["tilt"]].max()), 3),
     }
 

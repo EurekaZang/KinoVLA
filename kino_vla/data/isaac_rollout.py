@@ -6,15 +6,20 @@ Shared by ``scripts/isaac_hindsight_collect.py`` (build the dataset over real-Go
 Go2 — not the surrogate point-robot. The ``backend`` is injected (an ``IsaacPolicyBackend``); this
 module imports no Isaac itself, so it stays CPU-importable.
 
-Each operator runs in its own lateral lane (Isaac is one-episode/process, #21a): the operator is
-installed, the Go2 is driven straight across with the M4 bang-bang excitation (so O5/O10 effort
-binds, #15), and the high-recall collection monitor intercepts the anomaly. Capture gates the
-failure locus — region operators strictly in-region (the slip/resistance lands in the window),
-global operators (O5/O10) anywhere (no spatial locus).
+Each operator runs in its own lateral lane (Isaac is one-episode/process, #21a), driven straight
+across with the M4 bang-bang excitation. Region operators (O1/O2/O3/O4/O7) are intercepted
+in-region by the high-recall collection monitor. The embodiment operators (O5/O10) have no spatial
+locus, so they run a dedicated capture that STRADDLES the fault onset (the #31 fix): a healthy
+baseline fills the window, the fault is installed, and the snapshot is taken a fixed delay later so
+the proprio trace shows the step that names the cause — O10's effort spikes into its derated cap
+and the trunk SAGS (a give-way leaves the motors UNLOADED, so effort activity + sag = actuators,
+not collapse); O5's heavier-but-healthy trunk is the overload sibling. ``clear_payload`` keeps each
+lane's payload absolute (reset does not strip it, #22), so O5 composes in any shard.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 import numpy as np
@@ -116,6 +121,88 @@ def apply_operator(backend: Any, lane: dict, rect: Rect) -> None:
         )
 
 
+def _onset_event(obs: Obs, op: str, channel: str) -> MonitorEvent:
+    """A capture trigger for an embodiment op, labelled with its HONEST observable channel.
+
+    O10 fires the effort channel (sustained actuator saturation); O5 fires the tracking channel
+    (a velocity deficit). Neither leaks privileged θ — both are Sport-Client-visible signals; the
+    trunk-height sag that names O5 'overload' is read from the proprio window, not from here.
+    """
+    value = (
+        float(obs.effort_ratio)
+        if op == "O10_effort_decay"
+        else float(np.linalg.norm(obs.cmd_prev[:2] - obs.vel_body))
+    )
+    return MonitorEvent(
+        t=obs.t, pos=obs.pos.copy(), channel=channel, value=value, threshold=0.0, summary="onset"
+    )
+
+
+def _collect_embodiment_lane(
+    backend: Any,
+    cc: Config,
+    lane: dict,
+    recorder: SnapshotRecorder,
+    obs: Obs,
+    speed_fn: Callable[[int], float],
+    rng: np.random.Generator,
+) -> tuple[Snapshot | None, dict[str, float], bool]:
+    """O5 (overload) / O10 (effort-decay): no spatial locus, no slip/visual tell — the #31 fix.
+
+    Fill a HEALTHY baseline window, install the embodiment fault, then capture so the window
+    STRADDLES the onset and the proprio trace shows the step that names the cause. BOTH failures
+    CROUCH the trunk (a base_height sag), so the sag alone is the ambiguity; they split on the feet
+    and effort: O10's derated actuator hits its cap (the effort trace SPIKES) and the feet SLIP, so
+    we wait for the first effort bind; O5's healthy motors never cap (effort ~0) and the feet keep
+    GRIP (low slip), so we capture a fixed delay after the load onset. (The base_height sag is
+    exposed to the Oracle in oracle._proprio_summary; before that, every O10 read as region_collapse
+    — slip with the sag invisible — and was filtered out, the gap this closes.)
+    """
+    op = lane["op"]
+    baseline = int(cc.get("embodiment_baseline_steps", 13))
+    delay = int(cc.get("effort_capture_delay_steps", 12))
+    effort_min = float(cc.get("effort_capture_min", 0.25))
+    channel = "effort_ratio" if op == "O10_effort_decay" else "tracking_err"
+    # 1) healthy baseline so the window holds the nominal trunk height / un-saturated effort
+    #    (the pre-onset context the Oracle reads as the step the fault introduces).
+    for k in range(baseline):
+        if obs.fallen:
+            break
+        recorder.observe(obs, None)
+        jit = 0.03 * rng.standard_normal(2)
+        obs = backend.step(np.array([speed_fn(k), jit[0], jit[1]]))
+    # 2) install the embodiment fault AFTER the healthy baseline.
+    if op == "O10_effort_decay":
+        backend.set_effort_scale(float(lane["floor"]))
+    else:
+        backend.add_payload(float(lane["mass"]), np.zeros(2))
+    # 3) drive on, then capture so the window straddles the developed failure. O10's effort SPIKES
+    #    when its derated cap is hit (it needs a few accel/decel cycles), so wait for the first bind
+    #    then +delay to land on the saturation. O5's healthy motors never bind effort, so capture a
+    #    fixed delay after the load onset to land on the developed sag (the overload tell).
+    countdown = delay if op == "O5_payload" else -1  # -1 = wait for the effort channel to bind
+    for k in range(int(cc.n_steps)):
+        if obs.fallen:
+            break
+        if countdown < 0 and float(obs.effort_ratio) >= effort_min:
+            countdown = delay
+        event = _onset_event(obs, op, channel) if countdown == 0 else None
+        if countdown > 0:
+            countdown -= 1
+        recorder.observe(obs, event)
+        if recorder.snapshot is not None:
+            break
+        jit = 0.03 * rng.standard_normal(2)
+        obs = backend.step(np.array([speed_fn(baseline + k), jit[0], jit[1]]))
+    # Effort never bound (O5 below the strain floor) or it fell first — still snapshot the last
+    # state so the lane is represented (a truly un-straining O5 will be filter-dropped, honestly).
+    if recorder.snapshot is None:
+        recorder.observe(obs, _onset_event(obs, op, channel))
+    if op == "O10_effort_decay":
+        backend.set_effort_scale(1.0)  # restore before the next lane
+    return recorder.snapshot, theta_for(lane), bool(obs.fallen)
+
+
 def collect_lane(
     backend: Any, cfg: Config, monitor_cfg: Config, lane: dict, seed: int
 ) -> tuple[Snapshot | None, dict[str, float], bool]:
@@ -129,31 +216,37 @@ def collect_lane(
     backend._start_pos = np.array([0.0, y])
     backend._start_heading = 0.0
     obs = backend.reset(seed)
+    # Start each lane from the nominal robot: reset does NOT strip a prior lane's payload (#22) or
+    # restore a derated actuator, so clear both — else add_payload (+=) compounds across lanes.
+    backend.clear_payload()
+    backend.set_effort_scale(1.0)
 
-    period, duty = float(cc.speed_period_s), float(cc.speed_duty)
-    lo = float(cc.speed_lo)
-    hi = float(cc.effort_speed_hi if op == "O10_effort_decay" else cc.speed_hi)
+    period, duty, lo = float(cc.speed_period_s), float(cc.speed_duty), float(cc.speed_lo)
+    # Per-op bang-bang demand (the embodiment failures surface under different excitation). O10
+    # (decay) takes the FAST demand so the accel/decel drives its DERATED actuator into the cap
+    # (effort spikes) and stumbles the gait (the trunk sags + feet SLIP). O5 (overload) takes a
+    # gentler demand with a HEAVY load: the healthy motors never cap (effort≈0), but the load
+    # CROUCHES the trunk (a sag) and bogs the speed without the fast-accel topple, and the feet
+    # keep their GRIP (low slip). So both crouch — the ambiguity — split by effort+slip. Region ops
+    # keep the standard bang-bang. (A give-way leaves the motors UNLOADED — effort≈0, slip STEP.)
+    if op == "O5_payload":
+        hi = float(cc.o5_speed)
+    elif op == "O10_effort_decay":
+        hi = float(cc.effort_speed_hi)
+    else:
+        hi = float(cc.speed_hi)
 
     def speed_fn(k: int) -> float:
         return hi if (((k * dt) / period) % 1.0) < duty else lo
 
-    if op == "O10_effort_decay":
-        backend.set_effort_scale(1.0)
     for _ in range(int(cc.settle_steps)):
         obs = backend.step(np.array([speed_fn(0), 0.0, 0.0]))
-    if op == "O10_effort_decay":
-        backend.set_effort_scale(float(lane["floor"]))  # cut after settling healthy
-    if op == "O5_payload":
-        backend.add_payload(float(lane["mass"]), np.zeros(2))
 
     scene = (
         [SemanticRegion(Rect(rect.cx, rect.cy, rect.hx, rect.hy), appr)] if op in REGION_OPS else []
     )
-    # Region ops gate to the patch (snapshot the in-region slip); global ops (O5/O10) have no
-    # spatial locus, so they take no gate. (Method A's A2 — gating them to the patch to capture a
-    # developed effort signature — was tried and reverted: the payload/decay torque does NOT exceed
-    # the saturation floor at safe drive speeds, so effort_ratio≈0 regardless of WHEN we capture —
-    # the genuine #15 observability floor on the real Go2; gating O10 to the patch also lost it.)
+    # Region ops gate to the patch (snapshot the in-region slip); embodiment ops (O5/O10) have no
+    # spatial locus, so they take no gate and are handled by _collect_embodiment_lane.
     gate = rect if op in REGION_OPS else None
     recorder = SnapshotRecorder(
         cfg,
@@ -163,49 +256,19 @@ def collect_lane(
         privileged_fn=backend.privileged_physics,
         gate_rect=gate,
     )
+    rng = np.random.default_rng(seed + 7)
+    if op in ("O10_effort_decay", "O5_payload"):
+        return _collect_embodiment_lane(backend, cc, lane, recorder, obs, speed_fn, rng)
+
     monitor = RuleMonitor(monitor_cfg, dt=dt)
     monitor.reset()
-    # Embodiment ops (O5/O10) have no slip/visual signature; their tell is actuator saturation,
-    # which binds only intermittently and AFTER the early bang-bang tracking spike. So force the
-    # capture to the window where effort actually binds, not the first monitor event.
-    effort_min = float(cc.get("effort_capture_min", 0.25))
-    is_effort_op = op in ("O10_effort_decay", "O5_payload")
-
-    def effort_event(o: Obs) -> MonitorEvent:
-        return MonitorEvent(
-            t=o.t,
-            pos=o.pos.copy(),
-            channel="effort_ratio",
-            value=float(o.effort_ratio),
-            threshold=effort_min,
-            summary="effort-bind capture",
-        )
-
-    delay = int(cc.get("effort_capture_delay_steps", 12))
-    countdown = -1  # -1 = effort has not bound yet
-    rng = np.random.default_rng(seed + 7)
     for k in range(int(cc.n_steps)):
         if obs.fallen:
             break
-        if is_effort_op:
-            # Ignore the bang-bang tracking spike; on the FIRST effort bind, wait ~half a window
-            # so the capture window fills with the (intermittent) effort spikes, then capture.
-            if countdown < 0 and float(obs.effort_ratio) >= effort_min:
-                countdown = delay
-            event = effort_event(obs) if countdown == 0 else None
-            if countdown > 0:
-                countdown -= 1
-        else:
-            event = monitor.step(obs)
+        event = monitor.step(obs)
         recorder.observe(obs, event)
         if recorder.snapshot is not None:
             break
         jit = 0.03 * rng.standard_normal(2)
         obs = backend.step(np.array([speed_fn(k), jit[0], jit[1]]))
-    # An effort op whose effort never bound (O5 — load spreads, never saturates) still gets a
-    # snapshot so it stays in the dataset (it will be filter-dropped — the honest #15 floor).
-    if is_effort_op and recorder.snapshot is None:
-        recorder.observe(obs, effort_event(obs))
-    if op == "O10_effort_decay":
-        backend.set_effort_scale(1.0)  # restore before the next lane
     return recorder.snapshot, theta_for(lane), bool(obs.fallen)

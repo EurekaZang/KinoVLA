@@ -125,9 +125,7 @@ def build_walking_skeleton(
     # region so the physical slip can overwrite + propagate over the whole sheet (spec §7).
     nav_map = None
     if use_map and scene_region is not None:
-        nav_map = TraversabilityMap(
-            load_config("map/traversability_v0.yaml"), scene=[scene_region]
-        )
+        nav_map = TraversabilityMap(load_config("map/traversability_v0.yaml"), scene=[scene_region])
     return WalkingSkeleton(
         backend=backend_obj,
         operators=OperatorStack([hazard_op]),

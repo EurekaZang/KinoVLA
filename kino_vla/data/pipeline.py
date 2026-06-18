@@ -263,6 +263,49 @@ def _collect_snapshot(
     return recorder.snapshot, ground_truth
 
 
+def stats_from_records(
+    cfg: Config,
+    kept_records: list[dict[str, Any]],
+    dropped_records: list[dict[str, Any]],
+    *,
+    wall_time_s: float = 0.0,
+) -> PipelineStats:
+    """Recompute :class:`PipelineStats` from kept+dropped JSONL records (dataset merge helper).
+
+    Mirrors :func:`compute_stats` but reads the manifest dicts (``to_record``) instead of live
+    ``DataSample`` objects — so two datasets can be merged and the card auto-regenerated (QA 5.4),
+    without re-running the Oracle. Throughput is left at 0 (a merge has no single wall-clock)."""
+
+    def op(rec: dict[str, Any]) -> str:
+        return rec["snapshot"]["operator_name"]
+
+    n = len(kept_records) + len(dropped_records)
+    by_reason = dict(Counter(r["verdict"]["reason"] for r in kept_records + dropped_records))
+    coverage: dict[str, dict[str, Any]] = {}
+    for pair in cfg.maze.ambiguity_pairs:
+        a, b = str(pair[0]), str(pair[1])
+        label = "|".join(sorted((a, b)))
+        kept_a = sum(1 for r in kept_records if op(r) == a)
+        kept_b = sum(1 for r in kept_records if op(r) == b)
+        coverage[label] = {a: kept_a, b: kept_b, "both_present": kept_a > 0 and kept_b > 0}
+    return PipelineStats(
+        n_cells=n,
+        n_interceptions=n,
+        n_no_interception=0,
+        kept=len(kept_records),
+        dropped=len(dropped_records),
+        reject_rate=(len(dropped_records) / n) if n else 0.0,
+        by_reason=by_reason,
+        per_operator_kept=dict(Counter(op(r) for r in kept_records)),
+        per_operator_total=dict(Counter(op(r) for r in kept_records + dropped_records)),
+        ab_balance_kept=dict(Counter(r["ground_truth"]["ab_class"] for r in kept_records)),
+        ambiguity_coverage=coverage,
+        wall_time_s=wall_time_s,
+        samples_per_hour=0.0,
+        kept_per_hour=0.0,
+    )
+
+
 def compute_stats(
     cfg: Config,
     samples: list[DataSample],
