@@ -34,7 +34,7 @@ Build the complete **Kino-VLA** system described in `Kino-vla-v2.md`: a closed-l
 
 - **(a)** the Kino-Fail v2 benchmark — 11 parameterized failure operators (O1–O11) on 4 mechanism axes, with 5 suites (Cal / Sem / Comp / Bound / OOD);
 - **(b)** the five-layer online loop — 1kHz Kino-Monitor + Reflex, Kino-Tokens extractor (privileged distillation), VLA Recovery Planner with semantic traversability map, CBF-QP Safety Shield + Primitive Compiler (spec §6, support-polygon DCM formulation), dual-rate execution;
-- **(c)** the training pipelines — Privileged-Grounded Hindsight CoT distillation (with truth-consistency filtering), Kino-SFT (Qwen2-VL + LoRA), Embodied DPO;
+- **(c)** the training pipelines — Privileged-Grounded Hindsight CoT distillation (with truth-consistency filtering), Kino-SFT (Qwen3-VL-4B + LoRA; upgraded from the spec's Qwen2-VL, §6 #33), Embodied DPO;
 - **(d)** the evaluation harness — baselines B1–B5, full ablation axes, metrics incl. attribution accuracy, Kino-Monitor ROC, CBF intervention stats, A/B boundary consistency (Suite-Bound), compositional generalization (Suite-Comp).
 
 **Target venues:** RSS / CoRL / ICRA / IROS. Every engineering decision should be traceable to a claim in the spec — code that supports no claim should not exist.
@@ -231,7 +231,7 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 
 ### M7 — VLA Training: Kino-SFT + Embodied DPO
 
-**Scope:** Qwen2-VL + LoRA SFT on filtered dataset; Kino-Projector MLP for latent token injection (text route as ablation arm); structured `<Thought>/<Action>` output parsing with schema validation; closed-loop rollout sampler at failure nodes; DPO preference-pair construction from physical outcomes (ambiguity-pair wrong-strategy rollouts as Rejected, spec §11); training configs + checkpoints. **Exit criteria:** SFT model beats FSM stub on Suite-Sem attribution accuracy (any margin — quality bar rises in M8); 100% of sampled outputs parse against the action schema or are rejected by the parser (no silent malformed actions reach the compiler); DPO improves closed-loop success over SFT on a held-out validation suite; full train run reproducible from one config + seed.
+**Scope:** Qwen3-VL-4B + LoRA SFT on filtered dataset (§6 #33: upgraded from the spec's Qwen2-VL per user directive; Qwen3-VL is the latest Qwen VLM / the base of the 2026-06 Qwen-Robot Suite — sized 4B for the 32 GB box with LoRA SFT+DPO); Kino-Projector MLP for latent token injection (text route as ablation arm); structured `<Thought>/<Action>` output parsing with schema validation; closed-loop rollout sampler at failure nodes; DPO preference-pair construction from physical outcomes (ambiguity-pair wrong-strategy rollouts as Rejected, spec §11); training configs + checkpoints. **Exit criteria:** SFT model beats FSM stub on Suite-Sem attribution accuracy (any margin — quality bar rises in M8); 100% of sampled outputs parse against the action schema or are rejected by the parser (no silent malformed actions reach the compiler); DPO improves closed-loop success over SFT on a held-out validation suite; full train run reproducible from one config + seed.
 
 ### M8 — Evaluation Harness & Paper-Ready Results
 
@@ -881,4 +881,24 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    both_present=True. M6 sim gate (refactored onto the shared collect_lane) PASS on the real Go2
    (7/7 intercept, O10/O5 kept, θ confirms). The 9 still-failed O5/O10 annotations are transient
    gateway 503s — scripts/retry_failed_annotations.py recovers them (not a balance/code issue).
+#33 2026-06-18 | M7 | VLM BACKBONE UPGRADE (user directive "改成最新的Qwen-RobotNav模型" + pick a size
+   for SFT on a 32 GB box). The spec (kino-vla-v2.md §10 PHASE 4 / §11) names "LoRA 微调 Qwen2-VL";
+   per user, M7 moves to the latest Qwen VLM. KEY FINDING (web-verified; the release postdates the
+   assistant's Jan-2026 knowledge cutoff, so it was checked, not assumed): the requested
+   Qwen-RobotNav (Qwen-Robot Suite, 2026-06-16, built on Qwen3-VL, sizes 2B/4B/8B) is a
+   Vision-Language-NAVIGATION model whose output is "8 waypoints (2D pos + heading)" from a 4-layer
+   MLP head (task modes VLN/PointNav/ObjNav/Tracking). It does NOT natively emit M7's <Thought> CoT
+   + a structured <Action> (one §5 primitive), so it is ARCHITECTURALLY MISMATCHED as the
+   recovery-planner/CoT backbone. RESOLUTION (user-confirmed via AskUserQuestion): M7 backbone =
+   Qwen3-VL (the general VLM Qwen-RobotNav is built on — the true successor to Qwen2-VL, supports
+   CoT + structured text output), size 4B for the 32 GB box. SIZING (32 GB, LoRA per the spec's
+   assumption — "FST" read as SFT): 4B+LoRA is the robust sweet spot for BOTH Kino-SFT and Embodied
+   DPO with headroom for image tokens/batch; 7-8B fits only TIGHT (grad-checkpointing + capped
+   visual-token budget + the adapter-toggle DPO reference so a 2nd full ref model isn't loaded — a
+   full-precision 8B ref alongside the 8B policy would NOT fit 32 GB); full (non-LoRA) fine-tuning
+   changes this entirely (32 GB ≈ 2B max). Qwen-RobotNav stays a candidate COMPONENT for the
+   Replan_Waypoint / traversability navigation sub-task or a Suite-Sem nav baseline — NOT the
+   reasoning backbone. SPEC NOT EDITED (hard rule: spec changes are a human decision) — a human
+   should update kino-vla-v2.md §10/§11 to match. CLAUDE.md §1 + M7 scope updated. M7 is not yet
+   implemented (no configs/vla/ or training code); this fixes the model + size choice for when it is.
 ```
