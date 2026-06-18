@@ -11,11 +11,13 @@ heading_gain: 2.0
 align_angle_rad: 0.7
 cmd_slew_mps2: 1.2
 yaw_slew_radps2: 6.0
-event_grace_s: 6.0
+event_grace_s: 9.0       # longer commit: the ice-robust gait (floor-0.08 retrain) re-slips a few
+                         # times crossing the patch; hold the detour so it clears in one pass
 backstep:
   speed_mps: 0.25
   duration_s: 3.0   # shorter reverse so it does not back deep into the patch
 avoid:
-  radius_m: 2.5
+  radius_m: 3.0     # one detour clears the whole 2 m patch with margin (was 2.5)
   clearance_m: 0.4
-  growth: 1.5
+  growth: 1.0       # NO explosive growth on re-fire — growth 1.5 compounded to a 13-waypoint wild
+                    # detour that toppled the new gait (#19); a fixed wide circle detours cleanly

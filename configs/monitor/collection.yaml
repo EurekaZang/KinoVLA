@@ -1,0 +1,15 @@
+# High-recall Kino-Monitor for M6 Hindsight-CoT data collection (spec §10 PHASE 2).
+# Data collection wants to INTERCEPT every anomaly (high recall) so the dataset covers the
+# full operator set; the deployment precision/recall operating point is a separate ROC
+# concern (spec §3/§12, configs/monitor/rule_v0*.yaml). So this config lowers every channel
+# threshold and shortens the arm/debounce relative to the surrogate deployment calibration.
+ema_alpha: 0.4           # faster response (catch the anomaly instant)
+debounce_steps: 2        # short: intercept quickly
+arm_delay_s: 0.3         # the bang-bang driver excites from the start; brief skip of t=0
+cooldown_s: 1.0          # one interception per cell is enough; cooldown is mostly inert here
+tilt_arm_delay_s: 0.3
+thresholds:
+  slip_ratio: 0.30       # O1/O3/O7 traction loss
+  tracking_error: 0.25   # O2/O4 resistance, O8 blocking [m/s]
+  effort_ratio: 0.20     # O5/O10 actuator-effort saturation
+  tilt: 0.40             # imminent fall [rad]

@@ -134,6 +134,19 @@ class Costmap:
         i, j = cell
         return bool(self._physical[j, i])
 
+    def embedding_at(self, world_xy: np.ndarray) -> np.ndarray | None:
+        """The appearance feature *actually perceived* at a cell, or None if never observed.
+
+        Propagation must compare like with like: whatever encoder painted the map (class-hash
+        surrogate or real pixel feature) is what a failure attribution should generalise with.
+        """
+        cell = self._cell_of(world_xy)
+        if cell is None:
+            return None
+        i, j = cell
+        embed = self._embed[j, i]
+        return embed.copy() if float(np.linalg.norm(embed)) > 0.0 else None
+
     def crop(self, center_xy: np.ndarray, half_extent_m: float) -> MapCrop:
         """Local cost window centred on ``center_xy`` (planner context, spec §7)."""
         center = self._cell_of(center_xy)

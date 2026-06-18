@@ -1,0 +1,212 @@
+{
+  "_doc": "Frozen synthetic Oracle CoTs with known verdicts (QA 5.2 golden-file gate for the spec §10 truth-consistency filter). Each case: a privileged ground truth (operator + θ) and a raw Oracle CoT, with the expected keep flag + reason code. Covers every reason: KEEP, attribution_mismatch (confabulation / vision deception), primitive_not_feasible (ambiguity-pair wrong-sibling strategy), safety_rule_violation (same-round detour on a sudden trap), schema_invalid (malformed / non-atomic / bad coord / off-vocabulary).",
+  "cases": [
+    {
+      "name": "keep_ice_low_friction",
+      "operator": "O1_mu_field",
+      "op_theta": {"mu_s": 0.12, "mu_d": 0.10},
+      "oracle_text": "{\"thought\": \"slipping on a uniform ice sheet\", \"attribution\": \"low_friction\", \"action\": {\"primitive\": \"Set_Constraint\", \"params\": {\"max_speed\": 0.4, \"stiffness\": 0.5}}}",
+      "prior_outputs": [],
+      "expect_keep": true,
+      "expect_reason": "keep"
+    },
+    {
+      "name": "keep_glue_adhesion_backstep",
+      "operator": "O4_tether",
+      "op_theta": {"k": 150.0, "d": 6.0, "L_0": 0.0, "F_break": 22.0},
+      "oracle_text": "{\"thought\": \"yellow adhesive board, elastic pull-back\", \"attribution\": \"adhesion\", \"action\": {\"primitive\": \"Backstep\", \"params\": {\"distance_m\": 0.5}}}",
+      "prior_outputs": [],
+      "expect_keep": true,
+      "expect_reason": "keep"
+    },
+    {
+      "name": "keep_thin_ice_update_topology",
+      "operator": "O3_collapse",
+      "op_theta": {"mu_intact": 0.8, "mu_collapsed": 0.08, "trigger_dwell_s": 0.4},
+      "oracle_text": "{\"thought\": \"the surface collapsed under load\", \"attribution\": \"region_collapse\", \"action\": {\"primitive\": \"Update_Topology\", \"params\": {\"region_xy\": [2.5, 0.0], \"radius_m\": 0.6, \"status\": \"untraversable\"}}}",
+      "prior_outputs": [],
+      "expect_keep": true,
+      "expect_reason": "keep"
+    },
+    {
+      "name": "keep_mud_switch_gait",
+      "operator": "O2_compliance",
+      "op_theta": {"k_c": 18.0, "c_c": 8.0, "d_sink": 0.06},
+      "oracle_text": "{\"thought\": \"brown viscous mud, high tangential drag\", \"attribution\": \"compliant_terrain\", \"action\": {\"primitive\": \"Switch_Gait\", \"params\": {\"mode\": \"high_step\"}}}",
+      "prior_outputs": [],
+      "expect_keep": true,
+      "expect_reason": "keep"
+    },
+    {
+      "name": "keep_overload_hold_and_request",
+      "operator": "O5_payload",
+      "op_theta": {"mass_kg": 7.0, "com_offset_x": 0.0, "com_offset_y": 0.0},
+      "oracle_text": "{\"thought\": \"torque saturated, no continuous solution\", \"attribution\": \"overload\", \"action\": {\"primitive\": \"Hold_and_Request\", \"params\": {\"reason\": \"payload exceeds torque budget\"}}}",
+      "prior_outputs": [],
+      "expect_keep": true,
+      "expect_reason": "keep"
+    },
+    {
+      "name": "keep_decay_switch_gait",
+      "operator": "O10_effort_decay",
+      "op_theta": {"decay_rate_per_s": 0.8, "floor": 0.2, "t_start_s": 1.5},
+      "oracle_text": "{\"thought\": \"actuator effort decaying over time, internal\", \"attribution\": \"effort_decay\", \"action\": {\"primitive\": \"Switch_Gait\", \"params\": {\"mode\": \"crawl\"}}}",
+      "prior_outputs": [],
+      "expect_keep": true,
+      "expect_reason": "keep"
+    },
+    {
+      "name": "keep_synonym_normalized",
+      "operator": "O1_mu_field",
+      "op_theta": {"mu_s": 0.12, "mu_d": 0.10},
+      "oracle_text": "{\"thought\": \"reflective ice\", \"attribution\": \"slippery\", \"action\": {\"primitive\": \"Set_Constraint\", \"params\": {\"max_speed\": 0.5, \"stiffness\": 0.4}}}",
+      "prior_outputs": [],
+      "expect_keep": true,
+      "expect_reason": "keep"
+    },
+    {
+      "name": "keep_tagged_format",
+      "operator": "O4_tether",
+      "op_theta": {"k": 150.0, "d": 6.0, "L_0": 0.0, "F_break": 22.0},
+      "oracle_text": "<Thought>elastic tether is pulling the trunk back</Thought>\n<Action>{\"attribution\": \"adhesion\", \"primitive\": \"Update_Topology\", \"params\": {\"region_xy\": [2.5, 0.0], \"radius_m\": 0.5, \"status\": \"untraversable\"}}</Action>",
+      "prior_outputs": [],
+      "expect_keep": true,
+      "expect_reason": "keep"
+    },
+    {
+      "name": "drop_attr_glue_called_mud",
+      "operator": "O4_tether",
+      "op_theta": {"k": 150.0, "d": 6.0, "L_0": 0.0, "F_break": 22.0},
+      "oracle_text": "{\"thought\": \"looks like brown mud, just push through\", \"attribution\": \"compliant_terrain\", \"action\": {\"primitive\": \"Switch_Gait\", \"params\": {\"mode\": \"high_step\"}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "attribution_mismatch"
+    },
+    {
+      "name": "drop_attr_thin_ice_called_ice",
+      "operator": "O3_collapse",
+      "op_theta": {"mu_intact": 0.8, "mu_collapsed": 0.08, "trigger_dwell_s": 0.4},
+      "oracle_text": "{\"thought\": \"just a slippery ice patch, slow down\", \"attribution\": \"low_friction\", \"action\": {\"primitive\": \"Set_Constraint\", \"params\": {\"max_speed\": 0.4, \"stiffness\": 0.5}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "attribution_mismatch"
+    },
+    {
+      "name": "drop_attr_overload_called_decay",
+      "operator": "O5_payload",
+      "op_theta": {"mass_kg": 7.0, "com_offset_x": 0.0, "com_offset_y": 0.0},
+      "oracle_text": "{\"thought\": \"motor must be overheating, limp it out\", \"attribution\": \"effort_decay\", \"action\": {\"primitive\": \"Switch_Gait\", \"params\": {\"mode\": \"crawl\"}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "attribution_mismatch"
+    },
+    {
+      "name": "drop_attr_o7_deception_called_nominal",
+      "operator": "O7_visual_remap",
+      "op_theta": {"mu_s": 0.10, "mu_d": 0.08, "depth_bias_m": 0.6},
+      "oracle_text": "{\"thought\": \"looks like solid ground, nothing wrong\", \"attribution\": \"nominal\", \"action\": {\"primitive\": \"Set_Constraint\", \"params\": {\"max_speed\": 0.8, \"stiffness\": 0.5}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "attribution_mismatch"
+    },
+    {
+      "name": "drop_prim_glue_uses_mud_strategy",
+      "operator": "O4_tether",
+      "op_theta": {"k": 150.0, "d": 6.0, "L_0": 0.0, "F_break": 22.0},
+      "oracle_text": "{\"thought\": \"sticky adhesion, but I will just high-step through\", \"attribution\": \"adhesion\", \"action\": {\"primitive\": \"Switch_Gait\", \"params\": {\"mode\": \"high_step\"}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "primitive_not_feasible"
+    },
+    {
+      "name": "drop_prim_mud_uses_glue_strategy",
+      "operator": "O2_compliance",
+      "op_theta": {"k_c": 18.0, "c_c": 8.0, "d_sink": 0.06},
+      "oracle_text": "{\"thought\": \"viscous mud, but I will retreat\", \"attribution\": \"compliant_terrain\", \"action\": {\"primitive\": \"Backstep\", \"params\": {\"distance_m\": 0.5}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "primitive_not_feasible"
+    },
+    {
+      "name": "drop_prim_overload_uses_decay_strategy",
+      "operator": "O5_payload",
+      "op_theta": {"mass_kg": 7.0, "com_offset_x": 0.0, "com_offset_y": 0.0},
+      "oracle_text": "{\"thought\": \"overloaded, but I will change gait\", \"attribution\": \"overload\", \"action\": {\"primitive\": \"Switch_Gait\", \"params\": {\"mode\": \"crawl\"}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "primitive_not_feasible"
+    },
+    {
+      "name": "drop_prim_decay_uses_overload_strategy",
+      "operator": "O10_effort_decay",
+      "op_theta": {"decay_rate_per_s": 0.8, "floor": 0.2, "t_start_s": 1.5},
+      "oracle_text": "{\"thought\": \"motor decay, but I will call for help and unload\", \"attribution\": \"effort_decay\", \"action\": {\"primitive\": \"Hold_and_Request\", \"params\": {\"reason\": \"give up\"}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "primitive_not_feasible"
+    },
+    {
+      "name": "drop_safety_sudden_trap_same_round_detour",
+      "operator": "O3_collapse",
+      "op_theta": {"mu_intact": 0.8, "mu_collapsed": 0.08, "trigger_dwell_s": 0.4},
+      "oracle_text": "{\"thought\": \"the ground is collapsing, I will just replan a detour around it\", \"attribution\": \"region_collapse\", \"action\": {\"primitive\": \"Replan_Waypoint\", \"params\": {\"point_px\": [580, 360]}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "safety_rule_violation"
+    },
+    {
+      "name": "keep_detour_after_prior_escape",
+      "operator": "O3_collapse",
+      "op_theta": {"mu_intact": 0.8, "mu_collapsed": 0.08, "trigger_dwell_s": 0.4},
+      "oracle_text": "{\"thought\": \"already backed off and marked it last round; now reroute\", \"attribution\": \"region_collapse\", \"action\": {\"primitive\": \"Replan_Waypoint\", \"params\": {\"point_px\": [580, 360]}}}",
+      "prior_outputs": ["t=1.0s slip_ratio -> Backstep", "Update_Topology(region, untraversable)"],
+      "expect_keep": true,
+      "expect_reason": "keep"
+    },
+    {
+      "name": "drop_schema_malformed_json",
+      "operator": "O1_mu_field",
+      "op_theta": {"mu_s": 0.12, "mu_d": 0.10},
+      "oracle_text": "I think the robot is on ice, it should slow down. (no JSON here)",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "schema_invalid"
+    },
+    {
+      "name": "drop_schema_missing_action",
+      "operator": "O1_mu_field",
+      "op_theta": {"mu_s": 0.12, "mu_d": 0.10},
+      "oracle_text": "{\"thought\": \"ice\", \"attribution\": \"low_friction\"}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "schema_invalid"
+    },
+    {
+      "name": "drop_schema_replan_missing_pixel_coord",
+      "operator": "O8_invisible_collider",
+      "op_theta": {"region_cx": 2.5, "region_cy": 0.0},
+      "oracle_text": "{\"thought\": \"invisible wall, reroute\", \"attribution\": \"invisible_obstacle\", \"action\": {\"primitive\": \"Replan_Waypoint\", \"params\": {\"goal\": \"left\"}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "schema_invalid"
+    },
+    {
+      "name": "drop_schema_unknown_primitive",
+      "operator": "O1_mu_field",
+      "op_theta": {"mu_s": 0.12, "mu_d": 0.10},
+      "oracle_text": "{\"thought\": \"ice\", \"attribution\": \"low_friction\", \"action\": {\"primitive\": \"Teleport\", \"params\": {}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "schema_invalid"
+    },
+    {
+      "name": "drop_schema_off_vocabulary_attribution",
+      "operator": "O1_mu_field",
+      "op_theta": {"mu_s": 0.12, "mu_d": 0.10},
+      "oracle_text": "{\"thought\": \"weird surface\", \"attribution\": \"quicksand_vortex\", \"action\": {\"primitive\": \"Set_Constraint\", \"params\": {\"max_speed\": 0.4, \"stiffness\": 0.5}}}",
+      "prior_outputs": [],
+      "expect_keep": false,
+      "expect_reason": "schema_invalid"
+    }
+  ]
+}

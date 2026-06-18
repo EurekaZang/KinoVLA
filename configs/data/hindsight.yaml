@@ -1,0 +1,294 @@
+# M6 Privileged-Grounded Hindsight CoT data pipeline (spec §10). One source for the
+# failure taxonomy (operator→attribution + A/B class + feasible recovery sets), the
+# procedural counterfactual maze (PHASE 1), the oracle (PHASE 3), the truth-consistency
+# filter (PHASE 3, the methodological contribution), and the snapshot packaging (PHASE 2).
+# No magic numbers in module code (QA 5.1.5) — every knob lives here.
+
+# --- Failure taxonomy: ground-truth attribution from the operator + θ (spec §10 PHASE 3) ---
+# The privileged truth the filter checks the Oracle's CoT against. Each operator maps to a
+# canonical attribution category; the A/B-boundary operators (O2/O5/O10) are refined by a θ
+# threshold (the Suite-Bound θ* idea, spec §8.3): below it the failure is low-level
+# recoverable (A), above it semantic intervention is required (B). O7's ground-truth category
+# is its PHYSICS (low_friction), not its appearance — the deception is the whole point: a
+# vision-led oracle attributes "solid_ground ⇒ nominal" and is correctly dropped.
+attribution:
+  operator_category:
+    O1_mu_field: low_friction
+    O2_compliance: compliant_terrain
+    O3_collapse: region_collapse
+    O4_tether: adhesion
+    O5_payload: overload
+    O6_push: external_push
+    O7_visual_remap: low_friction
+    O8_invisible_collider: invisible_obstacle
+    O9_high_centering: high_centering
+    O10_effort_decay: effort_decay
+    O11_obs_bias: obs_bias
+  default_ab_class:
+    low_friction: A
+    compliant_terrain: A
+    region_collapse: B
+    adhesion: B
+    overload: B
+    external_push: A
+    invisible_obstacle: B
+    high_centering: B
+    effort_decay: B
+    obs_bias: A
+  # θ thresholds that flip an A-class operator into B (the A/B boundary, spec §8.3 Suite-Bound).
+  ab_thresholds:
+    O2_compliance: { param: d_sink, b_above: 0.12 }   # deep sink ⇒ B
+    O5_payload: { param: mass_kg, b_above: 5.0 }       # saturating overload ⇒ B
+    O10_effort_decay: { param: floor, b_below: 0.3 }   # severe derate ⇒ B
+
+# --- Feasible recovery sets: the §5 many-to-many attribution→recovery map ---
+# A chosen primitive must lie in its attribution's set or the sample is dropped. The
+# ambiguity pairs are constructed DISJOINT on their discriminating primitive — adhesion vs
+# compliant_terrain differ on Backstep vs Switch_Gait; overload vs effort_decay differ on
+# Hold_and_Request vs Switch_Gait — so the confabulation "right vision-story, wrong-sibling
+# strategy" is caught even when the symptom (proprioception) is identical (spec §5, §8.1 P4).
+recovery:
+  feasible:
+    low_friction: [Set_Constraint, Adjust_Posture]
+    compliant_terrain: [Switch_Gait, Set_Constraint]
+    region_collapse: [Update_Topology, Replan_Waypoint, Backstep]
+    adhesion: [Backstep, Update_Topology]
+    overload: [Hold_and_Request, Set_Constraint]
+    effort_decay: [Switch_Gait, Set_Constraint]
+    external_push: [Set_Constraint, Adjust_Posture, Hold_and_Request]
+    invisible_obstacle: [Update_Topology, Replan_Waypoint, Backstep]
+    high_centering: [Adjust_Posture, Backstep]
+    obs_bias: [Set_Constraint]
+  canonical:
+    low_friction: Set_Constraint
+    compliant_terrain: Switch_Gait
+    region_collapse: Update_Topology
+    adhesion: Backstep
+    overload: Hold_and_Request
+    effort_decay: Switch_Gait
+    external_push: Set_Constraint
+    invisible_obstacle: Update_Topology
+    high_centering: Adjust_Posture
+    obs_bias: Set_Constraint
+  # Safety iron-rule (spec §10 prompt constraints): a sudden trap must be escaped before a
+  # detour — a same-round Replan_Waypoint with no prior escape primitive is dropped.
+  sudden_trap: [adhesion, region_collapse]
+  escape_primitives: [Backstep, Update_Topology]
+
+# --- Attribution synonyms: normalize a free-text oracle attribution onto a category ---
+# A real LLM is prompted to use the category vocabulary, but emits synonyms; this maps them.
+synonyms:
+  ice: low_friction
+  slippery: low_friction
+  low_friction: low_friction
+  mud: compliant_terrain
+  viscous: compliant_terrain
+  compliant: compliant_terrain
+  compliant_terrain: compliant_terrain
+  soft_terrain: compliant_terrain
+  thin_ice: region_collapse
+  collapse: region_collapse
+  region_collapse: region_collapse
+  glue: adhesion
+  sticky: adhesion
+  adhesive: adhesion
+  tether: adhesion
+  adhesion: adhesion
+  overload: overload
+  heavy: overload
+  payload: overload
+  motor_decay: effort_decay
+  actuator_decay: effort_decay
+  effort_decay: effort_decay
+  overheating: effort_decay
+  high_centering: high_centering
+  beached: high_centering
+  invisible_obstacle: invisible_obstacle
+  invisible_wall: invisible_obstacle
+  glass: invisible_obstacle
+  obstacle: invisible_obstacle
+  external_push: external_push
+  push: external_push
+  obs_bias: obs_bias
+  nominal: nominal
+  unknown: nominal
+  none: nominal
+
+# --- Procedural counterfactual maze (spec §10 PHASE 1) ---
+# A seeded sequence of cells, each one operator placed on the walking-skeleton path with θ
+# sampled from its range. B-class ambiguity pairs are weighted up (Suite-Sem is the core).
+maze:
+  n_cells: 24
+  cells:
+    - { op: O1_mu_field, weight: 2, appearance: ice_sheet, params: { mu: [0.06, 0.16] } }
+    - { op: O3_collapse, weight: 2, appearance: ice_sheet, params: { mu_collapsed: [0.06, 0.12], dwell: [0.3, 0.6] } }
+    - { op: O2_compliance, weight: 3, appearance: brown_mud, params: { k: [12.0, 22.0], c: [6.0, 10.0], d_sink: [0.04, 0.20] } }
+    - { op: O4_tether, weight: 3, appearance: yellow_adhesive, params: { k: [120.0, 180.0], d: [5.0, 8.0], f_break: [20.0, 30.0] } }
+    - { op: O5_payload, weight: 2, appearance: solid_ground, params: { mass: [4.0, 8.0] } }
+    - { op: O10_effort_decay, weight: 2, appearance: solid_ground, params: { floor: [0.18, 0.30], rate: [0.6, 1.2] } }
+    - { op: O7_visual_remap, weight: 2, appearance: solid_ground, params: { mu: [0.06, 0.12], depth_bias: [0.4, 0.8] } }
+    - { op: O8_invisible_collider, weight: 1, appearance: solid_ground, params: {} }
+    - { op: O9_high_centering, weight: 1, appearance: solid_ground, params: { residual: [0.2, 0.4] } }
+  # PHASE 1 "shuffle physics-visual correspondence": fraction of (otherwise-honest) cells
+  # whose APPEARANCE is decoupled from physics — an extra visual deception on top of O7's
+  # built-in one. Drives a higher reject-rate (the vision-led oracle confabulates). 0 keeps
+  # only O7's canonical decoupling.
+  decouple_fraction: 0.15
+  # Ambiguity pairs (Suite-Sem): the card reports whether both siblings are represented.
+  ambiguity_pairs:
+    - [O4_tether, O2_compliance]
+    - [O5_payload, O10_effort_decay]
+    - [O3_collapse, O1_mu_field]
+  # Fixed per-operator extras the θ ranges don't cover (no magic numbers in module code).
+  defaults:
+    collapse_mu_intact: 0.8   # O3 intact friction before the dwell-triggered collapse
+    effort_t_start_s: 1.5     # O10 begins decaying after the start transient
+    payload_com_m: 0.0        # O5 CoM offset (centred load)
+
+# --- Oracle (spec §10 PHASE 3) ---
+oracle:
+  # ScriptedOracle: a deterministic, evidence-led offline annotator (the CI/throughput path;
+  # the external-LLM ApiOracle is the deployment path, prompt knobs below). It attributes
+  # from the VISIBLE appearance first, falls back to the proprioceptive symptom, and picks
+  # the canonical primitive; with confab_rate it confabulates (flips to the ambiguity
+  # sibling) — modelling the Oracle's fluent guessing on deceptive/ambiguous snapshots.
+  confab_rate: 0.25   # fraction of (non-deceptive) snapshots the surrogate Oracle confabulates
+  prompt:
+    primitive_library:
+      [Backstep, Replan_Waypoint, Switch_Gait, Adjust_Posture, Set_Constraint, Update_Topology, Hold_and_Request]
+    category_vocabulary:
+      [low_friction, compliant_terrain, region_collapse, adhesion, overload, effort_decay, external_push, invisible_obstacle, high_centering, obs_bias, nominal]
+    model: gemini-3.1-pro   # spec §10 names an external Oracle LLM (e.g. Gemini 3.1 Pro)
+  # Real external-LLM Oracle (ApiOracle). The OpenAI-compatible gateway + model the user
+  # configured; OPENAI_API_KEY comes from the env (~/.config/kinovla/oracle.env, gitignored),
+  # never committed. wire_api=responses ⇒ the OpenAI Responses API; store=false honours the
+  # user's disable_response_storage. Multimodal: the rendered RGB frames are attached so the
+  # Oracle reads the surface from pixels (reveal_appearance off — the class name is NOT leaked).
+  api:
+    base_url: https://api.sublyx.org
+    path: /v1/responses
+    model: gpt-5.5
+    reasoning_effort: xhigh   # max reasoning (user config) — best attribution on these snapshots
+    store: false
+    n_images: 2                # attach the last N rendered RGB frames (cost control)
+    max_output_tokens: null    # the sublyx gateway rejects this param (HTTP 400) — leave unset
+    timeout_s: 300             # xhigh is slow; allow generous per-call time
+    retries: 6                 # the gateway intermittently 503s / drops the TLS connection
+
+# --- PHASE 2 multimodal snapshot ---
+snapshot:
+  n_frames: 5          # spec §10 PHASE 2: the 5 RGB/depth frames before the anomaly
+  window_ms: 500.0     # proprioceptive (Kino-Tokens precursor) window
+  control_hz: 50.0     # surrogate control rate (configs/sim/surrogate.yaml)
+  image_width: 96
+  image_height: 72
+  fov_rad: 1.5708      # 90° horizontal field of view (matches the map's RGB-D camera)
+  mount_height_m: 0.45 # camera height over the body (≈ Go2 trunk-mounted RGB-D)
+  pitch_rad: 0.6       # downward tilt so the ground ahead fills the frame (~34°)
+
+# --- PHASE 2 data-collection drive (spec §10: "失败巡检", drive into the failure + intercept) ---
+# Data collection is NOT the recovery loop (that is what M7 trains): we drive the robot
+# straight across the hazard with a bang-bang square-wave excitation (exactly the M4
+# distillation driver) and let the Kino-Monitor intercept the anomaly. The excitation is
+# load-bearing — payload (O5) / effort-decay (O10) only leave a proprioceptive trace when the
+# effort budget binds, during the sharp high→low deceleration (CLAUDE.md #15); a flat cruise
+# never excites them, so they would never intercept.
+drive:
+  n_steps: 320           # 6.4 s at 50 Hz — long enough to reach + dwell in the hazard
+  speed_lo: 0.1
+  speed_hi: 1.0
+  speed_period_s: 1.0    # bang-bang period
+  speed_duty: 0.5        # fraction of each period at speed_hi
+  hazard_cx: 2.5         # hazard centre on the straight +x path [m]
+  hazard_hx: 1.5         # half-length (spans x in [1.0, 4.0])
+  hazard_hy: 2.0         # wide across so the jittered path stays inside
+  # Capture-gate margins (see pipeline._collect_snapshot). Region operators gate STRICTLY
+  # in-region (margin 0) so the slip/resistance signature is in the snapshot window, not the
+  # bang-bang start transient on firm ground; global operators (O5/O10) take no gate; the O8
+  # edge-stopper keeps a small margin because the wall halts the robot just at the boundary.
+  edge_gate_margin_m: 0.4
+  # High-recall collection monitor: data collection wants to catch every anomaly (the
+  # deployment precision/recall operating point is a separate ROC concern, spec §3/§12).
+  monitor: monitor/collection.yaml
+
+# --- Reporting (exit criterion 2 + QA 5.2) ---
+report:
+  target_samples_per_hour: 200   # the card reports achieved throughput vs this floor
+  n_review_annotations: 10       # QA 5.2: emit N sample annotations to review on a prompt change
+
+# --- M6 GPU gate (scripts/isaac_hindsight_check.py) — collect REAL-Go2 snapshots ---
+# The spec (§1/§8.1/§10) builds the data pipeline on Isaac Lab. This drives the physically-
+# simulated Go2 into each operator's failure in its own lateral lane (Isaac is one-episode/
+# process, #21a), intercepts with the collection monitor, and snapshots the REAL proprioception
+# + privileged θ; then the SAME oracle + truth-consistency filter run on it. The surrogate
+# pipeline above stays the high-volume/CI path; this proves the rollout is real-Go2 (like the
+# M4/M5 GPU backfills, #21/#23). RGB-D is the camera-free §7 render (real geometry, M5 closure).
+isaac_collect:
+  settle_steps: 25
+  n_steps: 300
+  patch_cx: 2.2
+  patch_hx: 1.2
+  patch_hy: 1.0
+  speed_hi: 1.0
+  speed_lo: 0.1
+  effort_speed_hi: 1.4   # effort-decay binds only under fast bang-bang demand (#15)
+  speed_period_s: 1.0
+  speed_duty: 0.5
+  gate_margin_m: 0.0     # intercept STRICTLY inside the region: on the real Go2 the bang-bang
+                         # tracking transient fires at the patch edge, so any margin would
+                         # snapshot firm ground before the robot reaches the actual failure
+  # One lane per operator (well-separated y). Region operators first; effort (restored after);
+  # payload last (add_payload is irreversible in-process). Covers all 3 Suite-Sem pairs + O7.
+  lanes:
+    - { op: O1_mu_field, y: 0.0, appearance: ice_sheet, mu: 0.10 }
+    - { op: O3_collapse, y: 3.0, appearance: ice_sheet, mu_collapsed: 0.08, dwell: 0.4, mu_intact: 0.8 }
+    - { op: O2_compliance, y: 6.0, appearance: brown_mud, k: 20.0, c: 9.0, d_sink: 0.06 }
+    - { op: O4_tether, y: 9.0, appearance: yellow_adhesive, k: 20.0, c: 9.0, f_break: 26.0 }
+    - { op: O7_visual_remap, y: -3.0, appearance: solid_ground, mu: 0.10 }
+    - { op: O10_effort_decay, y: -6.0, appearance: solid_ground, floor: 0.20 }
+    - { op: O5_payload, y: -9.0, appearance: solid_ground, mass: 6.0 }
+  # Dataset lanes (scripts/isaac_hindsight_collect.py): the 7 operators × 2 θ each, spread in y
+  # (3 m apart, no overlap). All payload (O5) lanes LAST — add_payload is irreversible in-process
+  # (#22), so any earlier payload would contaminate later lanes; effort (O10) is restored per lane.
+  dataset_lanes:
+    - { op: O1_mu_field, y: 0.0, appearance: ice_sheet, mu: 0.07 }
+    - { op: O1_mu_field, y: 3.0, appearance: ice_sheet, mu: 0.10 }
+    - { op: O1_mu_field, y: 6.0, appearance: ice_sheet, mu: 0.14 }
+    - { op: O3_collapse, y: 9.0, appearance: ice_sheet, mu_collapsed: 0.07, dwell: 0.4, mu_intact: 0.8 }
+    - { op: O3_collapse, y: 12.0, appearance: ice_sheet, mu_collapsed: 0.09, dwell: 0.5, mu_intact: 0.8 }
+    - { op: O3_collapse, y: 15.0, appearance: ice_sheet, mu_collapsed: 0.11, dwell: 0.4, mu_intact: 0.8 }
+    - { op: O2_compliance, y: 18.0, appearance: brown_mud, k: 18.0, c: 8.0, d_sink: 0.06 }
+    - { op: O2_compliance, y: 21.0, appearance: brown_mud, k: 21.0, c: 9.0, d_sink: 0.12 }
+    - { op: O2_compliance, y: 24.0, appearance: brown_mud, k: 24.0, c: 10.0, d_sink: 0.18 }
+    - { op: O4_tether, y: -3.0, appearance: yellow_adhesive, k: 18.0, c: 8.0, f_break: 22.0 }
+    - { op: O4_tether, y: -6.0, appearance: yellow_adhesive, k: 21.0, c: 9.0, f_break: 26.0 }
+    - { op: O4_tether, y: -9.0, appearance: yellow_adhesive, k: 24.0, c: 10.0, f_break: 30.0 }
+    - { op: O7_visual_remap, y: -12.0, appearance: solid_ground, mu: 0.07 }
+    - { op: O7_visual_remap, y: -15.0, appearance: solid_ground, mu: 0.10 }
+    - { op: O7_visual_remap, y: -18.0, appearance: solid_ground, mu: 0.12 }
+    # O10: SEVERE decay (floor ~0.14) so the torque cap drops below the trot's demand and the
+    # effort channel binds (probe: floor 0.15 => eff_max 0.91, walks; floor 0.10 => falls). This
+    # is the spec's B-class O10 instance. effort_capture_min (below) grabs the high-effort window.
+    - { op: O10_effort_decay, y: -21.0, appearance: solid_ground, floor: 0.13 }
+    - { op: O10_effort_decay, y: -24.0, appearance: solid_ground, floor: 0.15 }
+    # O5: effort is UNOBSERVABLE on this Go2 (probe: eff_max 0.00 at every mass; >=6 kg falls) —
+    # the payload spreads across the legs so the mean torque never hits the 0.7 saturation floor.
+    # Kept for ambiguity-pair completeness but it will be dropped by the filter (honest #15 floor).
+    - { op: O5_payload, y: -27.0, appearance: solid_ground, mass: 5.0 }
+    - { op: O5_payload, y: 27.0, appearance: solid_ground, mass: 7.0 }
+  effort_capture_min: 0.25   # O10: force-capture the window once effort_ratio binds past this
+  effort_capture_delay_steps: 12  # ...then wait ~half a window so the binding fills the trace
+
+  # Randomized-θ scale collection (scripts/isaac_hindsight_collect.py --random --n-lanes N --seed S).
+  # OBSERVABLE operators only (O5 excluded — effort unobservable, #15 floor); each lane samples θ
+  # from its range and gets a spaced y. The filter keeps ~80%+ of these. Many shards (one Isaac
+  # process each) merge into the dataset; gpt-5.5 annotates concurrently.
+  random:
+    y_spacing_m: 3.0
+    ops:
+      - { op: O1_mu_field, weight: 2, appearance: ice_sheet, mu: [0.06, 0.16] }
+      - { op: O3_collapse, weight: 2, appearance: ice_sheet, mu_collapsed: [0.06, 0.12], dwell: [0.35, 0.6] }
+      - { op: O2_compliance, weight: 2, appearance: brown_mud, k: [16.0, 26.0], c: [7.0, 11.0], d_sink: [0.04, 0.20] }
+      - { op: O4_tether, weight: 2, appearance: yellow_adhesive, k: [16.0, 26.0], c: [7.0, 11.0], f_break: [20.0, 32.0] }
+      - { op: O7_visual_remap, weight: 2, appearance: solid_ground, mu: [0.06, 0.13] }
+      - { op: O10_effort_decay, weight: 1, appearance: solid_ground, floor: [0.12, 0.16] }

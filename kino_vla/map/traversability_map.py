@@ -19,21 +19,39 @@ even though they feel identical), and the segmenter only reveals them within vie
 
 from __future__ import annotations
 
+from typing import Protocol
+
 import numpy as np
 
 from kino_vla.map.costmap import Costmap
 from kino_vla.map.segmentation import SurrogateSegmenter
-from kino_vla.map.types import MapCrop, SemanticRegion
+from kino_vla.map.types import MapCrop, ObservedRegion, SemanticRegion
 from kino_vla.utils.config import Config
+
+
+class Segmenter(Protocol):
+    """Perception front-end: scene → back-projected observations from the current pose."""
+
+    def segment(
+        self, pose_xy: np.ndarray, heading: float, scene: list[SemanticRegion]
+    ) -> list[ObservedRegion]: ...
 
 
 class TraversabilityMap:
     """Online semantic traversability map maintained in the odometry frame."""
 
-    def __init__(self, cfg: Config, scene: list[SemanticRegion] | None = None) -> None:
+    def __init__(
+        self,
+        cfg: Config,
+        scene: list[SemanticRegion] | None = None,
+        segmenter: Segmenter | None = None,
+    ) -> None:
         self._cfg = cfg
         self._costmap = Costmap(cfg.costmap)
-        self._segmenter = SurrogateSegmenter(cfg.camera)
+        # Default: the cheap centre-in-cone surrogate (keeps the live demo loop fast). The
+        # real RGB-D pinhole back-projection (rgbd.RgbdSegmenter) is injectable here and is a
+        # drop-in for the same .segment contract (spec §7; strict gate in tests/scripts).
+        self._segmenter = segmenter if segmenter is not None else SurrogateSegmenter(cfg.camera)
         self._scene: list[SemanticRegion] = list(scene) if scene else []
         self._fail_cost = float(cfg.failure_cost)
         self._fail_radius = float(cfg.failure_radius_m)
@@ -61,7 +79,13 @@ class TraversabilityMap:
         return len(regions)
 
     def _appearance_at(self, world_xy: np.ndarray) -> np.ndarray | None:
-        """Best appearance embedding at a world point: scene truth, else observed map."""
+        """Best appearance embedding at a world point: the *perceived* map feature first, then
+        scene truth. Preferring the painted costmap embedding keeps propagation in the same
+        feature space the segmenter used (pixel features under RgbdSegmenter, class-hash under
+        the surrogate) — otherwise a real-pixel map would never match a class-hash query."""
+        perceived = self._costmap.embedding_at(world_xy)
+        if perceived is not None:
+            return perceived
         for region in self._scene:
             if region.rect.contains(np.asarray(world_xy, dtype=np.float64)):
                 return region.embedding

@@ -17,17 +17,18 @@ export_filename: "policy.pt"
 # than faceplant); randomize base mass (O5 groundwork) and inject periodic pushes
 # (O6 / push-recovery robustness, complementing the Reflex layer).
 dr:
-  # Minimal DR around nominal so the policy learns a clean *upright* trot (planted
-  # stance feet → near-zero slip on good ground, which the slip channel needs). An
-  # over-low friction floor or training-time pushes drove a degenerate low/foot-
-  # dragging crawl (floor 0.25 → 0.13 m, floor 0.4 → 0.2 m). The O1 ice patch (μ=0.10)
-  # is deliberately OOD — the failure to detect, not something to train away.
-  # Wide-but-not-degenerate friction DR: the feet_slide penalty keeps the gait
-  # planted (so it slips detectably on ice) while the low floor makes the policy
-  # robust enough to survive the O1 patch (μ=0.10) during recovery instead of
-  # toppling. (A high floor → fragile-on-ice; feet_slide alone keeps it from skating.)
-  static_friction_range: [0.3, 1.0]
-  dynamic_friction_range: [0.3, 0.9]
+  # Friction DR floor LOWERED to 0.08 for ice-robustness (2026-06-17, 5090 retrain).
+  # The prior floor of 0.3 left μ≈0.07–0.10 ice far OOD: the policy never trained below
+  # μ=0.3 and FELL on the M4 μ=0.07 excitation lane, poisoning the μ̂ regression (the post-
+  # fall windows read firm). Training down to μ=0.08 lets the policy stay upright on ice-like
+  # friction so the M4 lanes yield clean windows. The feet_slide penalty (below) is what makes
+  # a low floor usable: it keeps the gait PLANTED (slips detectably on ice) instead of
+  # collapsing into the degenerate low/foot-dragging skating crawl an unpenalized low floor
+  # caused before (floor 0.25 → 0.13 m height). So: low floor (ice survival) + feet_slide
+  # (anti-skate) together. The O1 patch (μ=0.10) is still detected as a slip event — surviving
+  # ice ≠ not slipping; the planted gait slips, recovers, and stays up.
+  static_friction_range: [0.08, 1.0]
+  dynamic_friction_range: [0.08, 0.9]
   restitution_range: [0.0, 0.0]
   add_base_mass_range: [-1.0, 2.0]    # kg, added to the ~15 kg base
   enable_push: false                  # training pushes encourage a low defensive stance

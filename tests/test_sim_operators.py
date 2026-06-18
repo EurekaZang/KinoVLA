@@ -146,3 +146,23 @@ def test_m3_cbf_pushfall_isaac():
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "PASS: M3 push-fall characterization complete" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_m6_hindsight_isaac():
+    """M6 Hindsight-CoT pipeline on the REAL Go2 (spec §10; the data pipeline is Isaac-based,
+    §1/§8.1). Drives the physically-simulated Go2 into each operator's failure (lateral lanes),
+    intercepts with the collection monitor, and snapshots the REAL proprioception + privileged
+    θ — then runs the SAME Oracle + truth-consistency filter. Verifies all lanes intercept,
+    each snapshot's real θ confirms its operator (ice μ≈0.1, payload>0, effort<0.5), and the
+    filter keeps grounded reflections (closes the M6 surrogate gap on GPU, like M4/M5 #21/#23)."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_hindsight_check.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: M6 Hindsight on Isaac" in proc.stdout

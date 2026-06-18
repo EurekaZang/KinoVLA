@@ -7,8 +7,15 @@
 ema_alpha: 0.3
 debounce_steps: 3        # short: real ice slip is intermittent across the gait cycle
 arm_delay_s: 2.5         # skip the push-off slip transient (gone by ~2 s; ice is hit ~2.7 s at cruise 0.8)
-cooldown_s: 1.5
+cooldown_s: 6.0          # long: after a fire, let one detour fully commit before re-arming, so the
+                         # intermittent ice slip of the ice-robust gait (floor-0.08 retrain) cannot
+                         # stack re-fires into the FSM-stub's avoid-growth thrash (#10/#19)
+tilt_arm_delay_s: 0.5    # the tilt (imminent-fall) channel arms early — a real tilt is not a
+                         # push-off artifact, so it catches topples before the 2.5 s main arm
+                         # (e.g. O5 payload toppling at ~1.7 s)
 thresholds:
   slip_ratio: 0.4        # above the push-off transient (~0.42); ice slip spikes to ~1.0
   tracking_error: 0.35
   effort_ratio: 0.25
+  tilt: 0.5              # rad (~29°): a clear loss of balance, well above healthy-gait sway/
+                         # recoverable wobble, so it fires only on a genuine imminent fall

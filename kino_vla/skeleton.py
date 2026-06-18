@@ -13,6 +13,7 @@ pipeline:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -23,7 +24,7 @@ from kino_vla.map import SemanticRegion, TraversabilityMap
 from kino_vla.monitor.rule_monitor import RuleMonitor
 from kino_vla.shield.cbf_shield import CbfShield
 from kino_vla.sim.backend import LocomotionBackend
-from kino_vla.sim.operators import MuField, OperatorStack
+from kino_vla.sim.operators import FailureOperator, MuField, OperatorStack
 from kino_vla.sim.surrogate import SurrogateBackend
 from kino_vla.sim.terrain import TerrainSpec, generate_flat_with_patch
 from kino_vla.utils.config import Config, load_config
@@ -51,6 +52,7 @@ def build_walking_skeleton(
     demo_overrides: dict[str, Any] | None = None,
     record_cam: bool = False,
     use_map: bool = True,
+    operator_factory: Callable[[Rect], tuple[FailureOperator, SemanticRegion | None]] | None = None,
 ) -> WalkingSkeleton:
     """Assemble the full skeleton for one episode; ``backend`` is surrogate|isaac.
 
@@ -60,15 +62,32 @@ def build_walking_skeleton(
     overwrites the costmap, the mark propagates over the sheet, and the avoid discs feed
     the recovery planner. The map is backend-agnostic (numpy), so it runs identically on
     the surrogate and on the physically-simulated Isaac Go2.
+    ``operator_factory`` (default None ⇒ the pinned O1 ice patch) swaps the path hazard for
+    an arbitrary Kino-Fail operator placed at ``terrain.hazard_patch`` — it returns
+    ``(operator, scene_region|None)`` so each operator can run the SAME closed loop
+    (monitor → FSM → shield → map). Used by scripts/record_operators.py for the per-operator
+    closed-loop videos; the default keeps the demo/CI path byte-identical.
     """
     demo_cfg = load_config("demo/walking_skeleton.yaml", demo_overrides)
     terrain = generate_flat_with_patch(demo_cfg.terrain, seed)
-    ice = MuField(
-        region=terrain.hazard_patch,
-        mu_s=float(demo_cfg.ice.mu_s),
-        mu_d=float(demo_cfg.ice.mu_d),
-        restitution=float(demo_cfg.ice.restitution),
-    )
+    if operator_factory is None:
+        hazard_op: FailureOperator = MuField(
+            region=terrain.hazard_patch,
+            mu_s=float(demo_cfg.ice.mu_s),
+            mu_d=float(demo_cfg.ice.mu_d),
+            restitution=float(demo_cfg.ice.restitution),
+        )
+        scene_region: SemanticRegion | None = SemanticRegion(
+            Rect(
+                terrain.hazard_patch.cx,
+                terrain.hazard_patch.cy,
+                terrain.hazard_patch.hx,
+                terrain.hazard_patch.hy,
+            ),
+            "ice_sheet",
+        )
+    else:
+        hazard_op, scene_region = operator_factory(terrain.hazard_patch)
     start_pos = np.asarray(demo_cfg.start.pos, dtype=np.float64)
     start_heading = float(demo_cfg.start.heading)
 
@@ -102,25 +121,16 @@ def build_walking_skeleton(
     # transparent at the FSM cruise speed (~0.8 m/s ≪ the trot capture bound) so the
     # demo's qualitative behaviour is unchanged; it only bites hostile commands.
     shield = CbfShield(load_config("shield/cbf_v0.yaml"))
-    # M5: the semantic traversability map grounds the ice patch as a homogeneous visual
+    # M5: the semantic traversability map grounds the path hazard as a homogeneous visual
     # region so the physical slip can overwrite + propagate over the whole sheet (spec §7).
     nav_map = None
-    if use_map:
-        scene = [
-            SemanticRegion(
-                Rect(
-                    terrain.hazard_patch.cx,
-                    terrain.hazard_patch.cy,
-                    terrain.hazard_patch.hx,
-                    terrain.hazard_patch.hy,
-                ),
-                "ice_sheet",
-            )
-        ]
-        nav_map = TraversabilityMap(load_config("map/traversability_v0.yaml"), scene=scene)
+    if use_map and scene_region is not None:
+        nav_map = TraversabilityMap(
+            load_config("map/traversability_v0.yaml"), scene=[scene_region]
+        )
     return WalkingSkeleton(
         backend=backend_obj,
-        operators=OperatorStack([ice]),
+        operators=OperatorStack([hazard_op]),
         monitor=monitor,
         policy=policy,
         shield=shield,

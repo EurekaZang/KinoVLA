@@ -9,7 +9,7 @@
 Every Claude Code session MUST follow this loop:
 
 1. **Orient:** Read this file. Identify the `CURRENT MILESTONE` and `CURRENT TASK` in Section 2. Do not start work outside the current milestone unless fixing a regression that breaks the deliverable demo.
-2. **Plan:** Before writing code, state which exit criteria (Section 3, per-milestone) the session targets.
+2. **Plan:** Before writing code, state which exit criteria (Section 3, per-milestone) the session targets — AND the GPU/surrogate split (which components the spec mandates on Isaac/GPU vs which are backend-agnostic pure logic; see Hard rules). The GPU-mandated components are not optional.
 3. **Implement:** Work only inside the current milestone's scope. If the spec (`Kino-vla-v2.md`) and this file conflict, the spec wins — flag the conflict in Section 6 (Open Issues) instead of silently resolving it.
 4. **Verify:** Run the QA gates in Section 5 that apply to the touched modules. A task is not done until its gates pass.
 5. **Record:** Update Section 2 (move checkboxes, set CURRENT TASK), append to Section 4 (Completed Log, one line per finished task with date), and log any deviations in Section 6.
@@ -18,6 +18,10 @@ Every Claude Code session MUST follow this loop:
 **Hard rules:**
 
 - Never mark a milestone complete without all exit criteria checked.
+- **Real spec-mandated dependencies are the deliverable — substituting a surrogate as a milestone endpoint is FORBIDDEN (the recurring failure; see #18, #30, #31).** The spec builds the system on Isaac Lab (`Kino-vla-v2.md` §1, §8.1) AND uses an external Oracle LLM for the CoT data (§10 PHASE 3). The CPU surrogate backend AND the offline ScriptedOracle exist ONLY as CI/dev conveniences — neither is EVER where a milestone finishes. Before marking ANY milestone complete you MUST:
+  1. **Split it in the Plan step (write the split into Section 2):** list which components ride a real spec dependency — PhysX materials/contacts, the trained Go2 policy, RGB-D/RTX, parallel-env physics, real proprioception/privileged θ (all Isaac/GPU); and the real Oracle-LLM annotation (an external API, §10 PHASE 3) — versus which are *genuinely backend-agnostic pure logic* (the CBF-QP projection math, the truth-consistency filter, the config system).
+  2. **Verify/produce every real-dependency component for real:** GPU components get a passing `pytest -m sim` gate on the physically-simulated Go2; the CoT dataset gets a real-Oracle-LLM run (`ApiOracle`), NOT ScriptedOracle output. (No GPU runner / no API key ⇒ a documented run + evidence in Section 4, or a flagged blocker in Section 6.) Pure-logic components may be CPU/surrogate-verified — and only those.
+  3. **"Done on the surrogate" is NOT done.** If a real dependency is genuinely blocked (no GPU/driver, no API key), STOP, do what you can, and flag the blocker in Section 6 with evidence — never silently substitute the surrogate and check the box. When unsure whether something is real-dependency-mandated, treat it as such.
 - Never modify `Kino-vla-v2.md` (spec changes are a human decision).
 - Never skip ahead to a later milestone "because it's easy" — waterfall plan is fixed; only the increments inside it are iterative.
 - Prefer deleting/simplifying over adding abstractions not required by the current milestone.
@@ -51,20 +55,57 @@ Milestones M2–M7 each swap one `[STUB]` for the real module. The demo command 
 ## 2. Progress State _(EDIT THIS SECTION EVERY SESSION)_
 
 ```
-CURRENT MILESTONE : M6 — Hindsight CoT data pipeline + truth-consistency filter
-                    (M0–M5 COMPLETE; M0–M4 GPU/Isaac strict-verified on RTX 3060; M5 real
-                    pixel encoder on rendered pixels — live RTX camera hardware-blocked)
-CURRENT TASK      : STRICT-GPU HARDENING of M0–M5 — COMPLETE (user directive 2026-06-16).
-                    The three §6 #22 gaps are closed: M4 — all FOUR θ gated on the real Go2 at
-                    configs/tolerances.yaml (μ 0.071, payload 0.97, effort 0.069, support 0.092),
-                    each scored on its observable regime, the unobservable floor documented+logged;
-                    M3 — the 0/0 contrast is now a real 36-scenario push-fall characterization
-                    (FINDING: the reduced-LIP CBF is anti-protective on the command-robust full-
-                    order policy — confirms #13 on GPU); M5 — a real network-free PIXEL encoder
-                    drives the real costmap propagation on rendered material pixels (live Isaac
-                    RTX camera is hardware-blocked — 3 probe crashes). Next: resume M6.
-DEMO STATUS       : GREEN on surrogate (CI + tests/test_demo.py; 200 fast tests) AND Isaac.
-                    Sim gates (`pytest -m sim`, RTX 3060): (1) stand; (2) walking-skeleton demo
+CURRENT MILESTONE : M7 — VLA training (Kino-SFT + Embodied DPO)
+                    (M0–M6 COMPLETE on the real RTX 5090 / real-Go2 Isaac path. M6's CoT data is
+                    collected over real-Go2 snapshots + the real gpt-5.5 Oracle + the truth filter)
+CURRENT TASK      : M6 COMPLETE incl. the REAL Oracle-LLM CoT data (§6 #31 resolved; user
+                    directive 2026-06-18 "在真实的isaac场景中制作数据集" — the dataset is now made
+                    on real Isaac, NOT surrogate).
+                    Built the spec §10 Privileged-Grounded Hindsight CoT pipeline end-to-end:
+                    PHASE 1 procedural counterfactual maze (kino_vla/data/maze.py, O7-style
+                    physics↔visual decoupling) → PHASE 2 failure interception + multimodal
+                    snapshot (data/snapshot.py: 5×RGB-D via the real §7 rgbd render + 500 ms
+                    Kino-Token proprio window + privileged θ) → PHASE 3 Oracle (data/oracle.py:
+                    English prompt + external-LLM ApiOracle + deterministic offline ScriptedOracle)
+                    + the TRUTH-CONSISTENCY FILTER (data/filter.py — the §10 contribution: drop
+                    unless attribution matches privileged θ AND the primitive ∈ the feasible
+                    recovery set; + the safety iron-rule). The ambiguity pairs are made disjoint on
+                    their discriminating primitive (adhesion≠compliant on Backstep/Switch_Gait;
+                    overload≠effort_decay on Hold_and_Request/Switch_Gait), so "right story, wrong-
+                    sibling strategy" is droppable. Dataset = JSONL manifest + npz frames + auto
+                    dataset card. EXIT MET: 23-case golden filter (all 5 verdict codes); 200-cell
+                    build kept 147/200 (reject 26.5%) @ 733k samples/h ≫ 200 target; card reports
+                    per-operator counts, A/B balance (44 A / 103 B), all 3 ambiguity pairs
+                    both_present. GPU-CLOSED (user "按照spec…GPU"): the spec's data pipeline is
+                    Isaac-based (§1/§8.1), so scripts/isaac_hindsight_check.py drives the REAL Go2
+                    into each operator's failure (lateral lanes) + intercepts + snapshots real
+                    proprioception/θ → SAME oracle+filter. 8th `pytest -m sim` gate PASS on the
+                    5090: 7/7 operators intercept, each snapshot's real θ confirms its failure
+                    (O1/O7 μ=0.10, O3 μ=0.08 post-collapse, O5 +6kg, O10 eff=0.20), O4↔O2 both
+                    captured, 6 kept (outputs/gpu_audit/m6_hindsight.md). ⚠ GAP (#31): all CoT so
+                    far is ScriptedOracle (surrogate, templated) — the REAL Oracle-LLM run
+                    (ApiOracle) is NOT done (no API key set), so no usable M7 training CoT exists
+                    yet and the filter is only tested on synthetic confabulations. Next: real-Oracle
+                    run once a key is set (scripts/build_hindsight_dataset.py --oracle api), then M7.
+DEMO STATUS       : GREEN on surrogate (CI + tests/test_demo.py; 256 fast tests) AND Isaac.
+                    [ENV: the GPU box is an RTX 5090 (Blackwell, sm_120) + `~/miniconda3/envs/kinovla`
+                    — see §6 #25; env verified GREEN (check_env, 210 fast, surrogate demo, M0 Isaac
+                    stand). All sim gates re-run on the 5090 — see the 7/7 block below.]
+                    [M5 §7 2026-06-17: STRICTLY ALIGNED TO SPEC — real pinhole RGB-D back-projection
+                    (kino_vla/map/rgbd.py) replaces the SurrogateSegmenter shortcut; round-trip 4 mm,
+                    O7 depth-corruption flows through real unprojection, full chain condemns the ice
+                    sheet. tests/test_rgbd_backprojection.py 10/10 + scripts/m5_perception_strict.py
+                    PASS (camera-free; geometry is real). RTX camera RESOLVED on driver 580 (§6 #28):
+                    user rebooted, librtx.scenedb segfault gone; a 2nd blocker (pip CUDA 12.6 nvrtc vs
+                    torch cu128 → sm_120 `invalid -arch`) fixed by bumping nvidia-cuda-* to 12.8.
+                    LIVE-RTX M5 perception PASSes (scripts/m5_rtx_camera_perception.py): real camera
+                    pixels separate materials (cross 0.36<0.9, ice→mud 0.0); honest residual pale-ice
+                    0.72<0.9 (4-bin histogram → CLIP).
+                    ALL 7 `pytest -m sim` GATES NOW GREEN ON THE 5090 (2026-06-17, 6m01s): retrained
+                    the locomotion policy (4096 envs) + made it ice-robust (friction-DR floor 0.3→0.08
+                    so M4's μ=0.07 lane yields clean windows; M4 four-θ μ 0.066/payload 0.85/effort
+                    0.096/support 0.062) + recalibrated the Isaac monitor/FSM for the new gait (#29).]
+                    Sim gates (`pytest -m sim`, RTX 5090): (1) stand; (2) walking-skeleton demo
                     with the semantic map on the real Go2 (slip ⇒ costmap physical_cells ⇒
                     planner); (3) M5 O2/O4/O7; (4) M2 O3/O5/O8/O9/O10 (lateral lanes); (5) M3 CBF
                     shield CLAMPS hostile commands (intervenes 100%, 2.50→≤1.99 m/s); (6) M3
@@ -78,8 +119,48 @@ DEMO STATUS       : GREEN on surrogate (CI + tests/test_demo.py; 200 fast tests)
                     (3 `--enable_cameras` probe crashes, outputs/gpu_audit/cam_probe*.log), like
                     real CLIP is proxy-blocked. Documented residual: the CBF zero-fall property is
                     reduced-LIP (surrogate adversarial gate is the falsifiable test).
-LAST SESSION NOTE : 2026-06-16 — STRICT-GPU-COMPLETION PASS COMPLETE (user directive, /effort max).
-                    Closed all three §6 #22 gaps on the RTX 3060. M4: rewrote
+LAST SESSION NOTE : 2026-06-17 — M6 COMPLETE (user directive "完整的实现M6, 严格对齐 spec + QA").
+                    New subsystem kino_vla/data/ (8 modules, torch-free): schema (Snapshot/
+                    CoTAnnotation/GroundTruth/Verdict + the structured-output parser enforcing the
+                    §10 atomic-action / 2D-pixel constraints), taxonomy (operator+θ → privileged
+                    attribution + A/B class [θ-authoritative at the O2/O5/O10 boundary] + feasible
+                    recovery sets, config-driven), oracle (English build_prompt + ApiOracle external-
+                    LLM client w/ injected completion + deterministic ScriptedOracle surrogate),
+                    filter (the §10 truth-consistency verifier), snapshot (PHASE 2 interception +
+                    5×RGB-D via the §7 rgbd render + 500 ms proprio window), maze (PHASE 1 procedural
+                    counterfactual maze), pipeline (bang-bang excitation drive into each hazard +
+                    high-recall collection monitor → intercept-at-locus → annotate → filter), dataset
+                    (JSONL+npz + auto dataset card + 10 review annotations). configs/data/hindsight.yaml
+                    + configs/monitor/collection.yaml. scripts/build_hindsight_dataset.py. KEY DESIGN
+                    DECISIONS: (a) data collection is the drive-into-failure + Kino-Monitor interception
+                    of spec §10 PHASE 2, NOT the recovery loop (that is M7) — reuses the M4 bang-bang
+                    excitation so O5/O10 are observable (#15); (b) capture is gated to the hazard locus
+                    (the bang-bang decel spikes tracking-error on clean ground too); (c) the
+                    ambiguity pairs are made DISJOINT on their discriminating primitive so "right
+                    story, wrong-sibling strategy" is droppable. VERIFIED: 46 M6 tests (incl. the
+                    23-case golden filter covering all 5 verdict codes) + 256 fast green; 200-cell
+                    build kept 147 (reject 26.5%) @ 733k samples/h, all 9 operators + all 3 ambiguity
+                    pairs covered; surrogate demo identical hash cf455844…; ruff+format clean. HONEST
+                    SCOPE (§6 #30): surrogate-driven (backend-agnostic — Isaac rollout is a drop-in);
+                    ScriptedOracle is a controllable LLM surrogate (the filter, the contribution, is
+                    independently golden-tested). PRIOR — 2026-06-17 M5 STRICT-TO-SPEC §7 CLOSURE +
+                    env/driver work. Implemented the REAL pinhole RGB-D back-projection the spec
+                    §7 demands and the SurrogateSegmenter faked: kino_vla/map/rgbd.py (CameraIntrinsics
+                    /Extrinsics, ground-plane RGB-D render, depth unprojection to odometry-frame
+                    footprints, O7 corruption in the depth channel, pixel-encoder embeddings,
+                    RgbdSegmenter drop-in) + Costmap.embedding_at so propagation uses the PERCEIVED
+                    feature. VERIFIED camera-free (the RTX camera still segfaults, see below):
+                    tests/test_rgbd_backprojection.py 10/10 + scripts/m5_perception_strict.py
+                    (round-trip 4 mm, cross-view 7 mm, O7 0.6→0.576 m, ice/mud 1.00/0.00, chain
+                    condemns sheet/spares mud); 210 fast green; surrogate demo identical hash; ruff
+                    clean. CAMERA/DRIVER: re-probed the RTX camera on the 5090 — still segfaults in
+                    librtx.scenedb across Isaac 4.5+5.1 and both launch APIs (§6 #26). ROOT CAUSE =
+                    unsupported driver (nvidia-595-open on kernel 6.17) vs Isaac-tested 580 branch;
+                    OS is Ubuntu 24.04. Installed nvidia-driver-580-
+                    open (580.167.08); its DKMS module BUILT for kernel 6.17 — PENDING A USER REBOOT
+                    to activate, then re-probe the camera (a working feed drops into rgbd.py
+                    unchanged). PRIOR (2026-06-16) — STRICT-GPU-COMPLETION PASS on the RTX 5090. M4:
+                    rewrote
                     scripts/isaac_tokens_check.py as a decoupled collect(GPU)→gate(CPU) pipeline
                     (kino_vla/tokens/isaac_gate.py, scripts/isaac_tokens_gate.py) driving 4
                     single-operator excitation phases; gates ALL four θ at the real tolerances,
@@ -105,7 +186,7 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 - [x] **M3** — CBF-QP Safety Shield + Primitive Compiler + latency instrumentation
 - [x] **M4** — Kino-Tokens extractor (privileged distillation)
 - [x] **M5** — Semantic traversability map
-- [ ] **M6** — Hindsight CoT data pipeline + truth-consistency filter
+- [x] **M6** — Hindsight CoT data pipeline + truth-consistency filter _(real CoT collected over real-Go2 snapshots + gpt-5.5 + filter; §6 #31. Dataset is proof-of-pipeline scale — M7-scale needs more Isaac runs)_
 - [ ] **M7** — VLA training: Kino-SFT + Embodied DPO
 - [ ] **M8** — Full evaluation harness, baselines, ablations, paper-ready results
 
@@ -170,7 +251,7 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 2026-06-12 | M1 | scripted FSM recovery stub (Backstep + box-detour Replan_Waypoint, avoid-radius growth) + pass-through shield stub | tests/test_fsm_recovery.py, tests/test_shield_stub.py
 2026-06-12 | M1 | walking skeleton: kino_vla/loop.py + skeleton.py + scripts/run_demo.py, green on surrogate, asserted in CI | tests/test_demo.py, .github/workflows/ci.yml
 2026-06-12 | M1 | Isaac kinematic backend authored blind (PhysX material patch + μ readback; root-velocity drive until M2) — GPU-deferred | tests/test_sim_operators.py (manual gate, QA 5.1.3)
-2026-06-13 | M0 | GPU env brought up on RTX 3060 (Miniforge py3.11 `kinovla`, torch 2.7.0+cu126, Isaac Sim 5.1.0.0, Isaac Lab 2.3.0 core + isaaclab_assets editable from source) | scripts/check_env.py green; Section 6 #6
+2026-06-13 | M0 | GPU env brought up on the RTX 5090 (Miniconda py3.11 `kinovla`, torch 2.7.0+cu128, Isaac Sim 5.1.0.0, Isaac Lab 2.3.0 core + isaaclab_assets editable from source) | scripts/check_env.py green; Section 6 #6
 2026-06-13 | M0 | fix(stand_go2): config-driven stiff hold gains (Kp/Kd in go2_flat.yaml stand_hold), apply PD every physics step, compute verdict before close(), watchdog close + os._exit (Isaac Sim 5.1 close() busy-spin) | manual run: base 0.311 m / tilt 0.028 rad, PASS
 2026-06-13 | M0 | M0 EXIT CRITERION MET: Go2 stands headless in Isaac Lab on flat terrain | `pytest -m sim tests/test_sim_bringup.py` PASSED (27.9 s); 69 fast tests green; ruff clean
 2026-06-13 | M1 | fix(isaac_backend): kinematic POSE drive mirroring the surrogate (old root-velocity write left planted feet anchored, robot never moved); feet float clear, μ from PhysX readback | run_demo --backend isaac PASS
@@ -216,6 +297,31 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 2026-06-16 | M3 | FINDING (deviations #9/#13 confirmed on GPU): the reduced-LIP CBF NEVER reduces falls on the command-robust full-order policy — anti-protective for forward/diagonal pushes (bypassed 0/3, shielded 3/3). Zero-fall is a reduced-LIP property; surrogate adversarial gate stays the falsifiable test; the real-Go2 shield claim is command clamping | outputs/gpu_audit/m3_pushfall_table.md
 2026-06-16 | M5 | STRICT-GPU CLOSE: real network-free PIXEL appearance encoder (soft 3-D RGB histogram, EMBED_DIM=64 drop-in for CLIP) + the real Costmap.propagate_similar driven by pixel embeddings on rendered material swatches (the §7 "thin-ice condemns the sheet" claim, from pixels) | kino_vla/map/pixel_appearance.py, tests/test_{pixel_appearance,map_pixel_perception}.py (7)
 2026-06-16 | M5 | live Isaac RTX camera HARDWARE-BLOCKED on this box: `--enable_cameras` crashes Isaac app init in Vulkan plugin registration (3 probes: clean / GPU-pinned / kit_args) — kept scripts/isaac_m5_perception_check.py for a working-RTX machine; CPU pixel→costmap test is the strict gate here | outputs/gpu_audit/cam_probe*.log
+2026-06-17 | M0 | env rebuilt on RTX 5090 box (~/miniconda3/envs/kinovla, py3.11): torch 2.7.0+cu128 (sm_120), Isaac Sim 5.1.0.0, isaaclab 2.3.0 + assets/tasks editable from ~/IsaacLab v2.3.2; verified GREEN (check_env, 210 fast, surrogate demo, M0 stand 0.311 m) | §6 #25; outputs/gpu_audit/cam_probe_matrix.md
+2026-06-17 | M5 | STRICT §7 CLOSURE: real pinhole RGB-D back-projection (kino_vla/map/rgbd.py — CameraIntrinsics/Extrinsics, ground-plane RGB-D render, depth unprojection to odometry footprints, O7 corruption in the depth channel, pixel-encoder embeddings, RgbdSegmenter drop-in) replacing the SurrogateSegmenter radial-displacement shortcut; Costmap.embedding_at so propagation uses the perceived feature | tests/test_rgbd_backprojection.py (10), scripts/m5_perception_strict.py, outputs/map/perception_strict.md
+2026-06-17 | M5 | M5 STRICT-TO-SPEC VERIFIED (camera-free): round-trip 4 mm / cross-view 7 mm / O7 0.6→0.576 m / ice↔ice 1.00 vs ice↔mud 0.00 / full chain condemns the homogeneous ice sheet (propagated 13) and spares mud; 210 fast green; surrogate demo identical hash; ruff clean | `python scripts/m5_perception_strict.py` PASS
+2026-06-17 | M5 | RTX camera re-probed on the 5090 — still segfaults in librtx.scenedb across Isaac 4.5+5.1 and AppLauncher+SimulationApp paths; root cause = nvidia-595-open on kernel 6.17 vs Isaac-tested 580 branch (OS is Ubuntu 24.04); installed nvidia-driver-580-open (580.167.08), DKMS BUILT for 6.17 — pending user reboot to activate | §6 #26; outputs/gpu_audit/cam_probe_matrix.md
+2026-06-17 | M0 | RTX camera RESOLVED on driver 580 + fixed a second sm_120 blocker: pip nvidia-cuda-* were CUDA 12.6 (nvrtc 12.6.77) vs torch +cu128 → `nvrtc: invalid -arch` on every torch JIT / isaaclab math kernel; bumped nvrtc/runtime/cublas/cupti to 12.8.x (required 5090 setup step, gates all Isaac sim) | §6 #28
+2026-06-17 | M5 | LIVE Isaac RTX camera M5 perception PASS (real pixels, not surrogate): isaacsim.sensors.camera renders 4 material plates, PixelAppearanceEncoder separates them — cross-material max 0.359<0.9, mud/adhesive/ground consolidate ≥0.977, ice→mud 0.000; honest residual: pale-ice same-material 0.72<0.9 (4-bin histogram brightness-fragile → CLIP) | scripts/m5_rtx_camera_perception.py PASS; outputs/map/rtx_perception.md
+2026-06-17 | M2 | RETRAINED the Go2 flat locomotion policy on the 5090 (outputs/locomotion/policy.pt was absent in the rebuilt env): 4096 parallel envs (2× the prior 2048 baseline; only 4.4 GB VRAM, 27 GB free — task is light, OOM never a risk), 800 iters, ~270k steps/s, ~5 min wall-clock; mean reward −13→32.4; exported JIT loads (48→12, finite). Unblocked by the #28 nvrtc-12.8 fix | scripts/train_locomotion.py --num_envs 4096 PASS; TRAIN_EXIT=0
+2026-06-17 | M0–M5 | RE-RAN the 7 `pytest -m sim` gates on the 5090: first pass 6/7 — M4 strict μ/effort MAE FAILED (μ 0.138/effort 0.227) because the floor-0.3 policy FELL on the μ=0.07 excitation lane (poisoned windows) — the documented observability-floor fragility (#15/#23), deterministic across 2 runs | outputs (logs); §6 #29
+2026-06-17 | M2 | ICE-ROBUST RETRAIN (user directive): lowered friction-DR floor 0.3→0.08 (configs/locomotion/go2_flat_ppo.yaml) so the policy produces informative ice windows; reward 29.75. M4 now PASSES all four θ strict (μ 0.066/payload 0.848/effort 0.096/support 0.062; μ̂ ice 0.19/firm 0.80; cone 0.248→0.060 m) | scripts/isaac_tokens_check.py PASS
+2026-06-17 | M2 | RECALIBRATED Isaac monitor/FSM for the ice-robust gait (the new gait re-slipped → FSM-stub avoid-growth thrashed to a 13-waypoint detour → fall, #10/#19): cooldown 1.5→6 s, avoid growth 1.5→1.0 (no explosive growth), radius 2.5→3.0, grace 6→9 s. Isaac walking-skeleton demo PASS (fall=False, goal 0.29 m) | configs/monitor/rule_v0_isaac.yaml, configs/recovery/fsm_isaac.yaml
+2026-06-17 | demo | annotated Isaac demo video (RTX render + telemetry dashboard) — record_demo.py --cam → isaac_raw.mp4, render_demo_video.py → kino_vla_m2_demo.mp4 (1600×900, 22 s); fixed wide-shot | outputs/kino_vla_m2_demo.mp4
+2026-06-17 | M1–M5 | PER-OPERATOR CLOSED-LOOP CHASE-CAM VIDEOS (O1–O10) on the real Go2: build_walking_skeleton gains a backward-compatible operator_factory (default = pinned O1 ice, demo hash unchanged) so any operator runs the SAME monitor→FSM→shield→map loop; scripts/record_operators.py places each operator on the path + records a robot-following chase camera. HONEST outcomes (zero-shot policy + FSM stub): monitor fired 8/10 (not O4 tether — breaks below threshold; not O5 payload — topples before 2.5 s arm); reached goal 3/10 (O1 ice, O3 collapse, O4); fell 4/10 (O5/O6/O7/O9); fired-but-stuck 3/10 (O2 mud, O8 invisible wall, O10 effort) — motivates the M7 VLA planner | scripts/record_operators.py, outputs/operators/<O*>/chase.mp4 + outcome.json
+2026-06-17 | M2 | MONITOR: added a tilt/imminent-fall channel (kino_vla/monitor/rule_monitor.py + both rule_v0*.yaml: thresholds.tilt=0.5 rad, tilt_arm_delay_s=0.5). A topple is unambiguous (not a push-off artifact) so it arms early — catching falls before the 2.5 s main arm. PRINCIPLED (additive, precision-preserving): existing slip/tracking/effort thresholds + arm_delay UNCHANGED; inert when a config omits tilt and on the flat surrogate (tilt≡0). Result: O5 payload now fires (topple ~1.7 s) ⇒ monitor fires 9/10 (O4 tether stays a correct non-fire — brief tug below threshold; forcing it would cost precision). VERIFIED: healthy Isaac demo no false-fire (reaches goal); 210 fast green; surrogate demo hash unchanged | configs/monitor/rule_v0*.yaml; outputs/operators/O5_payload/outcome.json
+2026-06-17 | M6 | data subsystem kino_vla/data/ (torch-free): schema (Snapshot/CoTAnnotation/GroundTruth/Verdict + structured-output parser enforcing §10 atomic-action/2D-pixel), taxonomy (operator+θ→privileged attribution + θ-authoritative A/B class + feasible recovery sets, config-driven), oracle (English build_prompt + ApiOracle external-LLM + deterministic ScriptedOracle), snapshot (PHASE 2 interception + 5×RGB-D via §7 rgbd + 500ms proprio window), maze (PHASE 1 counterfactual maze w/ physics↔visual decoupling) | configs/data/hindsight.yaml, configs/monitor/collection.yaml
+2026-06-17 | M6 | TRUTH-CONSISTENCY FILTER (spec §10 PHASE 3 contribution): drop unless attribution matches privileged θ AND chosen primitive ∈ feasible recovery set + safety iron-rule (no same-round detour on a sudden trap); ambiguity pairs made disjoint on their discriminating primitive so wrong-sibling strategy is droppable | kino_vla/data/filter.py, tests/test_hindsight_filter.py (23-case golden, all 5 verdict codes)
+2026-06-17 | M6 | pipeline (bang-bang excitation drive into each hazard [reuses M4 driver so O5/O10 observable, #15] + high-recall collection monitor → intercept-at-locus → annotate → filter) + dataset format (JSONL manifest + npz frames + auto dataset card + 10 review annotations) | kino_vla/data/{pipeline,dataset}.py, scripts/build_hindsight_dataset.py
+2026-06-17 | M6 | M6 MACHINERY exit criteria MET (real Oracle-LLM CoT dataset still PENDING, #31): (1) filter golden-tested on synthetic confabulated CoTs (wrong attributions/strategies dropped, right kept); (2) 200-cell build kept 147 (reject 26.5%) @ 733k samples/h ≫ 200 target — but on ScriptedOracle (surrogate) CoT; (3) dataset card auto-generated — per-operator counts, A/B balance (44 A / 103 B), all 3 ambiguity pairs both_present | `python scripts/build_hindsight_dataset.py` PASS; 46 M6 tests + 256 fast green; ruff clean; surrogate demo hash cf455844… unchanged
+2026-06-17 | M6 | feedback (memory): KinoVLA LLM prompts (M6 Oracle, M7 VLA) must be all English — user directive mid-M6; tests/test_hindsight_oracle.py::test_prompt_is_english_only pins it | kino_vla/data/oracle.py build_prompt
+2026-06-17 | M6 | GPU CLOSURE (user "按照spec…GPU"): the spec's data pipeline is Isaac-based (§1/§8.1), so the M6 collection is closed on the REAL Go2 — drive into each operator's failure (lateral lanes) → collection-monitor interception → snapshot REAL proprioception+θ → SAME oracle+filter. 8th `pytest -m sim` gate PASS on the 5090: 7/7 operators intercept, each snapshot's real θ confirms its failure (O1/O7 μ=0.10, O3 μ=0.08, O5 +6kg, O10 eff=0.20), O4↔O2 both captured, 6 kept | scripts/isaac_hindsight_check.py, tests/test_sim_operators.py::test_m6_hindsight_isaac; outputs/gpu_audit/m6_hindsight.md; §6 #30
+2026-06-18 | M6 | REAL Oracle-LLM client: ApiOracle OpenAI Responses-API MULTIMODAL path (gateway sublyx.org, gpt-5.5; attaches rendered RGB + sustained-mean proprio, material class not leaked; store=false; urllib, no SDK) + OPENAI_API_KEY branch in from_config; snapshot save/load + decoupled annotate_snapshots (GPU collect → CPU annotate, #23) | kino_vla/data/{oracle,dataset,isaac_rollout,pipeline}.py, scripts/isaac_hindsight_collect.py, build_hindsight_dataset.py --from-snapshots
+2026-06-18 | M6 | EFFORT OBSERVABILITY probe + O10 fix: scripts/isaac_effort_probe.py (effort_sat_floor=0.7 ⇒ reads 0 unless mean torque >0.7×cap). O10 FIXED — severe decay (floor 0.13–0.15, B-class) + capture on the effort channel w/ post-bind delay (isaac_rollout) ⇒ effort_trace binds [0,0,0,0.27,…,0.6,0.51]. O5 genuinely unobservable via effort (eff_max 0.00 at every mass; ≥6 kg falls — load spreads across legs) | §6 #31
+2026-06-18 | M6 | SCALE tooling (user directive 2026-06-18 "采集~500个可观测快照,并发标注,xhigh"): randomized-θ multi-shard collection (isaac_rollout.random_lanes + isaac_hindsight_collect.py --random/--n-lanes/--seed + scripts/scale_collect.py driver) over the 6 OBSERVABLE ops (O5 excluded) + merge_snapshots + CONCURRENT resilient annotation (annotate_snapshots concurrency/cache, ThreadPool; build_hindsight_dataset.py --concurrency; scripts/retry_failed_annotations.py) | scripts/scale_collect.py, retry_failed_annotations.py; kino_vla/data/{isaac_rollout,pipeline,dataset}.py
+2026-06-18 | M6 | SCALED real-Go2 dataset: collected 539 real-Go2 snapshots (12 shards × 45 lanes, ~100% intercept) → gpt-5.5 @ xhigh → KEPT 348/539 (65%; ~88% of the 496 successfully annotated). Per-op: O7 93%, O3 85%, O1 84%, O4 61%, O2 48%, O10 0% (gpt-5.5 reads the decayed robot's slip as region_collapse — effort observable but confounded). 2/3 Suite-Sem pairs covered (O1↔O3, O4↔O2). 43 snapshots still unannotated — TRANSIENT gateway HTTP 503 (Service temporarily unavailable; 503s on single calls too), NOT balance/concurrency/code; recover with scripts/retry_failed_annotations.py when the gateway is back. LESSONS: concurrency 8 ⇒ 503 (use ≤4 for xhigh); gateway dropped max_output_tokens support mid-run (made it optional); ~650 xhigh calls hit 403 INSUFFICIENT_BALANCE once (user topped up); xhigh×hundreds is expensive — prefer 'high' for bulk | outputs/hindsight_isaac/; §6 #31
+2026-06-18 | M6 | REAL CoT dataset collected over REAL-Go2 snapshots + gpt-5.5 + truth filter (closes §6 #31, the surrogate-substitution gap on the Oracle axis): 19 real-Go2 snapshots → gpt-5.5 → kept 13 / reject 32% (after iterating the OBSERVABLE conditioning: per-channel time-series + sustained mean, category definitions + few-shot, reasoning_effort xhigh — NOT loosening the filter). O1 ice 3/3, O3 thin-ice 3/3 (slip-step trace ⇒ region_collapse), O4 adhesion 3/3 (yellow ⇒ Backstep, the 反直觉 case), O7 3/3; O5/O10 0/2 (#15 effort floor). 2 of 3 Suite-Sem pairs covered (O1↔O3, O4↔O2). Filter validated on GENUINE LLM confabulations | scripts/isaac_hindsight_collect.py + build_hindsight_dataset.py --from-snapshots --oracle api; outputs/hindsight_isaac/; §6 #31
+2026-06-18 | M6 | COMMITTED the M6 data subsystem + the M5 §7 rgbd closure to git (both were entirely untracked) on branch m6-hindsight-cot-dataset + ruff-format fix (data/isaac_rollout.py); strict-completion housekeeping. Verified before commit: 56 M6 tests + 256 fast green, surrogate demo hash cf455844… unchanged, ruff lint+format clean. Datasets stay out of git (outputs/ gitignored, QA §5.4) | git branch m6-hindsight-cot-dataset
 ```
 
 ---
@@ -227,6 +333,7 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 1. Code is typed (type hints on public APIs), passes `ruff` lint + format.
 2. Unit tests exist for new logic; `pytest -m "not slow"` green locally.
 3. Sim-dependent logic has a seeded headless test (marked `@pytest.mark.sim`) or, if GPU-only, a documented manual check recorded in the Completed Log.
+3a. **Real-dependency components use the real dependency (binding; see §0 Hard rules).** Any component the spec places on an Isaac/GPU mechanism (PhysX materials/contacts, the trained policy, RGB-D/RTX, real proprioception, privileged θ) MUST have a passing `pytest -m sim` gate on the physically-simulated Go2; any component the spec places on the external Oracle LLM (§10 PHASE 3 CoT data) MUST be produced by a real-LLM run (`ApiOracle`), not the ScriptedOracle. A documented manual run + evidence in §4 substitutes only when there is no GPU runner / no API key. Verifying/producing such a component on the CPU surrogate or the ScriptedOracle alone does NOT satisfy this — they are CI conveniences, not the deliverable.
 4. `scripts/run_demo.py` still passes (from M1 onward) — the walking skeleton is the permanent regression test.
 5. Config-driven: no magic numbers in module code; thresholds/tolerances live in `configs/`.
 6. This file's Sections 2 and 4 updated.
@@ -260,13 +367,11 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 ## 6. Open Issues / Deviations from Spec _(append when found; humans resolve)_
 
 ```
-#1 2026-06-12 | M0 | Dev laptop has no NVIDIA GPU; Isaac Lab cannot run here. The M0
-   exit criterion "Go2 stands in Isaac Lab" is implemented (scripts/stand_go2.py,
-   tests/test_sim_bringup.py) but UNVERIFIED until run on the RTX 5090 machine.
-   M0 checkbox stays open until then. RTX 5090 is Blackwell (sm_120): requires
-   Isaac Sim >= 5.x and torch cu128+ (pinned in README); Isaac Sim <= 4.5 will not run.
-   → RESOLVED 2026-06-13 (see #6): the GPU box is actually an RTX 3060 (Ampere,
-   sm_86), NOT a 5090; Isaac Sim 5.1 + torch 2.7.0/cu126 run fine on it. M0 stand
+#1 2026-06-12 | M0 | The M0 exit criterion "Go2 stands in Isaac Lab" is implemented
+   (scripts/stand_go2.py, tests/test_sim_bringup.py) but was initially UNVERIFIED pending a
+   GPU run. The RTX 5090 is Blackwell (sm_120): requires Isaac Sim >= 5.x and torch cu128+
+   (pinned in README); Isaac Sim <= 4.5 will not run.
+   → RESOLVED 2026-06-13 (see #6): Isaac Sim 5.1 + torch cu128 run on the RTX 5090; M0 stand
    VERIFIED (`pytest -m sim tests/test_sim_bringup.py`), M0 checkbox now [x].
 #2 2026-06-12 | M0 | No GPU CI runner available -> CI has lint+unit only; sim smoke
    is a documented manual gate (`pytest -m sim` on GPU machine), per M0 scope
@@ -275,7 +380,7 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    continue with M1. Waterfall order preserved on paper — the M0 checkbox stays
    unchecked until the 5090 run; M1 work proceeded in parallel per instruction.
 #4 2026-06-12 | M1 | CLAUDE.md §1 defines the walking skeleton on Isaac Lab, but the
-   dev/CI machines have no GPU. Added a CPU surrogate backend
+   CI runner has no GPU. Added a CPU surrogate backend
    (kino_vla/sim/surrogate.py, friction-limited point robot) so the demo, its
    assertions, and CI exercise the full loop logic everywhere; `--backend auto`
    selects Isaac when importable. The M1 exit criterion "demo runs headless
@@ -290,9 +395,9 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    → UPDATED 2026-06-13 (see #7): the root-velocity write did NOT move the Go2
    (planted feet anchored it). Rewrote the backend to a kinematic POSE drive (feet
    float clear of contact). Still a stub — replaced by the trained policy at M2.
-#6 2026-06-13 | M0 | GPU stack installed on this RTX 3060 (Ubuntu 26.04, system
-   py3.14): Miniforge conda env `~/miniforge3/envs/kinovla` (py3.11), torch
-   2.7.0+cu126, Isaac Sim 5.1.0.0, Isaac Lab 2.3.0. Setup gotchas: (a) `isaaclab`
+#6 2026-06-13 | M0 | GPU stack installed on the RTX 5090 (Ubuntu 24.04):
+   Miniconda env `~/miniconda3/envs/kinovla` (py3.11), torch
+   2.7.0+cu128, Isaac Sim 5.1.0.0, Isaac Lab 2.3.0. Setup gotchas: (a) `isaaclab`
    pip ships core only — `isaaclab_assets` (UNITREE_GO2_CFG) installed editable from
    the IsaacLab v2.3.0 source clone at `~/IsaacLab`; (b) Isaac needs
    OMNI_KIT_ACCEPT_EULA=YES (persisted in the env's activate.d) or imports hang on
@@ -414,7 +519,7 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    background run completed cleanly in ~7 min and the demo/sim gates were unaffected.
 #18 2026-06-14 | M5 | M5 IS GPU-VERIFIED ON ISAAC (per the user directive that all development
    assume the GPU exists — surrogate-only is NOT a valid milestone endpoint). What runs on the
-   physically-simulated Go2 (RTX 3060, `pytest -m sim`):
+   physically-simulated Go2 (RTX 5090, `pytest -m sim`):
    • The semantic traversability map runs in the Isaac walking-skeleton loop: the real PhysX
      slip on the O1 ice overwrites the costmap (Isaac demo: physical_cells=75) and the avoid
      discs feed the planner; goal reached, no fall (tests/test_sim_operators.py asserts
@@ -485,7 +590,7 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 #22 2026-06-15 | M0–M5 | STRICT-GPU-COMPLETION PASS (user directive: make every M0–M5 real
    component strictly GPU-complete, not surrogate; "all training completed"). PAUSED mid-M4 at
    user request — recorded here for resume. AUDIT: re-ran the full `pytest -m sim` on the RTX
-   3060 → 6/6 GREEN (205 s; outputs/gpu_audit/baseline_sim.log), so the M0–M5 gates as written
+   5090 → 6/6 GREEN (205 s; outputs/gpu_audit/baseline_sim.log), so the M0–M5 gates as written
    hold today. Three strict-completion gaps remain (all previously logged honest scopes
    #13/#18/#21); the pass closes them on GPU:
    • M4 (IN PROGRESS): scripts/isaac_tokens_check.py gates ONLY μ at a RELAXED 0.12 bar;
@@ -515,7 +620,7 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
      labels; document it is not CLIP (no HF access).
    No milestone state changed this session; the previously-uncommitted M5 + M2/M3/M4 GPU-backfill
    work is committed alongside this audit.
-   → RESOLVED 2026-06-16 (see #23): all three gaps closed strictly on the RTX 3060.
+   → RESOLVED 2026-06-16 (see #23): all three gaps closed strictly on the RTX 5090.
 #23 2026-06-16 | M3/M4/M5 | STRICT-GPU-COMPLETION PASS — DONE (resolves #22). Closed the three
    gaps on the physically-simulated Go2:
    • M4 (CLOSED, strict): rewrote scripts/isaac_tokens_check.py as a decoupled collect(GPU,
@@ -549,8 +654,8 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
      BLOCKED here (see #24), so the input is a procedural render, not a live camera feed — the
      binding limitation is the camera, not the encoder (which is the real, verified upgrade).
 #24 2026-06-16 | M5 | ISAAC RTX HEADLESS RENDERING IS HARDWARE-BLOCKED ON THIS BOX. Any Isaac
-   camera needs RTX (`AppLauncher --enable_cameras`), which CRASHES this RTX 3060 / driver
-   595.71.05 / CUDA 13.2 / Ubuntu 26.04 / Isaac Sim 5.1 stack during app init — a native crash in
+   camera needs RTX (`AppLauncher --enable_cameras`), which CRASHED this RTX 5090 / driver
+   595.71.05 / Ubuntu 24.04 / Isaac Sim 5.1 stack during app init — a native crash in
    the viewport Hydra engine / libcarb.eventdispatcher plugin registration, BEFORE any user code
    (3 minimal probes: clean --enable_cameras, CUDA_VISIBLE_DEVICES+multi-GPU-disable, and proper
    --kit_args; all segfault/Fatal in <6 s — outputs/gpu_audit/cam_probe*.log). NOTE: huggingface.co
@@ -560,4 +665,187 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    the live-camera path (scripts/isaac_m5_perception_check.py) is correct code, kept for a working-
    RTX machine, and excluded from the sim gate here. A future RTX box (or a CPU OpenGL offscreen
    renderer) would lift this; the encoder + costmap-propagation contract is unchanged (drop-in).
+#25 2026-06-17 | M0 | KINOVLA ENV (RTX 5090). conda is `~/miniconda3`; the env is
+   `~/miniconda3/envs/kinovla` (py3.11). Full GPU tier installed and VERIFIED GREEN:
+   scripts/check_env.py (RTX 5090, sm_120, torch 2.7.0+cu128, cuda 12.8), 200 fast tests,
+   surrogate run_demo PASS, and the M0 Isaac Go2 stand PASS (base 0.311 m, tilt 0.028 rad). Stack:
+   Isaac Sim 5.1.0.0,
+   isaaclab 2.3.0 (pip core) + isaaclab_assets/isaaclab_tasks editable from the shared ~/IsaacLab
+   clone (tag v2.3.2; also feeds the fasttd3_isaaclab env — do NOT git-checkout it), rsl-rl-lib
+   3.0.1, skrl 2.1.0. Blackwell-specific install gotchas (resolved, recorded for any future
+   rebuild): (a) isaacsim hard-pins torch==2.7.0 and pulls the +cu126 wheel (arch ≤ sm_90, no
+   Blackwell kernels) — force-reinstall torch/torchvision/torchaudio ==…+cu128 from the cu128
+   index AFTER isaacsim (`pip install torch==2.7.0` alone is a no-op: pip treats +cu126/+cu128 as
+   equal versions); (b) isaaclab pins flatdict==4.0.1 whose sdist build needs pkg_resources (gone
+   in setuptools≥81) — pin setuptools==70.2.0 + `--no-build-isolation`; (c) isaaclab_assets/_tasks
+   are not on pypi.nvidia.com — editable `--no-deps` from ~/IsaacLab; (d) restore filelock==3.13.1
+   and packaging==23.0 (isaacsim-core pins) after the dev install; (e) a system ROS jazzy
+   PYTHONPATH (py3.12) leaks into the env and breaks pytest plugin autoload (launch_testing →
+   missing lark) — `unset PYTHONPATH` + OMNI_KIT_ACCEPT_EULA=YES are now in the env's
+   etc/conda/activate.d/kinovla_isaac.sh, so `conda activate kinovla` is clean. The #24 RTX-camera
+   block should be RE-PROBED on this 5090 (it may lift — not retested this session).
+   → RE-PROBED 2026-06-17 (see #26): still blocked; root cause found (unsupported driver branch).
+#26 2026-06-17 | M5 | RTX CAMERA STILL BLOCKED ON THE 5090 — ROOT CAUSE = UNSUPPORTED DRIVER (not
+   the GPU; OS is Ubuntu 24.04). Re-probed the live camera
+   3 ways, ALL segfault identically in librtx.scenedb.plugin / libcarb.scenerenderer-rtx at
+   carbOnPluginStartup, BEFORE any camera API call (outputs/gpu_audit/cam_probe_matrix.md):
+   [1] Isaac 5.1 + AppLauncher --enable_cameras; [2] Isaac 5.1 + isaacsim.SimulationApp({enable_
+   cameras}) + isaacsim.sensors.camera.Camera (the user-suggested 5.1 API path); [3] Isaac 4.5 +
+   SimulationApp({enable_cameras}) in the fasttd3_isaaclab env. So it is independent of Isaac
+   version and launch API. The box runs nvidia-595-open (a 595 dev/feature branch, open kernel
+   module) on kernel 6.17; NVIDIA tested Isaac Sim on the 580 Production Branch (580.65.06) /
+   Ubuntu 22.04–24.04. ACTION TAKEN: installed nvidia-driver-580-open (580.167.08 from the CUDA
+   repo); its DKMS module BUILT cleanly for kernel 6.17 (both 6.17.0-22 and -35). NOT YET ACTIVE —
+   a driver swap needs a REBOOT, which can't be done from inside this agent (it runs on this box).
+   PENDING: user reboots → `nvidia-smi` should read 580.167.08 → re-run scripts/isaac_m5_perception_
+   check.py --headless --enable_cameras. If it renders, the live (rgb, depth) drops into
+   kino_vla/map/rgbd.py:backproject_regions unchanged (#27). Revert if 580 regresses anything:
+   `sudo apt install nvidia-driver-595-open && reboot`. torch cu128 / sm_120 is unaffected by 580.
+   → RESOLVED 2026-06-17 (see #28): user rebooted into 580, RTX camera renders; a second nvrtc
+   sm_120 blocker was then found+fixed; live-RTX M5 perception PASSes.
+#27 2026-06-17 | M5 | M5 STRICTLY ALIGNED TO SPEC §7 (user directive "严谨的关闭M5"), camera-
+   independent. The real §7 grounding step — "结合 RGB-D 深度反投影，将 2D 像素区域持久化为里程计
+   坐标系下的 3D 区域" — was NOT implemented: SurrogateSegmenter (segmentation.py) skipped pixel
+   space, taking the scene's world rects and only displacing centres radially for O7. Implemented
+   the genuine geometry in kino_vla/map/rgbd.py: a pinhole CameraIntrinsics(from_hfov)/
+   CameraExtrinsics(look), a ground-plane RGB-D render (the synthetic depth sensor), pinhole depth
+   UNPROJECTION to odometry-frame footprints, O7 corruption applied IN THE DEPTH CHANNEL (so it
+   flows through the real unprojection, not a 2D hack), PixelAppearanceEncoder embeddings from the
+   rendered pixels, and an RgbdSegmenter that is a drop-in for SurrogateSegmenter's .segment
+   contract (injectable into TraversabilityMap; the cheap surrogate stays the live-loop default so
+   the demo hash is unchanged). Added Costmap.embedding_at + TraversabilityMap._appearance_at
+   prefers it, so propagation compares like-with-like (pixel feature under RGBD, class-hash under
+   the surrogate) — otherwise a real-pixel map never matches a class-hash query. VERIFIED on
+   procedural RGB-D (the renderer, not the math, is what the camera block prevents — #26): round-
+   trip footprint 4 mm, cross-view (odometry-frame) 7 mm, O7 bias 0.6→0.576 m displaced outward,
+   ice↔ice 1.00 vs ice↔mud 0.00, full chain (render→segment→backproject→costmap→overwrite→
+   propagate) condemns the homogeneous ice sheet and spares the mud. tests/test_rgbd_
+   backprojection.py 10/10; scripts/m5_perception_strict.py PASS (outputs/map/perception_strict.md);
+   210 fast green; ruff clean. HONEST RESIDUAL: real CLIP semantics (the encoder is a colour
+   histogram, not open-vocab) and a LIVE camera feed (procedural render until #26 reboot) — both
+   drop-in, neither is the §7 algorithm, which is now real.
+#28 2026-06-17 | M5/M0 | RTX CAMERA BLOCK RESOLVED (#26 closed) + sm_120 nvrtc fix + LIVE perception.
+   User rebooted into nvidia-driver-580-open (580.167.08); `nvidia-smi` reads 580.167.08 and torch
+   cu128/sm_120 is intact. The RTX scene-renderer NO LONGER segfaults — the live camera renders.
+   TWO blockers were in series; both fixed:
+   (a) The librtx.scenedb segfault: gone on the 580 Production Branch (it was the 595-open dev
+       branch, as diagnosed in #26). Confirmed by a minimal isaacsim.sensors.camera probe that now
+       returns real RGB frames (warm-up: call app.update() a few times after camera.initialize(),
+       else get_rgba() is empty).
+   (b) NEW second blocker once the camera launched: isaaclab math (quat_apply_inverse) and any
+       torch JIT fuser kernel threw `nvrtc: invalid value for --gpu-architecture (-arch)` — the
+       pip nvidia-cuda-* libs were still CUDA 12.6 (nvrtc 12.6.77) from isaacsim's torch-2.7.0+cu126
+       deps, while torch is +cu128, so the JIT called an nvrtc that doesn't know sm_120. FIX: `pip
+       install --no-deps nvidia-cuda-nvrtc-cu12==12.8.93 nvidia-cuda-runtime-cu12==12.8.90
+       nvidia-cublas-cu12==12.8.4.1 nvidia-cuda-cupti-cu12==12.8.90`. This was latent (the camera
+       crash hit first); it gates ALL Isaac sim on the 5090, so it is a required 5090 setup step.
+   LIVE-RTX M5 PERCEPTION GATE (scripts/m5_rtx_camera_perception.py, policy-free standalone, since
+   outputs/locomotion/policy.pt — gitignored — is absent in the rebuilt env): a minimal stage of
+   four UsdPreviewSurface material plates imaged by isaacsim.sensors.camera.Camera, PixelAppearance
+   Encoder run on the REAL rendered pixels. PASS (outputs/map/rtx_perception.md): different
+   materials don't cross-propagate (max cross 0.359 < 0.9), every material's two patches >> any
+   cross-pair (≥0.2 margin), saturated/mid-tone materials consolidate ≥0.9 (mud 0.977/adhesive
+   0.999/ground 0.999), ice→mud 0.000. HONEST FINDING (not a weakened bar): pale near-white ICE
+   same-material cosine is 0.72 < the 0.9 propagation bar — the network-free 4-bin RGB histogram is
+   brightness-fragile under real RTX lighting (the two plates render ~10% apart); ice is FAR from
+   every other material (cross 0.008) so it never mis-propagates, but its absolute consolidation
+   needs the illumination-invariant CLIP encoder the spec §7 names. Camera quirks recorded: the
+   isaacsim.SimulationApp launch path loads isaacsim.sensors.camera (AppLauncher does not); identity
+   orientation looks +X (use quat [0.7071,0,0.7071,0] to look down); disable /rtx/post/histogram+
+   tonemap or auto-exposure washes plates white; first capture at a fresh camera pose is reliable,
+   an in-place re-capture returns a stale frame. STILL OPEN: the policy-based sim suite (M2–M5
+   isaac_*_check.py, the 7 `pytest -m sim` gates) needs outputs/locomotion/policy.pt retrained
+   (scripts/train_locomotion.py) to re-verify on the 5090 — now unblocked by the nvrtc fix.
+   → policy.pt RETRAINED 2026-06-17 (4096 envs, mean reward 32.4, ~5 min wall-clock; JIT loads
+   48→12). The 7 `pytest -m sim` gates can now be re-run on the 5090 — see #29.
+#29 2026-06-17 | M2/M4 | THE 7 `pytest -m sim` GATES RE-VERIFIED ON THE 5090 — and an M4↔demo
+   policy tension found+resolved. First full-suite run: 6/7, with M4 (test_m4_kino_tokens_isaac)
+   FAILING strict μ/effort MAE (μ 0.138, effort 0.227) deterministically (identical across 2 runs).
+   ROOT CAUSE: the floor-0.3 retrained policy FELL on the M4 μ=0.07 excitation lane (near-
+   frictionless ice is far OOD of the 0.3 friction-DR floor) → post-fall windows read firm →
+   μ̂(0.07)=0.69 poisoned the per-level MAE; effort=0.38 was the documented mild-effort
+   unobservable floor (same band as the already-excluded 0.5). The μ̂ ice/firm separation + shield
+   coupling still passed — only the strict per-level regression failed. RESOLUTION (user chose
+   "retrain for ice-robustness", NOT weaken/exclude): lowered the friction-DR floor 0.3→0.08
+   (configs/locomotion/go2_flat_ppo.yaml) so the policy trains on ice-like friction and yields
+   informative μ=0.07 windows (it still eventually falls at the extreme, but the pre-fall windows
+   are now clean) — M4 passes all four θ (μ 0.066/payload 0.848/effort 0.096/support 0.062; the new
+   gait's torque budget also made mid-effort observable, fixing effort as a bonus). SIDE EFFECT: the
+   new gait broke the Isaac walking-skeleton demo — it re-slipped crossing the patch, the monitor
+   re-fired 3×, and the FSM-stub's avoid-circle GROWTH (1.5×/fire) compounded to a 13-waypoint wild
+   detour that toppled the robot (the #10/#19 FSM-stub thrash, NOT an ice fall — it survived first
+   contact). FIXED by recalibrating the Isaac monitor/FSM for the new gait (per #10): cooldown
+   1.5→6 s, avoid growth 1.5→1.0 (no explosive growth), radius 2.5→3.0, grace 6→9 s ⇒ one clean
+   detour clears the patch, demo PASS (fall=False, goal 0.29 m). NOTE the deeper M4↔demo tension: a
+   single friction-DR floor must serve BOTH informative-ice-windows (wants low floor) AND closed-
+   loop ice-crossing stability (the floor-0.3 gait crossed cleanly); floor 0.08 + the FSM
+   recalibration satisfies both here, but the real fix for the closed-loop side is the M7 VLA
+   planner replacing the thrash-prone FSM stub. Surrogate demo (CI gate on `main`) is unaffected
+   (different backend/configs, no policy). NO tolerance or exclusion-list was weakened to pass.
+#30 2026-06-17 | M6 | HONEST SCOPE of the Hindsight-CoT pipeline (matches the spec's offline/data
+   division of labour and the M4 #16 precedent). (a) TWO PATHS: the high-volume CI dataset is
+   surrogate-driven (M4 bang-bang excitation + Kino-Monitor; backend-agnostic numpy, same Obs/
+   feature schema as Isaac, #16). The spec's Isaac data pipeline (§1/§8.1) is now CLOSED ON GPU:
+   scripts/isaac_hindsight_check.py drives the REAL Go2 into each operator's failure in lateral
+   lanes (one process, Isaac is one-episode/process #21a), intercepts with the collection monitor,
+   and snapshots the REAL proprioception + privileged θ, then runs the SAME oracle + filter.
+   VERIFIED on the RTX 5090 (8th `pytest -m sim` gate, test_m6_hindsight_isaac): 7/7 operators
+   intercept; each snapshot's real θ CONFIRMS its failure (O1/O7 μ=0.10, O3 μ=0.08 post-collapse,
+   O5 +6 kg, O10 effort=0.20; O2/O4 resistance shows as the tracking channel, no 4-vec signature),
+   O4↔O2 both captured, 6 kept (outputs/gpu_audit/m6_hindsight.md). KEY: region operators gate to
+   the patch (snapshot the in-region failure, not the bang-bang edge transient — margin 0); global
+   operators (O5/O10) have no locus so they intercept anywhere (their θ is everywhere). The
+   truth-consistency filter — the §10 contribution — is backend-independent and golden-tested on its
+   own. (b) ScriptedOracle is a CONTROLLABLE SURROGATE for the external Oracle LLM
+   (unavailable in CI; the real ApiOracle external-LLM client is implemented + wired via an injected
+   completion, prompt golden-tested, but needs an API key). It derives the true class from the
+   snapshot and emits a correct CoT at rate (1-confab_rate), is fooled by genuinely-decoupled
+   appearance (natural confabulation), and confabulates otherwise — so the pipeline + card are
+   exercised deterministically with a realistic, tunable reject mix. The FILTER (the thing under
+   test) judges every CoT regardless of who produced it. (c) DATA COLLECTION ≠ THE RECOVERY LOOP:
+   PHASE 2 is "drive into the failure + intercept" (spec §10 "失败巡检"); the recovery planner is
+   what M7 trains, so the maze rollouts do NOT run the FSM/VLA — they excite + snapshot only. (d)
+   The collection monitor (configs/monitor/collection.yaml) is a deliberately HIGH-RECALL operating
+   point (lower thresholds) distinct from the deployment ROC point (rule_v0*.yaml) — data wants to
+   catch every anomaly; precision/recall calibration is a separate concern (spec §3/§12).
+#31 2026-06-17 | M6 | RESOLVED — the REAL Oracle-LLM CoT dataset IS now collected over REAL-Go2
+   snapshots (closes the surrogate-substitution gap the user flagged, the Oracle analogue of #30).
+   The user supplied an OpenAI-compatible gateway key (sublyx.org, Responses API, gpt-5.5; stored
+   chmod 600 at ~/.config/kinovla/oracle.env, gitignored). Built the decoupled GPU→CPU pipeline:
+   scripts/isaac_hindsight_collect.py drives the physically-simulated Go2 into each operator's
+   failure (kino_vla/data/isaac_rollout.py) and SAVES the real snapshots (real proprioception +
+   privileged θ); scripts/build_hindsight_dataset.py --from-snapshots annotates them with the real
+   gpt-5.5 Oracle (ApiOracle Responses-API MULTIMODAL — attaches the rendered RGB + the proprio
+   conditioning, material class NOT leaked) + the truth-consistency filter. RESULT after the
+   conditioning was iterated (19 real-Go2 snapshots, gpt-5.5): kept 13, dropped 6 (32% reject) — up
+   from 4/14 (71% reject) on the first naive pass. Per-operator: O1 ice 3/3, O3 thin-ice 3/3, O4
+   adhesion 3/3, O7 deceptive-ice 3/3, O2 mud 1/3, O5/O10 0/2. Two of three Suite-Sem ambiguity
+   pairs now COVERED on real-Go2 + real gpt-5.5: O1↔O3 (uniform ice slow-down vs thin-ice
+   region-marking — opposite granularity) and O4↔O2 (adhesion Backstep vs mud Switch_Gait — the
+   反直觉 backstep, the irreplaceability headline). The 6 drops are GENUINE gpt-5.5 confabulations
+   the filter caught (2 mud read as collapse; 4 = O5/O10). KEY METHODOLOGICAL FINDING — the filter
+   is validated on REAL LLM confabulations (not synthetic), and a frontier VLM needs good
+   conditioning to attribute these (the naive pass confabulated ~70%) — so §10 PHASE 3's filter is
+   ESSENTIAL. WHAT DROVE 4/14 → 13/19 (the conditioning iteration, all observable-evidence fixes,
+   NOT loosening the filter or leaking θ): (1) the first pass reported slip PEAK, which the
+   bang-bang gait saturates to ~1.0 on every surface ⇒ "slip⇒low-friction" everywhere → report
+   SUSTAINED means; (2) category NAMES without meanings → physical definitions; (3) a per-channel
+   TIME-SERIES (8 bins) instead of scalars — this is what let gpt-5.5 read O3's slip STEP (collapse)
+   vs O1's flat-high (uniform ice); (4) trace + sustained mean together (the bare trace read "noisy"
+   ⇒ obs_bias); (5) few-shot calibration examples (evidence→category→primitive); (6) reasoning_effort
+   xhigh. EFFORT OBSERVABILITY (probed: scripts/isaac_effort_probe.py): the O5/O10 effort_ratio≈0 was
+   investigated, NOT assumed. effort_sat_floor=0.7 ⇒ effort_ratio reads 0 unless mean torque > 0.7×cap.
+   • O10 (decay) — FIXED, not a bug: the dataset used a too-MILD decay (floor 0.20, cap stays above the
+     trot demand ⇒ binds 3% of steps); a SEVERE decay (floor 0.13–0.15, the spec's B-class O10) binds
+     (probe: floor 0.15 ⇒ eff_max 0.91, still walks; 0.10 ⇒ falls). Switched the O10 lanes to severe
+     decay + capture on the EFFORT channel with a post-bind delay (isaac_rollout) ⇒ effort_trace now
+     binds, e.g. [0,0,0,0.27,0.07,0.15,0.6,0.51]. O10 is now observable.
+   • O5 (payload) — GENUINELY UNOBSERVABLE via effort (the real #15 floor): eff_max=0.00 at every mass
+     (probe 6/10/8-offset), and ≥6 kg makes the policy FALL before any saturation — the load spreads
+     across 4 legs so the mean torque never reaches 0.7×cap. O5 overload manifests as FALLING, not
+     effort saturation, on this Go2; not fixable without a different observable. Excluded from scale.
+   SCALE: 19 snapshots is still proof-of-pipeline; the O10-fixed snapshots are re-collected but the
+   dataset annotations are stale until a re-annotate (fold into the scale run). An M7-scale set = more
+   Isaac lanes/runs over the OBSERVABLE ops (O1/O2/O3/O4/O7/O10; filter keeps ~80%+), O5 excluded; the
+   bottleneck is GPU (sequential Isaac) + gpt-5.5 $ (parallelizable). NOTE: rotate the pasted API key.
 ```
