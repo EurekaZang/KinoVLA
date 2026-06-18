@@ -155,6 +155,26 @@ def test_parser_handles_fenced_json(taxonomy):
     assert ann.attribution == "low_friction"  # 'ice' normalized via synonyms
 
 
+def test_parser_handles_prose_with_leading_braces(taxonomy):
+    """m4: an Oracle reply with brace-containing prose BEFORE the JSON still parses (greedy
+    find/rfind used to span both and fail → mis-counted as schema_invalid)."""
+    text = "Reasoning {the surface looks icy}; my final answer:\n" + json.dumps(
+        {
+            "thought": "x",
+            "attribution": "low_friction",
+            "action": {
+                "primitive": "Set_Constraint",
+                "params": {"max_speed": 0.4, "stiffness": 0.5},
+            },
+        }
+    )
+    ann = CoTAnnotation.from_oracle_text(
+        text, synonyms=taxonomy.synonyms, valid_categories=taxonomy.valid_categories
+    )
+    assert ann.attribution == "low_friction"
+    assert ann.primitive.name == "Set_Constraint"
+
+
 def test_parser_rejects_non_pixel_replan(taxonomy):
     text = json.dumps(
         {

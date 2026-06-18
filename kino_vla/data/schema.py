@@ -49,6 +49,11 @@ DROP_SCHEMA = "schema_invalid"
 DROP_ATTRIBUTION = "attribution_mismatch"
 DROP_PRIMITIVE = "primitive_not_feasible"
 DROP_SAFETY = "safety_rule_violation"
+# NOT a truth-consistency verdict: the Oracle CALL itself failed (API HTTP error / timeout /
+# dropped connection). Tracked as its own status so infrastructure flakiness is never counted as a
+# filter rejection — the reported reject-rate must reflect the FILTER's judgments only (the metric a
+# paper cites). Excluded from reject_rate; reported separately on the card. spec §10 PHASE 3.
+ORACLE_ERROR = "oracle_error"
 
 
 class CoTParseError(ValueError):
@@ -315,14 +320,63 @@ def _extract_json_object(text: str) -> dict[str, Any]:
     fence = _FENCE.search(candidate)
     if fence is not None:
         candidate = fence.group(1).strip()
-    else:
-        start, end = candidate.find("{"), candidate.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            candidate = candidate[start : end + 1]
-    try:
-        obj = json.loads(candidate)
-    except json.JSONDecodeError as err:
-        raise CoTParseError(f"Oracle output is not valid JSON: {err}") from err
-    if not isinstance(obj, dict):
-        raise CoTParseError("Oracle output must be a JSON object")
+    obj = _loads_json_object(candidate)
+    if obj is None:
+        raise CoTParseError("Oracle output is not a valid JSON object")
     return obj
+
+
+def _balanced_object_spans(s: str) -> list[tuple[int, int]]:
+    """Spans of top-level balanced ``{...}`` regions, brace-counting outside string literals."""
+    spans: list[tuple[int, int]] = []
+    depth = start = 0
+    in_str = esc = False
+    start = -1
+    for i, ch in enumerate(s):
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}" and depth > 0:
+            depth -= 1
+            if depth == 0:
+                spans.append((start, i + 1))
+    return spans
+
+
+def _loads_json_object(text: str) -> dict[str, Any] | None:
+    """Parse a JSON object from raw text, tolerating prose around (and before) the JSON.
+
+    Tries the whole string first, then the balanced ``{...}`` spans (preferring the LAST one that
+    decodes to a dict and carries an ``attribution`` — so a reply like ``"Reasoning {note}: {...}"``
+    still parses instead of being mis-counted as a schema reject)."""
+    try:
+        obj = json.loads(text)
+        if isinstance(obj, dict):
+            return obj
+    except json.JSONDecodeError:
+        pass
+    dicts: list[dict[str, Any]] = []
+    for a, b in _balanced_object_spans(text):
+        try:
+            cand = json.loads(text[a:b])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(cand, dict):
+            dicts.append(cand)
+    if not dicts:
+        return None
+    for cand in reversed(dicts):  # prefer the last well-formed annotation object
+        if "attribution" in cand or "action" in cand:
+            return cand
+    return dicts[-1]

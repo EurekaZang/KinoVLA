@@ -215,6 +215,8 @@ drive:
 report:
   target_samples_per_hour: 200   # the card reports achieved throughput vs this floor
   n_review_annotations: 10       # QA 5.2: emit N sample annotations to review on a prompt change
+  license: CC-BY-4.0             # dataset license — card "License" section (a release decision)
+  sft_scale_floor: 1000          # kept-count below which the card flags it proof-of-pipeline (m3)
 
 # --- M6 GPU gate (scripts/isaac_hindsight_check.py) — collect REAL-Go2 snapshots ---
 # The spec (§1/§8.1/§10) builds the data pipeline on Isaac Lab. This drives the physically-

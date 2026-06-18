@@ -17,10 +17,12 @@ from kino_vla.data import (
     ApiOracle,
     FailureTaxonomy,
     annotate_snapshots,
+    git_commit_sha,
+    load_snapshot_meta,
     load_snapshots,
     write_dataset,
 )
-from kino_vla.data.schema import CoTAnnotation, RecoveryPrimitive, Verdict
+from kino_vla.data.schema import ORACLE_ERROR, CoTAnnotation, RecoveryPrimitive, Verdict
 from kino_vla.utils.config import REPO_ROOT, load_config
 
 
@@ -60,18 +62,29 @@ def main() -> int:
     n_failed = 0
     for sid, r in by_id.items():
         i = int(sid.split("_")[0])
-        is_api_fail = r["verdict"]["reason"] == "schema_invalid" and "oracle call failed" in r[
-            "verdict"
-        ].get("detail", "")
+        v = r["verdict"]
+        # An Oracle-call failure: the new ORACLE_ERROR status, or a legacy "oracle call failed"
+        # record (pre-M1 it was mislabeled schema_invalid). Everything else reuses its annotation.
+        is_api_fail = v["reason"] == ORACLE_ERROR or (
+            v["reason"] == "schema_invalid" and "oracle call failed" in v.get("detail", "")
+        )
         if is_api_fail:
             n_failed += 1  # NOT cached ⇒ re-annotated
         else:
             cache[i] = _reconstruct(r)
 
+    meta = load_snapshot_meta(d / "snapshots.npz")
+    n_miss = max(0, int(meta.get("n_attempted", len(items))) - len(items))
     print(f"[retry] re-annotating {n_failed} failed snapshots (concurrency {args.concurrency})")
     oracle = ApiOracle.from_config(cfg)
     result = annotate_snapshots(
-        cfg, items, oracle=oracle, taxonomy=tax, concurrency=args.concurrency, cache=cache
+        cfg,
+        items,
+        oracle=oracle,
+        taxonomy=tax,
+        concurrency=args.concurrency,
+        cache=cache,
+        n_no_interception=n_miss,
     )
     write_dataset(
         result,
@@ -79,7 +92,7 @@ def main() -> int:
         d,
         seed=1,
         oracle_name="api gpt-5.5 over real-Go2 (retried)",
-        git_commit="retry",
+        git_commit=git_commit_sha(),
     )
     s = result.stats
     print(

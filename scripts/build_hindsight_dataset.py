@@ -70,15 +70,22 @@ def main() -> int:
         oracle = ScriptedOracle(cfg, taxonomy, seed=args.seed)
 
     if args.from_snapshots:
-        from kino_vla.data import annotate_snapshots, load_snapshots
+        from kino_vla.data import annotate_snapshots, load_snapshot_meta, load_snapshots
 
         items = load_snapshots(args.from_snapshots)
+        meta = load_snapshot_meta(args.from_snapshots)  # m5: true intercept rate from the collector
+        n_miss = max(0, int(meta.get("n_attempted", len(items))) - len(items))
         print(
             f"[hindsight] annotating {len(items)} REAL-Go2 snapshots from {args.from_snapshots} "
-            f"(concurrency={args.concurrency})"
+            f"(concurrency={args.concurrency}, {n_miss} lane(s) had no interception)"
         )
         result = annotate_snapshots(
-            cfg, items, oracle=oracle, taxonomy=taxonomy, concurrency=args.concurrency
+            cfg,
+            items,
+            oracle=oracle,
+            taxonomy=taxonomy,
+            concurrency=args.concurrency,
+            n_no_interception=n_miss,
         )
     else:
         result = run_pipeline(cfg, seed=args.seed, oracle=oracle, taxonomy=taxonomy)

@@ -69,7 +69,7 @@ def main() -> int:
             items.append((snap, op_theta))
 
     out = REPO_ROOT / args.out
-    save_snapshots(out, items)
+    save_snapshots(out, items, n_attempted=len(lanes))  # m5: persist the true intercept rate
     print(f"[collect] saved {len(items)}/{len(lanes)} real-Go2 snapshots → {out}")
     ok = len(items) >= int(args.min_keep)
     print("PASS: collected real-Go2 Hindsight snapshots" if ok else "FAIL: too few snapshots")

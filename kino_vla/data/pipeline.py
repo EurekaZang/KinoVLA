@@ -26,7 +26,7 @@ import numpy as np
 from kino_vla.data.filter import TruthConsistencyFilter
 from kino_vla.data.maze import MazeCell, generate_maze
 from kino_vla.data.oracle import OracleClient
-from kino_vla.data.schema import DROP_SCHEMA, DataSample, GroundTruth, Snapshot, Verdict
+from kino_vla.data.schema import ORACLE_ERROR, DataSample, GroundTruth, Snapshot, Verdict
 from kino_vla.data.snapshot import SnapshotRecorder
 from kino_vla.data.taxonomy import FailureTaxonomy
 from kino_vla.monitor.rule_monitor import RuleMonitor
@@ -50,8 +50,9 @@ class PipelineStats:
     n_interceptions: int
     n_no_interception: int
     kept: int
-    dropped: int
-    reject_rate: float
+    dropped: int  # FILTER rejections only (excludes oracle_error)
+    oracle_error: int  # Oracle API/transport failures — NOT a filter verdict (M1; excluded above)
+    reject_rate: float  # dropped / (kept + dropped) — the filter's reject rate, errors excluded
     by_reason: dict[str, int]
     per_operator_kept: dict[str, int]
     per_operator_total: dict[str, int]
@@ -68,6 +69,7 @@ class PipelineStats:
             "n_no_interception": self.n_no_interception,
             "kept": self.kept,
             "dropped": self.dropped,
+            "oracle_error": self.oracle_error,
             "reject_rate": round(self.reject_rate, 4),
             "by_reason": dict(self.by_reason),
             "per_operator_kept": dict(self.per_operator_kept),
@@ -138,6 +140,7 @@ def annotate_snapshots(
     filt: TruthConsistencyFilter | None = None,
     concurrency: int = 1,
     cache: dict[int, tuple] | None = None,
+    n_no_interception: int = 0,
 ) -> PipelineResult:
     """PHASE 3 over PRE-COLLECTED snapshots (the decoupled GPU→CPU path, CLAUDE.md #23).
 
@@ -166,8 +169,10 @@ def annotate_snapshots(
                     oracle.annotate(snap), ground_truth, prior_outputs=snap.prior_outputs
                 )
             except Exception as err:  # noqa: BLE001 - one bad API call must not kill a long run
+                # NOT a filter verdict — the Oracle call itself failed. ORACLE_ERROR keeps this
+                # out of the reject-rate (M1: infra flakiness != truth-consistency rejection).
                 annotation = None
-                verdict = Verdict(False, DROP_SCHEMA, detail=f"oracle call failed: {err}")
+                verdict = Verdict(False, ORACLE_ERROR, detail=f"oracle call failed: {err}")
         with lock:
             done[0] += 1
             if done[0] % 25 == 0 or done[0] == total:
@@ -189,7 +194,13 @@ def annotate_snapshots(
     else:
         samples = [process(x) for x in enumerate(items)]
     wall = time.perf_counter() - wall_start
-    stats = compute_stats(cfg, samples, n_cells=len(items), n_no_interception=0, wall=wall)
+    stats = compute_stats(
+        cfg,
+        samples,
+        n_cells=len(items) + n_no_interception,
+        n_no_interception=n_no_interception,
+        wall=wall,
+    )
     return PipelineResult(samples=samples, stats=stats)
 
 
@@ -269,18 +280,27 @@ def stats_from_records(
     dropped_records: list[dict[str, Any]],
     *,
     wall_time_s: float = 0.0,
+    n_no_interception: int = 0,
 ) -> PipelineStats:
     """Recompute :class:`PipelineStats` from kept+dropped JSONL records (dataset merge helper).
 
     Mirrors :func:`compute_stats` but reads the manifest dicts (``to_record``) instead of live
-    ``DataSample`` objects — so two datasets can be merged and the card auto-regenerated (QA 5.4),
-    without re-running the Oracle. Throughput is left at 0 (a merge has no single wall-clock)."""
+    ``DataSample`` objects — so two datasets can be merged and the card auto-regenerated (QA 5.4)
+    without re-running the Oracle. ``oracle_error`` records are split from the filter reject-rate
+    (M1) just like the live path; throughput is computed from ``wall_time_s`` when given (the merge
+    passes the summed component wall-clocks, m1) so the merged card is internally consistent."""
 
     def op(rec: dict[str, Any]) -> str:
         return rec["snapshot"]["operator_name"]
 
+    def reason(rec: dict[str, Any]) -> str:
+        return rec["verdict"]["reason"]
+
+    errors = [r for r in dropped_records if reason(r) == ORACLE_ERROR]
+    filter_dropped = [r for r in dropped_records if reason(r) != ORACLE_ERROR]
     n = len(kept_records) + len(dropped_records)
-    by_reason = dict(Counter(r["verdict"]["reason"] for r in kept_records + dropped_records))
+    n_filter = len(kept_records) + len(filter_dropped)
+    by_reason = dict(Counter(reason(r) for r in kept_records + dropped_records))
     coverage: dict[str, dict[str, Any]] = {}
     for pair in cfg.maze.ambiguity_pairs:
         a, b = str(pair[0]), str(pair[1])
@@ -288,21 +308,23 @@ def stats_from_records(
         kept_a = sum(1 for r in kept_records if op(r) == a)
         kept_b = sum(1 for r in kept_records if op(r) == b)
         coverage[label] = {a: kept_a, b: kept_b, "both_present": kept_a > 0 and kept_b > 0}
+    hours = wall_time_s / 3600.0 if wall_time_s > 0 else 0.0
     return PipelineStats(
-        n_cells=n,
+        n_cells=n + n_no_interception,
         n_interceptions=n,
-        n_no_interception=0,
+        n_no_interception=n_no_interception,
         kept=len(kept_records),
-        dropped=len(dropped_records),
-        reject_rate=(len(dropped_records) / n) if n else 0.0,
+        dropped=len(filter_dropped),
+        oracle_error=len(errors),
+        reject_rate=(len(filter_dropped) / n_filter) if n_filter else 0.0,
         by_reason=by_reason,
         per_operator_kept=dict(Counter(op(r) for r in kept_records)),
         per_operator_total=dict(Counter(op(r) for r in kept_records + dropped_records)),
         ab_balance_kept=dict(Counter(r["ground_truth"]["ab_class"] for r in kept_records)),
         ambiguity_coverage=coverage,
         wall_time_s=wall_time_s,
-        samples_per_hour=0.0,
-        kept_per_hour=0.0,
+        samples_per_hour=(n / hours) if hours > 0 else 0.0,
+        kept_per_hour=(len(kept_records) / hours) if hours > 0 else 0.0,
     )
 
 
@@ -315,7 +337,8 @@ def compute_stats(
     wall: float,
 ) -> PipelineStats:
     kept = [s for s in samples if s.verdict.keep]
-    dropped = [s for s in samples if not s.verdict.keep]
+    errors = [s for s in samples if s.verdict.reason == ORACLE_ERROR]
+    dropped = [s for s in samples if not s.verdict.keep and s.verdict.reason != ORACLE_ERROR]
     by_reason = dict(Counter(s.verdict.reason for s in samples))
     per_op_kept = dict(Counter(s.snapshot.operator_name for s in kept))
     per_op_total = dict(Counter(s.snapshot.operator_name for s in samples))
@@ -328,6 +351,7 @@ def compute_stats(
         kept_b = sum(1 for s in kept if s.snapshot.operator_name == b)
         coverage[label] = {a: kept_a, b: kept_b, "both_present": kept_a > 0 and kept_b > 0}
     n = len(samples)
+    n_filter = len(kept) + len(dropped)  # samples the FILTER actually judged (errors excluded)
     hours = wall / 3600.0 if wall > 0 else float("inf")
     return PipelineStats(
         n_cells=n_cells,
@@ -335,7 +359,8 @@ def compute_stats(
         n_no_interception=n_no_interception,
         kept=len(kept),
         dropped=len(dropped),
-        reject_rate=(len(dropped) / n) if n else 0.0,
+        oracle_error=len(errors),
+        reject_rate=(len(dropped) / n_filter) if n_filter else 0.0,
         by_reason=by_reason,
         per_operator_kept=per_op_kept,
         per_operator_total=per_op_total,
