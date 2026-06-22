@@ -21,12 +21,13 @@ import numpy as np
 from kino_vla.data.snapshot import SnapshotRecorder
 from kino_vla.loop import run_episode
 from kino_vla.map import SemanticRegion, TraversabilityMap
+from kino_vla.monitor.reflex import ActiveProbe
 from kino_vla.monitor.rule_monitor import RuleMonitor
 from kino_vla.shield.cbf_shield import CbfShield
 from kino_vla.shield.primitive_compiler import PrimitiveCompiler
 from kino_vla.sim.operators import FailureOperator, OperatorStack
 from kino_vla.utils.config import load_config
-from kino_vla.vla.planner import RolloutRecord, VlaPlanner, VlaPolicy
+from kino_vla.vla.planner import Phase, RolloutRecord, VlaPlanner, VlaPolicy
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,11 @@ class Scenario:
     start_xy: tuple[float, float] = (0.0, 0.0)
     start_heading: float = 0.0
     max_time_s: float = 16.0
+    # How a rollout counts as success. "reach" = reached the goal without falling (the default for
+    # traversable hazards). "safe_halt" = reached OR deliberately halted (Hold_and_Request) without
+    # falling — the correct outcome for O5 overload, where the load makes proceeding impossible and
+    # the right recovery is to stop safely (a blind detour topples under the load). Spec §5 / §2.5.
+    success_mode: str = "reach"
 
 
 @dataclass(frozen=True)
@@ -85,14 +91,20 @@ class RolloutResult:
 
 def run_vla_rollout(
     scenario: Scenario,
-    policy: VlaPolicy,
+    policy: VlaPolicy | None,
     *,
     seed: int,
     backend: str = "surrogate",
     use_compiler: bool = True,
     use_map: bool = False,
+    fsm_baseline: bool = False,
 ) -> RolloutResult:
-    """Run one closed-loop episode with the VLA planner; return the physical outcome."""
+    """Run one closed-loop episode with the VLA planner; return the physical outcome.
+
+    ``fsm_baseline=True`` runs the cause-blind rule-FSM (B2) instead of the VLA planner — the same
+    monitor/shield/scenario wiring, a different recovery policy (spec §12 baseline). ``policy`` is
+    ignored in that case.
+    """
     start_pos = np.asarray(scenario.start_xy, dtype=np.float64)
 
     if backend == "surrogate":
@@ -120,19 +132,21 @@ def run_vla_rollout(
         seed=seed,
         use_compiler=use_compiler,
         use_map=use_map,
+        fsm_baseline=fsm_baseline,
     )
 
 
 def run_closed_loop(
     backend_obj: object,
     scenario: Scenario,
-    policy: VlaPolicy,
+    policy: VlaPolicy | None,
     *,
     monitor_cfg: str,
     fsm_cfg: str,
     seed: int,
     use_compiler: bool = True,
     use_map: bool = False,
+    fsm_baseline: bool = False,
 ) -> RolloutResult:
     """Run the planner closed loop on an EXISTING backend (so Isaac reuses one app across lanes).
 
@@ -151,14 +165,21 @@ def run_closed_loop(
         privileged_fn=lambda: {},  # runtime: the planner never sees privileged θ (no leak)
         gate_rect=None,
     )
-    planner = VlaPlanner(
-        cfg=load_config(fsm_cfg),
-        policy=policy,
-        goal_xy=goal_xy,
-        dt=backend_obj.dt,
-        recorder=recorder,
-        compiler=compiler,
-    )
+    if fsm_baseline:
+        from kino_vla.vla.fsm_recovery import FsmRecovery
+
+        planner: object = FsmRecovery(load_config(fsm_cfg), goal_xy, backend_obj.dt)
+    else:
+        fsm_config = load_config(fsm_cfg)
+        planner = VlaPlanner(
+            cfg=fsm_config,
+            policy=policy,
+            goal_xy=goal_xy,
+            dt=backend_obj.dt,
+            recorder=recorder,
+            compiler=compiler,
+            probe=ActiveProbe.from_config(fsm_config),  # active-sensing probe (Gap-3 #34c)
+        )
     nav_map = None
     if use_map:
         nav_map = TraversabilityMap(
@@ -180,19 +201,25 @@ def run_closed_loop(
     reached = result.goal_reached
     fell = result.fell
     stuck = not reached and not fell
-    first = planner.decisions[0] if planner.decisions else None
+    decisions = getattr(planner, "decisions", [])  # the FSM baseline has no VLA decisions
+    first = decisions[0] if decisions else None
+    halted = getattr(planner, "phase", None) is Phase.HALTED  # VLA Hold (FSM never halts)
+    if scenario.success_mode == "safe_halt":
+        success = (reached or halted) and not fell  # O5: a deliberate safe stop counts
+    else:
+        success = reached and not fell
     return RolloutResult(
         scenario=scenario.name,
         reached=reached,
         fell=fell,
         stuck=stuck,
         final_dist_m=result.final_dist_m,
-        n_rounds=len(planner.decisions),
+        n_rounds=len(decisions),
         first_attribution=first.attribution if first else None,
         first_primitive=first.primitive if first else None,
-        decisions=list(planner.decisions),
-        success=reached and not fell,
-        first_snapshot=planner.first_snapshot,
+        decisions=list(decisions),
+        success=success,
+        first_snapshot=getattr(planner, "first_snapshot", None),
     )
 
 

@@ -240,6 +240,9 @@ def train_dpo(
     beta = float(cfg.train.beta)
     n_images = int(cfg.data.get("n_images", 1))
     route = str(cfg.get("route", "latent"))
+    # loss_span="action" (the §6 #36 fix) makes the DPO preference contrast the <Action> decision
+    # span only, not the confounded free-form Thought — essential for on-policy pairs.
+    loss_span = str(cfg.train.get("loss_span", "completion"))
     prompt_cfg = load_config("data/hindsight.yaml")  # §5 vocab for the prompt (not the vla cfg)
 
     def make_inputs(snapshot: Snapshot, completion: str) -> VlaInputs:
@@ -247,7 +250,11 @@ def train_dpo(
         messages = build_messages(ctx, prompt_cfg, route=route, n_images=n_images)
         images = list(snapshot.rgb[-n_images:]) if snapshot.rgb.size else []
         return model.build_inputs(
-            messages, images, target_text=completion, proprio_window=snapshot.proprio_window
+            messages,
+            images,
+            target_text=completion,
+            proprio_window=snapshot.proprio_window,
+            loss_span=loss_span,
         )
 
     # Precompute each pair's tokenized inputs AND the (fixed) reference logprobs once: the DPO

@@ -482,3 +482,25 @@ def test_collect_lane_region_op_runs_and_cleans(cfg, monitor_cfg):
     assert be._rects  # the friction region was installed via apply_operator
     if snap is not None:  # the high-recall monitor fires on the sustained in-region slip
         assert snap.privileged_theta["mu"] == pytest.approx(0.1)
+
+
+def test_collect_lane_probe_drives_decel_accel(cfg, monitor_cfg):
+    """Path B (Gap-3 #34c): with use_probe:true the collector runs the decel→accel probe at the
+    locus. The probe's re-accel speed (0.8) is distinct from the bang-bang (1.0/0.1), so seeing it
+    in the backend commands proves the probe maneuver executed before the capture."""
+    from kino_vla.data.isaac_rollout import collect_lane
+
+    cmds: list[float] = []
+
+    class _ProbeSpyBackend(_FakeBackend):
+        def step(self, cmd):
+            cmds.append(float(cmd[0]))
+            return super().step(cmd)
+
+    be = _ProbeSpyBackend()
+    lane = {"op": "O1_mu_field", "y": 0.0, "appearance": "ice_sheet", "mu": 0.1}
+    snap, _theta, _ = collect_lane(be, cfg, monitor_cfg, lane, seed=0)
+    assert snap is not None  # the probe-refilled window was captured
+    rounded = {round(c, 2) for c in cmds}
+    assert 0.8 in rounded, "the probe's re-accel (hi_mps=0.8) must drive the backend"
+    assert 0.1 in rounded, "the probe's brake (lo_mps=0.1) must drive the backend"

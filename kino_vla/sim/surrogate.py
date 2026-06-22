@@ -230,10 +230,12 @@ class SurrogateBackend:
         return self._obs()
 
     def _apply_resistance(self, vel_body: np.ndarray) -> np.ndarray:
-        """Decelerate by the tangential-resistance force of any region underfoot (O2/O4).
+        """Decelerate by the tangential resistance of any region underfoot (O2 mud / O4 tether).
 
-        Resistance grows with path length travelled inside the region: ``F = k*s + c*|v|``.
-        It opposes the current velocity (capped so a single step can't reverse it) and
+        O2 compliance is a soft-ground DRAG FIELD: ``F = drag + c*|v|`` — bounded, distance-
+        independent, crossable at reduced speed (real mud is drag, not an elastic trap). O4 tether
+        is the elastic spring ``F = k*(s−L_0) + c*|v|`` that grows with displacement and can snap.
+        The force opposes the current velocity (capped so a single step can't reverse it) and
         accumulates a sink offset (O2). On exit the per-region path/anchor state resets.
         """
         sink = 0.0
@@ -244,20 +246,35 @@ class SurrogateBackend:
                 state.reset()
                 continue
             speed = float(np.linalg.norm(vel_body))
-            s_eff = max(0.0, state.path_len - region.slack_length_m)
-            force = region.stiffness_n_per_m * s_eff + region.damping_ns_per_m * speed
-            if force > region.break_force_n:
-                state.broken = True
+            if region.kind == "compliance":
+                # Soft-ground drag field (mud): BOUNDED constant + viscous drag, NOT a spring; no
+                # penetration growth so it is crossable (§6 #38). stiffness_n_per_m is the drag [N].
+                force = region.stiffness_n_per_m + region.damping_ns_per_m * speed
+            else:
+                # O4 adhesive GRIP (Bug-1, entry-point form — HEADING-INDEPENDENT): the hold grows
+                # with the distance from where the dog ENTERED the patch (how deep). It resists
+                # motion that goes DEEPER (away from the entry) at full strength (STALLS), and
+                # peels (peel_factor) when the dog moves back TOWARD the entry — so back-off escapes
+                # whatever way the dog is facing (the body-frame form broke when it turned). A LOW-
+                # break tether still tears under forward load (distance==path_len there → M5 gate).
+                if state.entry is None:
+                    state.entry = self._pos.copy()
+                pen = float(np.linalg.norm(self._pos - state.entry))
+                moving_out = pen < state.pen_prev - 1.0e-4
+                state.pen_prev = pen
+                grip = region.stiffness_n_per_m * max(0.0, pen - region.slack_length_m)
+                force = grip * (region.peel_factor if moving_out else 1.0)
+                force += region.damping_ns_per_m * speed
+                if grip > region.break_force_n:
+                    state.broken = True
             if state.broken:
-                # Tether snapped (O4): no further resistance, but the region still "feels"
-                # different (sink persists for O2; O4 has none).
+                # Tether snapped under forward load (O4 low-break): no further resistance.
                 sink = max(sink, region.sink_depth_m)
                 continue
             if speed > 1e-9:
                 decel = force / self.mass_kg
                 dv = min(decel * self.dt, speed)
                 vel_body = vel_body - (vel_body / speed) * dv
-            state.path_len += float(np.linalg.norm(vel_body)) * self.dt
             sink = max(sink, region.sink_depth_m)
         self._base_height_offset = sink
         return vel_body
@@ -352,15 +369,19 @@ class _CollapseState:
 
 
 class _ResistanceState:
-    """Mutable per-region path-length / break state for O2/O4 resistance regions."""
+    """Mutable per-region state for O2/O4 resistance regions (Bug-1: entry-point grip)."""
 
-    __slots__ = ("region", "path_len", "broken")
+    __slots__ = ("region", "path_len", "broken", "entry", "pen_prev")
 
     def __init__(self, region: ResistanceRegion) -> None:
         self.region = region
         self.path_len = 0.0
         self.broken = False
+        self.entry = None  # world entry point into the patch (set on first contact)
+        self.pen_prev = 0.0  # last distance-from-entry (to detect backing-out vs going-deeper)
 
     def reset(self) -> None:
         self.path_len = 0.0
         self.broken = False
+        self.entry = None
+        self.pen_prev = 0.0

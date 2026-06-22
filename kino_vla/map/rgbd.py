@@ -144,6 +144,49 @@ def _pixel_rays(intr: CameraIntrinsics, extr: CameraExtrinsics) -> np.ndarray:
     return ray_w
 
 
+def pixel_to_ground(
+    intr: CameraIntrinsics, extr: CameraExtrinsics, u: float, v: float
+) -> np.ndarray | None:
+    """Back-project ONE pixel to the ground plane z=0 (odometry frame); returns (x, y) or None.
+
+    The single-ray inverse of :func:`render_ground_scene`: form the camera ray for pixel (u, v)
+    with the real intrinsics, rotate it to world by the camera pose, and intersect z=0. Turns the
+    VLA's Replan_Waypoint pixel into the next nav waypoint (depth-free, exact on the ground)."""
+    xc = (float(u) - intr.cx) / intr.fx
+    yc = (float(v) - intr.cy) / intr.fy
+    ray_w = extr.rot_wc @ np.array([xc, yc, 1.0])
+    n = float(np.linalg.norm(ray_w))
+    if n < 1e-9:
+        return None
+    ray_w = ray_w / n
+    if ray_w[2] >= -1e-6:  # the ray must point downward to hit the ground ahead
+        return None
+    t = -extr.pos[2] / ray_w[2]
+    if t <= 0.0 or t > 30.0:
+        return None
+    return (extr.pos + t * ray_w)[:2].copy()
+
+
+def ground_to_pixel(
+    intr: CameraIntrinsics, extr: CameraExtrinsics, world_xy: np.ndarray
+) -> tuple[float, float] | None:
+    """Project a z=0 ground point to a pixel — the exact inverse of :func:`pixel_to_ground`.
+
+    ``rot_wc`` columns are the camera axes in world, so ``rot_wc.T`` maps world→camera; a ground
+    point in front of the camera (camera-z > 0) lands at ``(fx·x/z+cx, fy·y/z+cy)``. Returns (u, v)
+    in pixels if the point is in front of the camera AND inside the image, else None. Used to label
+    the geometric next-waypoint as the pixel the VLA should emit (nav SFT)."""
+    p = np.array([float(world_xy[0]), float(world_xy[1]), 0.0])
+    d = extr.rot_wc.T @ (p - extr.pos)  # world → camera frame (x=right, y=down, z=forward)
+    if d[2] <= 1e-6:  # at/behind the image plane
+        return None
+    u = d[0] / d[2] * intr.fx + intr.cx
+    v = d[1] / d[2] * intr.fy + intr.cy
+    if 0.0 <= u < intr.width and 0.0 <= v < intr.height:
+        return (float(u), float(v))
+    return None
+
+
 def render_ground_scene(
     intr: CameraIntrinsics, extr: CameraExtrinsics, scene: list[SemanticRegion]
 ) -> RgbdFrame:

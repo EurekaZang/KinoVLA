@@ -1,15 +1,20 @@
 """O2 Compliance-Field — soft sinking ground (mud), spec §8.2 Axis I.
 
-θ = (k_c, c_c, d_sink, region). A compliant-contact patch: as the robot drives through
-it, a displacement-dependent tangential resistance ``F = k_c·s + c_c·|v|`` opposes motion
-and the chassis sinks by ``d_sink`` (a measurable base-height drop). **Explicitly not FEM
-softbody** (infeasible at RL-parallel scale, spec P1) — compliant contact + geometric
-sink. A/B boundary is continuous in θ (shallow mud [A] → deep bog [B], Suite-Bound).
+θ = (k_c, c_c, d_sink, region). A soft-ground **drag field**: a *bounded* tangential
+resistance ``F = drag + c_c·|v|`` (a constant Coulomb-like sinking drag ``drag``=k_c[N] plus a
+viscous term) opposes motion, and the chassis sinks by ``d_sink`` (a measurable base-height
+drop). Real mud is a drag field — resistance depends on speed, NOT on how far you have
+travelled — so it is **crossable at reduced speed**, not an elastic trap. **Explicitly not FEM
+softbody** (infeasible at RL-parallel scale, spec P1). A/B boundary is continuous in θ (shallow
+mud [A] → deep bog [B], Suite-Bound).
 
-Forms the **constructive ambiguity pair with O4** (spec §8.2, P4): tuned to share an
-identical tangential-resistance-vs-displacement curve with the O4 adhesive tether, so
-proprioception alone cannot tell soft mud from a sticky board — only the visual map
-(brown mud vs yellow adhesive) decides high-step-through vs back-off-and-route.
+NOTE (§6 #38): O2 was previously an elastic SPRING (``F = k·path_len``) to share an identical
+proprioceptive curve with the O4 adhesive tether — the §8.2 P4 ambiguity pair. That spring grew
+unboundedly with distance and TRAPPED the robot, contradicting "compliant = traversable". O2 is
+now a physically-faithful bounded drag, which RETIRES the O2↔O4 matched-proprioception claim
+(mud=drag ≠ tether=spring). Mud and adhesive still differ in appearance (brown vs yellow) and
+recovery (high-step-through vs back-off-and-route); the "vision-irreplaceable" leg now needs a
+redesigned vision-necessary pair (a human spec decision).
 """
 
 from __future__ import annotations

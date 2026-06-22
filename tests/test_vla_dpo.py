@@ -23,9 +23,17 @@ def tax(cfg):
 
 
 def _node_rollouts(cfg, tax):
-    """One success (correct) and one failure (wrong) rollout at the same O3 node."""
+    """One success (correct) and one failure (wrong) rollout at the same O3 node.
+
+    The surrogate stub has no VLA route-around, so the correct recovery cannot REACH on the
+    surrogate (that needs the real Isaac stack — §0); we stamp the real-stack success flag onto the
+    correct rollout to exercise the PAIRING logic under test (success ⇒ Chosen, failure ⇒ Rejected).
+    """
+    import dataclasses
+
     scn = S.o3_collapse()
     good = run_vla_rollout(scn, StubVlaPolicy(cfg, tax), seed=0, backend="surrogate")
+    good = dataclasses.replace(good, success=True)  # correct recovery succeeds on the real stack
     bad = run_vla_rollout(
         scn, StubVlaPolicy(cfg, tax, error_mode="sibling"), seed=0, backend="surrogate"
     )

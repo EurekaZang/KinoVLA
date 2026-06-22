@@ -25,19 +25,30 @@ from kino_vla.vla.rollout import run_vla_rollout
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Closed-loop success eval (exit-3)")
-    ap.add_argument("--policy", choices=["stub", "model"], default="stub")
+    # policy = the spec §12 baseline: stub (oracle/CI), model (B5 latent / B4 text / B3 vision-only
+    # via route+proprio_detail), or fsm (B2 rule-FSM, cause-blind Backstep+detour).
+    ap.add_argument("--policy", choices=["stub", "model", "fsm"], default="stub")
     ap.add_argument("--adapter", default=None)
     ap.add_argument("--config", default="vla/dpo.yaml")
     ap.add_argument("--backend", default="surrogate", choices=["surrogate", "isaac"])
+    ap.add_argument("--route", default=None, choices=["latent", "text"], help="route arm")
+    ap.add_argument(
+        "--proprio-detail",
+        default="binned",
+        choices=["binned", "scalar", "none"],
+        help="text route: 'none' = B3 vision-only (no proprioception)",
+    )
     ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--out", default="outputs/vla/closed_loop.json")
     args = ap.parse_args()
 
-    cfg = load_config(args.config)
+    cfg = load_config(args.config, {"route": args.route} if args.route else None)
     pcfg = load_config("data/hindsight.yaml")
     tax = FailureTaxonomy(pcfg)
 
+    policy = None
+    fsm_baseline = args.policy == "fsm"
     if args.policy == "model":
         import torch
 
@@ -54,8 +65,9 @@ def main() -> None:
             route=str(cfg.get("route", "latent")),
             n_images=int(cfg.data.get("n_images", 1)),
             temperature=args.temperature,
+            proprio_detail=args.proprio_detail,
         )
-    else:
+    elif args.policy == "stub":
         policy = StubVlaPolicy(pcfg, tax)
 
     rows = []
@@ -64,7 +76,9 @@ def main() -> None:
     scenarios = S.surrogate_scenarios() if args.backend == "surrogate" else S.all_scenarios()
     for scn in scenarios:
         for rep in range(args.repeats):
-            r = run_vla_rollout(scn, policy, seed=rep, backend=args.backend)
+            r = run_vla_rollout(
+                scn, policy, seed=rep, backend=args.backend, fsm_baseline=fsm_baseline
+            )
             rows.append({"scenario": scn.name, "rep": rep, **r.to_dict()})
             n_succ += int(r.success)
             n_tot += 1

@@ -27,6 +27,7 @@ import numpy as np
 from kino_vla.data.schema import Snapshot
 from kino_vla.data.snapshot import SnapshotRecorder
 from kino_vla.map.types import SemanticRegion
+from kino_vla.monitor.reflex import ActiveProbe
 from kino_vla.monitor.rule_monitor import MonitorEvent, RuleMonitor
 from kino_vla.sim.types import CollapseRegion, FrictionRegion, Obs, ResistanceRegion
 from kino_vla.utils.config import Config
@@ -138,6 +139,40 @@ def _onset_event(obs: Obs, op: str, channel: str) -> MonitorEvent:
     )
 
 
+def _collect_probe(cc: Config) -> ActiveProbe | None:
+    """The active-sensing probe for data collection (Gap-3 #34c, Path B), or None.
+
+    Loaded from the SAME deploy config (``recovery/fsm_isaac.yaml``) the planner uses, so the
+    training window is filled by the identical decel→accel maneuver as the deployment window —
+    the two are IID by construction (the standardizer then normalizes both into the same band).
+    Gated on ``isaac_collect.use_probe`` so the legacy bang-bang collection stays reproducible.
+    """
+    if not bool(cc.get("use_probe", False)):
+        return None
+    from kino_vla.utils.config import load_config
+
+    return ActiveProbe.from_config(load_config("recovery/fsm_isaac.yaml"))
+
+
+def _probe_capture(
+    backend: Any, recorder: SnapshotRecorder, probe: ActiveProbe, obs: Obs, event: MonitorEvent
+) -> Obs:
+    """At the failure locus, run the probe maneuver (buffering the response) then capture.
+
+    Mirrors the deployment planner (kino_vla/vla/planner.py): the monitor fires, the probe runs
+    decel→accel for ~one window, and the snapshot is taken on the now probe-dominated (and so
+    in-distribution) window. ``event`` carries the original onset metadata (channel/time)."""
+    probe.start(float(obs.t))
+    while not bool(obs.fallen):
+        cmd = probe.command(obs)
+        if cmd is None:
+            break
+        recorder.observe(obs, None)  # buffer the probe response; do not capture yet
+        obs = backend.step(cmd)
+    recorder.observe(obs, event)  # the window is the probe transient ⇒ capture the snapshot
+    return obs
+
+
 def _collect_embodiment_lane(
     backend: Any,
     cc: Config,
@@ -146,6 +181,7 @@ def _collect_embodiment_lane(
     obs: Obs,
     speed_fn: Callable[[int], float],
     rng: np.random.Generator,
+    probe: ActiveProbe | None = None,
 ) -> tuple[Snapshot | None, dict[str, float], bool]:
     """O5 (overload) / O10 (effort-decay): no spatial locus, no slip/visual tell — the #31 fix.
 
@@ -186,10 +222,16 @@ def _collect_embodiment_lane(
             break
         if countdown < 0 and float(obs.effort_ratio) >= effort_min:
             countdown = delay
-        event = _onset_event(obs, op, channel) if countdown == 0 else None
+        if countdown == 0:  # the onset: capture (under the probe maneuver when enabled)
+            event = _onset_event(obs, op, channel)
+            if probe is not None:
+                obs = _probe_capture(backend, recorder, probe, obs, event)
+            else:
+                recorder.observe(obs, event)
+            break
         if countdown > 0:
             countdown -= 1
-        recorder.observe(obs, event)
+        recorder.observe(obs, None)
         if recorder.snapshot is not None:
             break
         jit = 0.03 * rng.standard_normal(2)
@@ -197,7 +239,11 @@ def _collect_embodiment_lane(
     # Effort never bound (O5 below the strain floor) or it fell first — still snapshot the last
     # state so the lane is represented (a truly un-straining O5 will be filter-dropped, honestly).
     if recorder.snapshot is None:
-        recorder.observe(obs, _onset_event(obs, op, channel))
+        event = _onset_event(obs, op, channel)
+        if probe is not None:
+            _probe_capture(backend, recorder, probe, obs, event)
+        else:
+            recorder.observe(obs, event)
     if op == "O10_effort_decay":
         backend.set_effort_scale(1.0)  # restore before the next lane
     return recorder.snapshot, theta_for(lane), bool(obs.fallen)
@@ -257,8 +303,11 @@ def collect_lane(
         gate_rect=gate,
     )
     rng = np.random.default_rng(seed + 7)
+    probe = _collect_probe(cc)  # Path B: capture under the same maneuver the planner deploys (#34c)
     if op in ("O10_effort_decay", "O5_payload"):
-        return _collect_embodiment_lane(backend, cc, lane, recorder, obs, speed_fn, rng)
+        return _collect_embodiment_lane(
+            backend, cc, lane, recorder, obs, speed_fn, rng, probe=probe
+        )
 
     monitor = RuleMonitor(monitor_cfg, dt=dt)
     monitor.reset()
@@ -266,6 +315,12 @@ def collect_lane(
         if obs.fallen:
             break
         event = monitor.step(obs)
+        # At the in-region failure locus, run the probe then capture (the high-recall monitor also
+        # fires on the clean-ground bang-bang spike, so gate the probe to the patch — as the
+        # snapshot recorder gates its capture).
+        if event is not None and probe is not None and rect.contains(obs.pos):
+            obs = _probe_capture(backend, recorder, probe, obs, event)
+            break
         recorder.observe(obs, event)
         if recorder.snapshot is not None:
             break

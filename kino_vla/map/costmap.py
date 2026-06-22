@@ -29,16 +29,25 @@ from kino_vla.utils.geometry import Rect
 class Costmap:
     """A grid of traversability costs in [0, 1] over a fixed odometry-frame extent."""
 
-    def __init__(self, cfg: Config) -> None:
+    def __init__(self, cfg: Config, embed_dim: int | None = None) -> None:
         self._res = float(cfg.resolution_m)
         self._extent = (float(cfg.extent[0]), float(cfg.extent[1]))
         self._origin = -0.5 * np.asarray(self._extent, dtype=np.float64)  # lower corner (x,y)
         self._nx = int(round(self._extent[0] / self._res))
         self._ny = int(round(self._extent[1] / self._res))
+        # The appearance-feature width: 64 for the class/pixel surrogates, 512 for real CLIP. The
+        # map's similarity machinery is encoder-agnostic; only the stored feature width changes.
+        self._embed_dim = int(
+            embed_dim if embed_dim is not None else cfg.get("embed_dim", EMBED_DIM)
+        )
         self._cost = np.zeros((self._ny, self._nx), dtype=np.float64)
         self._physical = np.zeros((self._ny, self._nx), dtype=bool)
         self._observed = np.zeros((self._ny, self._nx), dtype=bool)
-        self._embed = np.zeros((self._ny, self._nx, EMBED_DIM), dtype=np.float64)
+        self._embed = np.zeros((self._ny, self._nx, self._embed_dim), dtype=np.float64)
+
+    @property
+    def embed_dim(self) -> int:
+        return self._embed_dim
 
     # ------------------------------------------------------------ indexing
 
@@ -146,6 +155,21 @@ class Costmap:
         i, j = cell
         embed = self._embed[j, i]
         return embed.copy() if float(np.linalg.norm(embed)) > 0.0 else None
+
+    def dominant_feature_in(self, rect: Rect) -> np.ndarray | None:
+        """The mean L2-normalised OBSERVED appearance feature over the cells in ``rect`` (None if
+        none observed). Robust source of a region's CLIP feature when the exact query cell was not
+        directly imaged (the forward-down camera rarely sees the cell under the robot)."""
+        feats = [
+            self._embed[j, i]
+            for i, j in self._cells_in_rect(rect)
+            if self._observed[j, i] and float(np.linalg.norm(self._embed[j, i])) > 0.0
+        ]
+        if not feats:
+            return None
+        mean = np.mean(feats, axis=0)
+        n = float(np.linalg.norm(mean))
+        return mean / n if n > 0.0 else None
 
     def crop(self, center_xy: np.ndarray, half_extent_m: float) -> MapCrop:
         """Local cost window centred on ``center_xy`` (planner context, spec §7)."""

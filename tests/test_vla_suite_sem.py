@@ -9,8 +9,10 @@ from kino_vla.data.schema import Snapshot
 from kino_vla.data.taxonomy import FailureTaxonomy
 from kino_vla.eval.suite_sem import (
     SemItem,
+    ambiguous_appearances,
     compare_vla_vs_fsm,
     evaluate_attribution,
+    evaluate_by_regime,
     majority_attribution,
 )
 from kino_vla.utils.config import load_config
@@ -87,3 +89,41 @@ def test_vla_beats_fsm_majority_baseline(cfg, tax):
 
 def test_majority_attribution_helper():
     assert majority_attribution(["a", "a", "b"]) == "a"
+
+
+def _mixed_suite(tax):
+    """Ambiguous (ice_sheet → 2 categories) + solvable (mud/adhesive → 1 each) — the §3 regimes."""
+    items = []
+    for op, cat, appr in [
+        ("O1_mu_field", "low_friction", "ice_sheet"),
+        ("O3_collapse", "region_collapse", "ice_sheet"),
+        ("O2_compliance", "compliant_terrain", "brown_mud"),
+        ("O4_tether", "adhesion", "yellow_adhesive"),
+    ]:
+        for _ in range(3):
+            items.append(
+                SemItem(
+                    snapshot=_snap(op, appr),
+                    attribution_truth=cat,
+                    ab_class="B",
+                    ambiguity_pair="pair",
+                    primitive_truth=str(tax._canonical.get(cat, "")),
+                )
+            )
+    return items
+
+
+def test_ambiguous_appearances_is_data_derived(tax):
+    """ice_sheet maps to 2 categories ⇒ appearance-ambiguous; mud/adhesive ⇒ solvable (purity 1)."""
+    assert ambiguous_appearances(_mixed_suite(tax)) == {"ice_sheet"}
+
+
+def test_evaluate_by_regime_partitions_correctly(cfg, tax):
+    """The Gap-1 cut: the decisive metric is the appearance-ambiguous (proprio-decided) subset."""
+    items = _mixed_suite(tax)
+    amb = ambiguous_appearances(items)
+    br = evaluate_by_regime(StubVlaPolicy(cfg, tax), items, ambiguous_apps=amb)
+    assert br["overall"]["n"] == 12
+    assert br["ambiguous"]["n"] == 6  # the two ice_sheet operators
+    assert br["solvable"]["n"] == 6  # mud + adhesive
+    assert br["ambiguous"]["attribution_accuracy"] == 1.0  # oracle stub attributes both correctly

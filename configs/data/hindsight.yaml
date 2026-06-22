@@ -226,6 +226,10 @@ report:
 # pipeline above stays the high-volume/CI path; this proves the rollout is real-Go2 (like the
 # M4/M5 GPU backfills, #21/#23). RGB-D is the camera-free §7 render (real geometry, M5 closure).
 isaac_collect:
+  # Path B (Gap-3 #34c): capture the proprio window under the SAME active-sensing probe maneuver the
+  # planner deploys (recovery/fsm_isaac.yaml probe block), so the train and deploy windows are IID
+  # and the projector standardizer normalizes both into the same band. False ⇒ legacy bang-bang.
+  use_probe: true
   settle_steps: 25
   n_steps: 300
   patch_cx: 2.2

@@ -34,6 +34,12 @@ def main() -> None:
     ap.add_argument("--route", default=None, choices=["latent", "text"], help="match the adapter")
     ap.add_argument("--temperature", type=float, default=0.0, help="VLA sampling temperature")
     ap.add_argument("--samples", type=int, default=1, help="VLA samples/item (mean acc @temp>0)")
+    ap.add_argument(
+        "--regime",
+        default="all",
+        choices=["all", "ambiguous"],
+        help="'ambiguous' restricts to appearance-ambiguous snapshots (proprio-decided; #35)",
+    )
     args = ap.parse_args()
 
     cfg = load_config(args.config, {"route": args.route} if args.route else None)
@@ -61,6 +67,12 @@ def main() -> None:
     eval_examples = split.test if args.split == "test" else split.val
     ids = [e.sample_id for e in eval_examples]
     items = load_suite_sem(dataset_dir, ids, ambiguity_only=True)
+    if args.regime == "ambiguous":
+        from kino_vla.eval.suite_sem import ambiguous_appearances
+
+        amb = ambiguous_appearances(items)
+        items = [it for it in items if it.snapshot.appearance_class in amb]
+        print(f"[regime=ambiguous] {len(items)} appearance-ambiguous items (apps={sorted(amb)})")
     train_categories = [e.attribution_truth for e in split.train]
     feasible = {k: set(v) for k, v in tax._feasible.items()}
 

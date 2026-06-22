@@ -34,7 +34,7 @@ from kino_vla.sim.types import (
     SupportLossRegion,
 )
 from kino_vla.utils.config import REPO_ROOT, Config
-from kino_vla.utils.geometry import wrap_angle
+from kino_vla.utils.geometry import Rect, wrap_angle
 
 
 def _read_material_friction(prim_path: str) -> tuple[float, float]:
@@ -78,6 +78,7 @@ class IsaacPolicyBackend:
         start_pos: np.ndarray,
         start_heading: float,
         record_cam: bool = False,
+        perception_cam: bool = False,
     ) -> None:
         import isaaclab.sim as sim_utils
         import torch
@@ -105,6 +106,10 @@ class IsaacPolicyBackend:
         self._n_patches = 0
         self._record_cam = bool(record_cam)
         self._camera = None
+        self._perception_cam_on = bool(perception_cam)
+        self._perception_cam = None
+        self._perception_eye: np.ndarray | None = None
+        self._perception_target: np.ndarray | None = None
 
         env_cfg = UnitreeGo2FlatEnvCfg()
         env_cfg.scene.num_envs = 1
@@ -124,6 +129,8 @@ class IsaacPolicyBackend:
 
         if self._record_cam:
             self._add_record_camera(env_cfg, cfg)
+        if self._perception_cam_on:
+            self._add_perception_camera(env_cfg, cfg)
 
         self._env = ManagerBasedRLEnv(cfg=env_cfg)
         self._robot = self._env.scene["robot"]
@@ -134,6 +141,9 @@ class IsaacPolicyBackend:
             eye = self._torch.tensor([[3.0, -4.5, 7.5]], device=self._device)
             target = self._torch.tensor([[3.2, 0.3, 0.2]], device=self._device)
             self._camera.set_world_poses_from_view(eye, target)
+        if self._perception_cam_on:
+            self._perception_cam = self._env.scene["perception_cam"]
+            self._disable_tonemap()
 
         policy_path = REPO_ROOT / str(cfg.policy_path)
         if not policy_path.exists():
@@ -171,6 +181,8 @@ class IsaacPolicyBackend:
             state["path_len"] = 0.0
             state["broken"] = False
             state["inside"] = False
+            state["entry"] = None
+            state["pen_prev"] = 0.0
 
     # ------------------------------------------------------------ episode API
 
@@ -237,6 +249,8 @@ class IsaacPolicyBackend:
         # step; persists across the env's physics substeps via write_data_to_sim).
         self._apply_resistance_wrench()
         self._update_collapse()  # O3: swap intact→collapsed friction on dwell
+        if self._perception_cam_on:
+            self._auto_aim_perception()  # aim the ground-perception cam BEFORE the render
         obs_dict, _, terminated, _truncated, _ = self._env.step(action)
         self._obs = obs_dict["policy"]
         self._slip = self._measure_slip()
@@ -388,6 +402,164 @@ class IsaacPolicyBackend:
             ),
         )
         return prim_path
+
+    # ------------------------------------------------------------ §7 live perception camera
+
+    def _add_perception_camera(self, env_cfg: object, cfg: Config) -> None:
+        """Add a robot-following down-looking RGB-D + semantic-seg camera (spec §7 perception).
+
+        Real pixels (rgb), real depth (distance_to_image_plane) and per-pixel semantic ids
+        (semantic_segmentation, raw ids — colorize off) so a failure region is CLIP-labelled from
+        real pixels and back-projected to odometry-frame geometry via the measured depth."""
+        from isaaclab.sensors import CameraCfg
+
+        env_cfg.scene.perception_cam = CameraCfg(
+            prim_path="/World/perception_cam",
+            update_period=0.0,
+            height=int(cfg.get("perception_cam_height", 180)),
+            width=int(cfg.get("perception_cam_width", 240)),
+            data_types=["rgb", "distance_to_image_plane", "semantic_segmentation"],
+            colorize_semantic_segmentation=False,  # raw uint32 ids + idToLabels mapping
+            spawn=self._sim_utils.PinholeCameraCfg(
+                focal_length=float(cfg.get("perception_focal_mm", 18.0)),
+                clipping_range=(0.05, 30.0),
+            ),
+        )
+
+    def _disable_tonemap(self) -> None:
+        """Albedo-faithful render so CLIP sees the texture, not a tonemapped frame (#28)."""
+        import carb
+
+        s = carb.settings.get_settings()
+        for key in ("/rtx/post/tonemap/enabled", "/rtx/post/histogram/enabled"):
+            s.set_bool(key, False)
+
+    def aim_perception_camera(self, eye_xyz: np.ndarray, target_xyz: np.ndarray) -> None:
+        """Re-aim the perception camera (eye, target in the start frame)."""
+        if self._perception_cam is None:
+            raise RuntimeError("perception camera not enabled (construct with perception_cam=True)")
+        origin = self._env.scene.env_origins[0]
+        eye = self._torch.tensor([[float(v) for v in eye_xyz]], device=self._device) + origin
+        target = self._torch.tensor([[float(v) for v in target_xyz]], device=self._device) + origin
+        self._perception_cam.set_world_poses_from_view(eye, target)
+        self._perception_eye = np.asarray(eye_xyz, dtype=np.float64)
+        self._perception_target = np.asarray(target_xyz, dtype=np.float64)
+
+    def _auto_aim_perception(self) -> None:
+        """Aim the ground-perception camera ahead of the robot (behind+above looking forward-down,
+        the vantage the Stage-A probe validated), in the start/odometry frame."""
+        data = self._robot.data
+        env_origin = self._env.scene.env_origins[0].cpu().numpy()
+        pos = data.root_pos_w[0].cpu().numpy()[:2] - env_origin[:2]
+        q = data.root_quat_w[0].cpu().numpy()  # (w, x, y, z)
+        yaw = math.atan2(2.0 * (q[0] * q[3] + q[1] * q[2]), 1.0 - 2.0 * (q[2] ** 2 + q[3] ** 2))
+        fwd = np.array([math.cos(yaw), math.sin(yaw)])
+        eye = np.array([pos[0] - 0.8 * fwd[0], pos[1] - 0.8 * fwd[1], 1.2])
+        target = np.array([pos[0] + 1.6 * fwd[0], pos[1] + 1.6 * fwd[1], 0.0])
+        self.aim_perception_camera(eye, target)
+
+    def add_textured_patch(
+        self, rect: Rect, material_name: str, semantic_label: str, *, lift_m: float = 0.03
+    ) -> str:
+        """Spawn a flat textured + semantically-tagged quad at a world Rect so the perception
+        camera sees a real surface to CLIP-segment + depth-back-project (§7)."""
+        import omni.usd
+        from PIL import Image
+        from pxr import Gf, Sdf, UsdGeom, UsdShade
+
+        from kino_vla.map.clip_segmentation import material_texture
+
+        stage = omni.usd.get_context().get_stage()
+        env_origin = self._env.scene.env_origins[0].cpu().numpy()
+        tex_dir = REPO_ROOT / "outputs" / "map" / "rtx_patch_tex"
+        tex_dir.mkdir(parents=True, exist_ok=True)
+        name = f"patchtex_{self._n_patches}"
+        self._n_patches += 1
+        png = str(tex_dir / f"{name}_{material_name}.png")
+        Image.fromarray(
+            (material_texture(material_name, seed=0, size=256) * 255).astype("uint8")
+        ).save(png)
+
+        mtl = UsdShade.Material.Define(stage, f"/World/Looks/{name}")
+        pbr = UsdShade.Shader.Define(stage, f"/World/Looks/{name}/PBR")
+        pbr.CreateIdAttr("UsdPreviewSurface")
+        pbr.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.9)
+        pbr.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+        reader = UsdShade.Shader.Define(stage, f"/World/Looks/{name}/stReader")
+        reader.CreateIdAttr("UsdPrimvarReader_float2")
+        reader.CreateInput("varname", Sdf.ValueTypeNames.Token).Set("st")
+        tex = UsdShade.Shader.Define(stage, f"/World/Looks/{name}/diffuseTex")
+        tex.CreateIdAttr("UsdUVTexture")
+        tex.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(png)
+        tex.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
+            reader.ConnectableAPI(), "result"
+        )
+        for w in ("wrapS", "wrapT"):
+            tex.CreateInput(w, Sdf.ValueTypeNames.Token).Set("repeat")
+        tex.CreateOutput("rgb", Sdf.ValueTypeNames.Float3)
+        pbr.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
+            tex.ConnectableAPI(), "rgb"
+        )
+        mtl.CreateSurfaceOutput().ConnectToSource(pbr.ConnectableAPI(), "surface")
+
+        prim_path = f"/World/{name}"
+        mesh = UsdGeom.Mesh.Define(stage, prim_path)
+        cx, cy = float(rect.cx + env_origin[0]), float(rect.cy + env_origin[1])
+        z = float(env_origin[2]) + float(lift_m)
+        hx, hy = float(rect.hx), float(rect.hy)
+        mesh.CreatePointsAttr(
+            [
+                Gf.Vec3f(cx - hx, cy - hy, z),
+                Gf.Vec3f(cx + hx, cy - hy, z),
+                Gf.Vec3f(cx + hx, cy + hy, z),
+                Gf.Vec3f(cx - hx, cy + hy, z),
+            ]
+        )
+        mesh.CreateFaceVertexCountsAttr([4])
+        mesh.CreateFaceVertexIndicesAttr([0, 1, 2, 3])
+        mesh.CreateNormalsAttr([Gf.Vec3f(0, 0, 1)] * 4)
+        mesh.SetNormalsInterpolation("vertex")
+        mesh.CreateDoubleSidedAttr(True)
+        mesh.CreateSubdivisionSchemeAttr("none")
+        st = UsdGeom.PrimvarsAPI(mesh).CreatePrimvar(
+            "st", Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.faceVarying
+        )
+        st.Set([(0, 0), (1, 0), (1, 1), (0, 1)])
+        UsdShade.MaterialBindingAPI(mesh.GetPrim()).Bind(mtl)
+        try:
+            from isaacsim.core.utils.semantics import add_update_semantics
+        except ImportError:  # older Isaac
+            from omni.isaac.core.utils.semantics import add_update_semantics
+        add_update_semantics(mesh.GetPrim(), semantic_label=semantic_label, type_label="class")
+        return prim_path
+
+    def capture_perception(self) -> dict | None:
+        """Real rgb + depth + semantic-seg (+ intrinsics, world pose, env origin) for §7
+        back-projection. Returns numpy arrays, or None if the perception camera is off."""
+        if self._perception_cam is None:
+            return None
+        cam = self._perception_cam
+        cam.update(self.dt)
+        out = cam.data.output
+
+        def _np(x: object) -> np.ndarray:
+            return x[0].detach().cpu().numpy()
+
+        seg = np.squeeze(_np(out["semantic_segmentation"])).astype(np.int64)
+        return {
+            "rgb": _np(out["rgb"])[..., :3],
+            "depth": np.squeeze(_np(out["distance_to_image_plane"])).astype(np.float64),
+            "seg": seg,
+            "id_to_labels": cam.data.info[0]["semantic_segmentation"]["idToLabels"],
+            "K": _np(cam.data.intrinsic_matrices),
+            "pos": cam.data.pos_w[0].detach().cpu().numpy(),
+            "quat_ros": cam.data.quat_w_ros[0].detach().cpu().numpy(),
+            "quat_world": cam.data.quat_w_world[0].detach().cpu().numpy(),
+            "quat_opengl": cam.data.quat_w_opengl[0].detach().cpu().numpy(),
+            "env_origin": self._env.scene.env_origins[0].detach().cpu().numpy(),
+            "eye": self._perception_eye,
+            "target": self._perception_target,
+        }
 
     # ------------------------------------------------------------ operator API
 
@@ -600,7 +772,14 @@ class IsaacPolicyBackend:
         """
         for r in regions:
             self._resistance.append(
-                {"region": r, "path_len": 0.0, "broken": False, "inside": False}
+                {
+                    "region": r,
+                    "path_len": 0.0,
+                    "broken": False,
+                    "inside": False,
+                    "entry": None,
+                    "pen_prev": 0.0,
+                }
             )
 
     def _apply_resistance_wrench(self) -> None:
@@ -618,17 +797,32 @@ class IsaacPolicyBackend:
             region = state["region"]
             if not region.rect.contains(pos):
                 state["inside"] = False
+                state["entry"] = None  # left the patch ⇒ the grip resets (the foot peels off)
+                state["pen_prev"] = 0.0
                 continue
-            if not state["inside"]:
-                state["inside"] = True  # path length accrues from region entry
-            s_eff = max(0.0, state["path_len"] - region.slack_length_m)
-            mag = region.stiffness_n_per_m * s_eff + region.damping_ns_per_m * speed
-            if mag > region.break_force_n:
-                state["broken"] = True
+            state["inside"] = True
+            if region.kind == "compliance":
+                # Soft-ground DRAG FIELD (mud): bounded constant + viscous drag, crossable (§6 #38);
+                # stiffness_n_per_m is the constant drag [N] for the compliance kind.
+                mag = region.stiffness_n_per_m + region.damping_ns_per_m * speed
+            else:
+                # O4 adhesive GRIP (Bug-1, entry-point form, HEADING-INDEPENDENT): the hold grows
+                # with the distance from where the dog ENTERED. It resists motion that goes DEEPER
+                # (away from the entry) at full strength (push-through STALLS), and peels (peel)
+                # when the dog moves back TOWARD the entry, so back-off escapes whatever way the dog
+                # faces. A LOW-break tether still tears under forward load (distance==path_len, M5).
+                if state["entry"] is None:
+                    state["entry"] = pos.copy()
+                pen = float(np.linalg.norm(pos - state["entry"]))
+                moving_out = pen < state["pen_prev"] - 1.0e-4
+                state["pen_prev"] = pen
+                grip = region.stiffness_n_per_m * max(0.0, pen - region.slack_length_m)
+                mag = grip * (region.peel_factor if moving_out else 1.0)
+                mag += region.damping_ns_per_m * speed
+                if grip > region.break_force_n:
+                    state["broken"] = True
             if not state["broken"] and speed > 1e-6:
-                # Oppose the body-frame planar velocity (Hooke's-law + viscous drag).
                 force_b[:2] += -(vel_b / speed) * mag
-            state["path_len"] += speed * self.dt
         forces = torch.from_numpy(force_b.reshape(1, 1, 3).astype(np.float32)).to(
             self._device
         )  # (env=1, body=1, 3)

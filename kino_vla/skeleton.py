@@ -53,6 +53,8 @@ def build_walking_skeleton(
     record_cam: bool = False,
     use_map: bool = True,
     operator_factory: Callable[[Rect], tuple[FailureOperator, SemanticRegion | None]] | None = None,
+    map_overrides: dict[str, Any] | None = None,
+    live_perception: bool = False,
 ) -> WalkingSkeleton:
     """Assemble the full skeleton for one episode; ``backend`` is surrogate|isaac.
 
@@ -101,7 +103,11 @@ def build_walking_skeleton(
         from kino_vla.sim.isaac_policy_backend import IsaacPolicyBackend
 
         backend_obj = IsaacPolicyBackend(
-            load_config("sim/go2_skeleton.yaml"), start_pos, start_heading, record_cam=record_cam
+            load_config("sim/go2_skeleton.yaml"),
+            start_pos,
+            start_heading,
+            record_cam=record_cam,
+            perception_cam=live_perception,
         )
     else:
         raise ValueError(f"unknown backend {backend!r}; expected 'surrogate' or 'isaac'")
@@ -125,7 +131,27 @@ def build_walking_skeleton(
     # region so the physical slip can overwrite + propagate over the whole sheet (spec §7).
     nav_map = None
     if use_map and scene_region is not None:
-        nav_map = TraversabilityMap(load_config("map/traversability_v0.yaml"), scene=[scene_region])
+        if live_perception and backend == "isaac":
+            # REAL camera-grounded §7 map: texture + semantically tag the hazard on the terrain so
+            # the RTX perception camera sees it, and ground the costmap from those real pixels
+            # (LiveRtxSegmenter: semantic mask + real-CLIP label + ray∩ground footprint).
+            from kino_vla.map.clip_segmentation import APPEARANCE_TO_MATERIAL
+            from kino_vla.map.live_rtx_segmenter import LiveRtxSegmenter
+
+            material = APPEARANCE_TO_MATERIAL.get(scene_region.appearance_class, "concrete")
+            backend_obj.add_textured_patch(scene_region.rect, material, material)
+            nav_map = TraversabilityMap(
+                load_config("map/traversability_v0.yaml"),
+                scene=[scene_region],
+                segmenter=LiveRtxSegmenter(backend_obj),
+            )
+        else:
+            # ``map_overrides`` lets a caller pick the §7 perception front-end (e.g.
+            # {"segmenter": "clip"} for the synthetic-CLIP demo); default None keeps the shared
+            # config's surrogate front-end so the CI/demo path is unchanged.
+            nav_map = TraversabilityMap(
+                load_config("map/traversability_v0.yaml", map_overrides), scene=[scene_region]
+            )
     return WalkingSkeleton(
         backend=backend_obj,
         operators=OperatorStack([hazard_op]),

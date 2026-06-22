@@ -105,6 +105,11 @@ class ResistanceRegion:
     break_force_n: float = float("inf")
     slack_length_m: float = 0.0  # O4 tether free length L_0 before the spring engages
     kind: str = "compliance"
+    # O4 ADHESIVE GRIP (Bug-1): the hold grows with PENETRATION (forward progress into the patch),
+    # resists going deeper at full strength (push-through stalls), but is scaled by peel_factor (<1)
+    # when reversing, so the dog escapes by PEELING OUT (backing off), not by pushing through. The
+    # grip still snaps at break_force_n (a LOW-break tether tears under forward load, the M5 gate).
+    peel_factor: float = 1.0
 
 
 @dataclass(frozen=True)

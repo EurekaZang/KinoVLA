@@ -15,7 +15,7 @@ repeated-push protocol (operator O6) — the spec §6.9 groundwork and the M2 ga
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -56,6 +56,76 @@ class Reflex:
             self._backend.set_reflex(engage)
             self._engaged = engage
         return np.zeros(3) if engage else None
+
+
+@dataclass
+class ActiveProbe:
+    """Active-sensing probe — a brief decel→accel maneuver at the failure locus (Gap-3 #34c fix).
+
+    Issued the instant the monitor fires, BEFORE the VLA reads the 500 ms snapshot (spec §6.9 reflex
+    stage). Two jobs: (i) refill the proprioception window with the SAME bang-bang excitation
+    transient the M6 training data was collected under — the projector standardizer (kino_vla/vla/
+    sft.py) is fit on bang-bang windows, so a smooth deployment window normalizes into the OOD
+    negative tail and the attribution collapses to "overload"; (ii) causally disambiguate — a rigid
+    wall (O8) blocks both the brake and the re-accel (tracking_err persists), friction lets motion
+    resume, an overload bogs with effort≈0, an effort-decayed actuator saturates on the re-accel.
+    The command is emitted through the same ``backend.step(velocity)`` path the collector
+    (kino_vla/data/isaac_rollout.py) and the planner use, so the deploy window matches the train
+    window by construction. Disabled (``None``, the default) ⇒ the planner reflects immediately.
+    """
+
+    decel_s: float
+    accel_s: float
+    lo_mps: float = 0.1  # the bang-bang LOW (brake target), matching the collector's speed_lo
+    hi_mps: float = 0.8  # the bang-bang HIGH (re-accel); capped at the Go2's stable cruise
+    settle_window_ms: float = 500.0  # hold the re-accel until the 500 ms window is probe-dominated
+    _start_t: float = field(default=float("inf"), init=False)
+    _done: bool = field(default=False, init=False)
+
+    @property
+    def total_s(self) -> float:
+        """Probe duration: long enough that the full 500 ms window is probe motion."""
+        return max(self.decel_s + self.accel_s, self.settle_window_ms / 1000.0)
+
+    def start(self, t: float) -> None:
+        """Arm the probe at time ``t`` (the monitor-event time)."""
+        self._start_t = float(t)
+        self._done = False
+
+    @property
+    def active(self) -> bool:
+        return self._start_t != float("inf") and not self._done
+
+    def command(self, obs: Obs) -> np.ndarray | None:
+        """The probe velocity for this step, or ``None`` once the window is probe-filled (yield).
+
+        DECEL (``decel_s``): brake forward speed toward ``lo_mps``. ACCEL+hold (until ``total_s``):
+        a sharp re-accel to ``hi_mps`` — the transient the standardizer expects. ``None`` afterwards
+        hands control back to the planner, which then captures the (now in-distribution) snapshot.
+        """
+        if not self.active:
+            return None
+        elapsed = float(obs.t) - self._start_t
+        if elapsed < self.decel_s:
+            return np.array([self.lo_mps, 0.0, 0.0])
+        if elapsed < self.total_s:
+            return np.array([self.hi_mps, 0.0, 0.0])
+        self._done = True
+        return None
+
+    @classmethod
+    def from_config(cls, cfg: Config) -> ActiveProbe | None:
+        """Build from an fsm config's optional ``probe:`` block; ``None`` when absent/disabled."""
+        probe = cfg.get("probe", None)
+        if probe is None or not bool(probe.get("enabled", False)):
+            return None
+        return cls(
+            decel_s=float(probe.decel_s),
+            accel_s=float(probe.accel_s),
+            lo_mps=float(probe.get("lo_mps", 0.1)),
+            hi_mps=float(probe.get("hi_mps", 0.8)),
+            settle_window_ms=float(probe.get("settle_window_ms", 500.0)),
+        )
 
 
 @dataclass(frozen=True)

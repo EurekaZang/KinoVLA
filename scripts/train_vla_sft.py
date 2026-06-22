@@ -24,6 +24,11 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Kino-SFT (Qwen3-VL-4B + LoRA + Kino-Projector)")
     ap.add_argument("--config", default="vla/sft.yaml")
     ap.add_argument("--dataset", default=None, help="override data.dataset_dir")
+    ap.add_argument(
+        "--nav-dataset",
+        default=None,
+        help="co-train the RTX nav-SFT examples in this dir (route-around turn/waypoint decisions)",
+    )
     ap.add_argument("--out", default="outputs/vla/sft")
     ap.add_argument("--route", default=None, choices=["latent", "text"])
     ap.add_argument("--epochs", type=int, default=None)
@@ -46,7 +51,7 @@ def main() -> None:
 
     cfg = load_config(args.config, overrides)
     dataset_dir = args.dataset or str(cfg.data.dataset_dir)
-    metrics = train_sft(cfg, dataset_dir, args.out)
+    metrics = train_sft(cfg, dataset_dir, args.out, nav_dataset_dir=args.nav_dataset)
     print(
         json.dumps(
             {k: metrics[k] for k in ("best_val_loss", "n_train", "n_val", "n_test", "wall_time_s")},

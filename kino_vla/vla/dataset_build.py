@@ -44,7 +44,8 @@ class VlaExample:
     target_text: str  # <Thought>…</Thought><Action>{json}</Action>
     rgb: np.ndarray  # (n_frames, H, W, 3) float — the model attaches the last n_images
     proprio_window: np.ndarray  # (W, F) the Kino-Tokens precursor (latent route)
-    target_theta: list[float]  # privileged-θ distillation target (TARGET_SCHEMA order)
+    target_theta: list[float] | None  # privileged-θ target (None for nav examples ⇒ skip θ loss)
+    loss_span: str = "completion"  # "completion" (recovery) | "action" (nav: score only <Action>)
 
 
 @dataclass(frozen=True)
@@ -98,12 +99,14 @@ def load_examples(
     route: str = "latent",
     reveal_appearance: bool = False,
     n_images: int = 1,
+    proprio_detail: str = "binned",
 ) -> list[VlaExample]:
     """Load every kept M6 sample as a :class:`VlaExample` (prompt + frames + target).
 
     ``route`` selects the proprioception representation (``"text"`` numbers vs ``"latent"``
     Kino-Tokens, spec §3); ``reveal_appearance`` is the text-only ablation that names the surface
-    instead of attaching frames.
+    instead of attaching frames; ``proprio_detail`` (text route) sets the §3 fidelity arm
+    (``binned``/``scalar``/``none``).
     """
     out = Path(out_dir)
     records = [
@@ -121,7 +124,12 @@ def load_examples(
             "proprio": npz[f"{sid}__proprio"],
         }
         snapshot = _snapshot_from_record(rec, frames)
-        ctx = context_from_snapshot(snapshot, route=route, reveal_appearance=reveal_appearance)
+        ctx = context_from_snapshot(
+            snapshot,
+            route=route,
+            reveal_appearance=reveal_appearance,
+            proprio_detail=proprio_detail,
+        )
         annotation = _annotation_from_record(rec)
         gt = rec["ground_truth"]
         examples.append(
@@ -138,6 +146,41 @@ def load_examples(
                 rgb=frames["rgb"],
                 proprio_window=frames["proprio"],
                 target_theta=[float(x) for x in rec["target_theta"]],
+            )
+        )
+    return examples
+
+
+def load_nav_examples(out_dir: str | Path) -> list[VlaExample]:
+    """Load the RTX nav-SFT dataset (``nav_meta.jsonl`` + ``nav_frames.npz``) as VlaExamples.
+
+    Each record carries the FULL nav prompt ``messages`` (built at generation time with the live
+    camera's geometry + map note) and the geometric target (a Turn or a Replan_Waypoint pixel), so
+    no rebuild is needed. ``target_theta=None`` (no privileged θ for a nav decision ⇒ projector/θ
+    loss skipped, model.compute_loss) and ``loss_span="action"`` (score the <Action> span)."""
+    out = Path(out_dir)
+    records = [
+        json.loads(line) for line in (out / "nav_meta.jsonl").read_text().splitlines() if line
+    ]
+    npz = np.load(out / "nav_frames.npz")
+    examples: list[VlaExample] = []
+    for rec in records:
+        sid = rec["sample_id"]
+        examples.append(
+            VlaExample(
+                sample_id=sid,
+                operator_name="navigation",
+                appearance_class="route_around",
+                ambiguity_pair=None,
+                ab_class="nav",
+                attribution_truth="nominal",
+                primitive_truth=rec["kind"],
+                messages=rec["messages"],
+                target_text=rec["target_text"],
+                rgb=npz[f"{sid}__rgb"],
+                proprio_window=npz[f"{sid}__proprio"],
+                target_theta=None,
+                loss_span="action",
             )
         )
     return examples

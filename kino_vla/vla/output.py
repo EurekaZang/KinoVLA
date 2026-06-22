@@ -20,6 +20,8 @@ loop alike.
 
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass
 
 from kino_vla.data.schema import CoTAnnotation, CoTParseError, RecoveryPrimitive
@@ -53,6 +55,7 @@ class ParsedDecision:
     raw_text: str
     annotation: CoTAnnotation | None = None
     reject_code: str = ""
+    nav_turn_deg: float | None = None  # set iff a NOMINAL-nav Turn (yaw_deg in [-90,90]); §5-free
 
     @property
     def attribution(self) -> str | None:
@@ -86,6 +89,42 @@ def parse_vla_decision(
     except CoTParseError as err:
         return ParsedDecision(ok=False, raw_text=text, reject_code=f"{REJECT_SCHEMA}: {err}")
     return ParsedDecision(ok=True, raw_text=text, annotation=annotation)
+
+
+_NAV_ACTION_TAG = re.compile(r"<Action>\s*(.*?)\s*</Action>", re.DOTALL | re.IGNORECASE)
+
+
+def _nav_action_json(text: str) -> dict | None:
+    """Extract the <Action>{json} object (or a bare JSON object) from a nav output; None if none."""
+    m = _NAV_ACTION_TAG.search(text)
+    for blob in ([m.group(1)] if m else []) + [text.strip()]:
+        try:
+            obj = json.loads(blob)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if isinstance(obj, dict):
+            return obj
+    return None
+
+
+def parse_nav_decision(
+    text: str, *, synonyms: dict[str, str], valid_categories: frozenset[str]
+) -> ParsedDecision:
+    """Parse a NOMINAL-mode nav output: a ``Replan_Waypoint`` (2D pixel) OR a ``Turn`` (``yaw_deg``
+    in [-90, 90], relative to the current heading). ``Turn`` is a nav-only primitive — NOT a §5
+    recovery primitive — so it is recognised here directly (the VLA may choose to rotate at ANY nav
+    tick, the user directive); everything else goes to the §5 :func:`parse_vla_decision`."""
+    obj = _nav_action_json(text)
+    if obj is not None and str(obj.get("primitive", "")).strip().lower() == "turn":
+        params = obj.get("params") or {}
+        raw = params.get("yaw_deg", obj.get("yaw_deg"))
+        try:
+            yaw = max(-90.0, min(90.0, float(raw)))
+        except (TypeError, ValueError):
+            yaw = None
+        if yaw is not None:  # Turn is §5-free ⇒ carried on nav_turn_deg, not a RecoveryPrimitive
+            return ParsedDecision(ok=True, raw_text=text, nav_turn_deg=yaw)
+    return parse_vla_decision(text, synonyms=synonyms, valid_categories=valid_categories)
 
 
 def to_compiler_primitive(

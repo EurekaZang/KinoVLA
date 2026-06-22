@@ -17,9 +17,15 @@ Each returns a :class:`~kino_vla.vla.rollout.Scenario` on a straight start→goa
 from __future__ import annotations
 
 from kino_vla.map.types import SemanticRegion
-from kino_vla.sim.operators.o1_mu_field import MuField
-from kino_vla.sim.operators.o3_collapse import Collapse
-from kino_vla.sim.operators.o8_invisible_collider import InvisibleCollider
+from kino_vla.sim.operators import (
+    Collapse,
+    ComplianceField,
+    EffortDecay,
+    InvisibleCollider,
+    MuField,
+    Payload,
+    Tether,
+)
 from kino_vla.utils.geometry import Rect
 from kino_vla.vla.rollout import Scenario
 
@@ -80,8 +86,93 @@ def o1_ice(y: float = 0.0) -> Scenario:
     )
 
 
+def o2_compliance(y: float = 0.0) -> Scenario:
+    """Mud (B): the correct recovery is Switch_Gait (high-step through). A blind detour wastes the
+    run; reading it as adhesion (Backstep) abandons a passable patch — the O2/O4 matched-proprio
+    pair, so the planner must read the appearance (brown mud) to pick power-through over escape."""
+    rect = _rect(y)
+    op = ComplianceField(rect, k_c=15.0, c_c=8.0, d_sink=0.05)
+    region = op.scene_region()
+    return Scenario(
+        name="O2_compliance",
+        operator=op,
+        scene_region=region,
+        operator_name="O2_compliance",
+        appearance_class=region.appearance_class,
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def o4_tether(y: float = 0.0) -> Scenario:
+    """Adhesion / glue board (B): the *counter-intuitive* case — the correct recovery is Backstep
+    (back off the sticky surface), not push-through. The O2↔O4 sibling: matched tangential
+    resistance, separated only by the yellow-adhesive appearance (spec §8.1 P4)."""
+    rect = _rect(y)
+    op = Tether(rect, k=150.0, d=6.0, l0=0.0, f_break=22.0)
+    region = op.scene_region()
+    return Scenario(
+        name="O4_tether",
+        operator=op,
+        scene_region=region,
+        operator_name="O4_tether",
+        appearance_class=region.appearance_class,
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def o5_payload(y: float = 0.0) -> Scenario:
+    """Heavy external overload ~16 kg (B, global): the robot physically cannot proceed, so the
+    correct recovery is Hold_and_Request — stop safely. A cause-blind detour topples under the load
+    (the decisive dichotomy cell). ``success_mode="safe_halt"`` credits a deliberate non-falling
+    stop as success. Global operator (no spatial patch); the surface is plain solid_ground."""
+    rect = _rect(y)
+    return Scenario(
+        name="O5_payload",
+        operator=Payload(mass_kg=16.0, com_offset_m=(0.0, 0.0)),
+        scene_region=SemanticRegion(rect=rect, appearance_class="solid_ground"),
+        operator_name="O5_payload",
+        appearance_class="solid_ground",
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+        success_mode="safe_halt",
+    )
+
+
+def o10_effort_decay(y: float = 0.0) -> Scenario:
+    """Actuator effort-decay to a severe floor (B, global): the robot's OWN motors weaken, so the
+    correct recovery is Switch_Gait (a limp/crawl gait). The O5↔O10 sibling: both crouch, split by
+    effort+slip (O10) vs grip+no-effort (O5). Global operator; plain solid_ground."""
+    rect = _rect(y)
+    return Scenario(
+        name="O10_effort_decay",
+        operator=EffortDecay(decay_rate_per_s=0.6, floor=0.15, t_start_s=2.0),
+        scene_region=SemanticRegion(rect=rect, appearance_class="solid_ground"),
+        operator_name="O10_effort_decay",
+        appearance_class="solid_ground",
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
 def all_scenarios(y: float = 0.0) -> list[Scenario]:
-    return [o8_invisible(y), o3_collapse(y), o1_ice(y)]
+    """The full B-class dichotomy set (Isaac deliverable): the 3 region pairs + the 2 global
+    embodiment ops, each on its own lane. O1/O3 (friction), O2/O4 (resistance), O5/O10 (embodiment),
+    O8 (unseen-generalization control)."""
+    return [
+        o1_ice(y),
+        o3_collapse(y),
+        o8_invisible(y),
+        o2_compliance(y),
+        o4_tether(y),
+        o5_payload(y),
+        o10_effort_decay(y),
+    ]
 
 
 def surrogate_scenarios(y: float = 0.0) -> list[Scenario]:

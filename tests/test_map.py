@@ -10,6 +10,7 @@ and the planner hand-off (crop + avoid discs).
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from kino_vla.map import (
     Costmap,
@@ -23,6 +24,40 @@ from kino_vla.utils.config import load_config
 from kino_vla.utils.geometry import Rect
 
 MAP_CFG = load_config("map/traversability_v0.yaml")
+
+
+# ------------------------------------------------------------ perception front-end selection
+
+
+def test_default_segmenter_is_clip_but_shared_config_pins_surrogate():
+    """The code default front-end is real CLIP (spec §7); the shared CI/demo config opts down to
+    the surrogate so the fast suite and the demo gate stay GPU/model-free (CLAUDE.md QA 5.1)."""
+    from kino_vla.map.traversability_map import DEFAULT_SEGMENTER
+
+    assert DEFAULT_SEGMENTER == "clip"
+    assert MAP_CFG.get("segmenter") == "surrogate"
+    # the shared config builds the cheap front-end (no torch/CLIP) ⇒ a 64-d costmap
+    assert type(TraversabilityMap(MAP_CFG).costmap.embed_dim) is int
+    assert TraversabilityMap(MAP_CFG).costmap.embed_dim == 64
+
+
+def test_make_segmenter_selects_front_end_lazily():
+    """make_segmenter maps the config string to the front-end class; the clip/rgbd imports are
+    lazy so *constructing* them does not load torch/CLIP (only .segment / .embed_dim would)."""
+    from kino_vla.map.clip_segmentation import ClipSegmenter
+    from kino_vla.map.rgbd import RgbdSegmenter
+    from kino_vla.map.traversability_map import make_segmenter
+
+    cam = MAP_CFG.camera
+    assert isinstance(make_segmenter("surrogate", cam), SurrogateSegmenter)
+    assert isinstance(make_segmenter("rgbd", cam), RgbdSegmenter)
+    assert isinstance(make_segmenter("clip", cam), ClipSegmenter)  # cheap: CLIP loads lazily
+    # a {'segmenter': 'clip'} override routes through the same selector (what the Isaac demo uses)
+    clip_cfg = load_config("map/traversability_v0.yaml", {"segmenter": "clip"})
+    seg = make_segmenter(str(clip_cfg.get("segmenter")), clip_cfg.camera)
+    assert isinstance(seg, ClipSegmenter)
+    with pytest.raises(ValueError):
+        make_segmenter("bogus", cam)
 
 
 # ------------------------------------------------------------ appearance embeddings

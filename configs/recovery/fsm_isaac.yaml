@@ -4,20 +4,58 @@
 # is armed, more stable on ice), a wider avoid circle that covers the whole 2 m patch
 # in one detour, and a longer post-replan commit so the intermittent ice slip does not
 # re-trigger a thrashing backstep loop mid-detour.
-cruise_speed_mps: 0.8    # the policy's stable cruise (gentler speeds steered it into stumbles)
+cruise_speed_mps: 0.6    # slower cruise: a route-AROUND needs stable turns (0.8 toppled on the
+                         # sharp in-place apex turn); the Go2 is upright + steerable at 0.6
 approach_slowdown_m: 0.5
 waypoint_tol_m: 0.3
-heading_gain: 2.0
+# VLA-as-planner clock (point 2): the VLA reflects every reflect_period_s — NOMINAL mode picks the
+# next nav waypoint (Replan_Waypoint pixel → back-project), RECOVERY mode (anomaly >= recovery_anomaly
+# OR a monitor fire) attributes + recovers. context_rounds = how many prior VLA outputs feed the next
+# round's prompt (nav coherence + tamps the #34c drift).
+reflect_period_s: 1.0
+nav_warmup_s: 0.0        # (deprecated) suppressing the whole first pick let the +y drift accumulate
+startup_straight_s: 2.5   # for the first 2.5 s, SLOWLY (startup_speed_mps) pure-pursue the start→goal
+startup_heading_gain: 1.8 # LINE — a gentle gait from rest + strong line tracking keeps the marginal
+startup_speed_mps: 0.35   # Go2 upright through the push-off (both an uncorrected +y drift AND a sharp
+                          # nav-pick turn topple it). Steps straight into the patch; the nav-pick still
+                          # fires, only its turn waits out the warmup.
+recovery_anomaly: 0.8
+context_rounds: 5
+heading_gain: 1.5        # gentler turn command (2.0 spun the dog hard enough to topple at the apex)
 align_angle_rad: 0.7
 cmd_slew_mps2: 1.2
-yaw_slew_radps2: 6.0
-event_grace_s: 9.0       # longer commit: the ice-robust gait (floor-0.08 retrain) re-slips a few
-                         # times crossing the patch; hold the detour so it clears in one pass
+yaw_slew_radps2: 3.5     # gentler yaw ramp: a slow in-place turn keeps the quadruped upright
+event_grace_s: 12.0      # the route-AROUND takes ~25 s; hold off the monitor so a route-around
+                         # stumble doesn't re-trigger recovery mid-maneuver (it clears in one pass)
 backstep:
   speed_mps: 0.25
-  duration_s: 3.0   # shorter reverse so it does not back deep into the patch
+  duration_s: 3.0        # legacy; superseded by max_duration_s
+  # GEOMETRIC exit (spec §5): reverse until the robot has physically backed out of the hazard by
+  # min_backout_m ALONG the entry direction — a real reverse, so Backstep actually clears the trap.
+  # (The earlier 'until anomaly clears' test fired the instant the tether snapped, before the slewed
+  # reverse took effect, so the robot never backed up — it pushed through + detoured.) max_duration_s
+  # is the safety cap. exit_anomaly/exit_debounce are retained, unused, for provenance.
+  min_backout_m: 1.0   # reverse (keeping the goal-facing heading) ≥1 m so the dog clears the patch
+  exit_anomaly: 0.6
+  exit_debounce: 10
+  max_duration_s: 14.0   # the dog DRIVES to a backout point outside the big patch — give it time
 avoid:
   radius_m: 3.0     # one detour clears the whole 2 m patch with margin (was 2.5)
   clearance_m: 0.4
   growth: 1.0       # NO explosive growth on re-fire — growth 1.5 compounded to a 13-waypoint wild
                     # detour that toppled the new gait (#19); a fixed wide circle detours cleanly
+
+# Active-sensing probe (Gap-3 #34c): on a monitor event, run a brief decel→accel maneuver BEFORE the
+# VLA reads the snapshot, to refill the 500 ms proprio window with the SAME bang-bang excitation the
+# M6 data was collected under (the projector standardizer is fit on bang-bang windows, so a smooth
+# deploy window is OOD → the attribution collapses to "overload"). It also causally disambiguates: a
+# rigid wall blocks both the brake and the re-accel; friction/ice lets motion resume; an overload
+# bogs with effort≈0; an effort-decayed actuator saturates on the re-accel. decel_s+accel_s ≈ the
+# 500 ms window; hi_mps is capped at the Go2's stable cruise (0.8) so the re-accel does not topple.
+probe:
+  enabled: true
+  decel_s: 0.25
+  accel_s: 0.25
+  lo_mps: 0.1
+  hi_mps: 0.8
+  settle_window_ms: 500.0

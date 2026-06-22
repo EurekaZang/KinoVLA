@@ -14,3 +14,9 @@ avoid:
   radius_m: 1.8          # avoid-circle radius marked at the event position
   clearance_m: 0.4
   growth: 1.5            # radius multiplier when the same region triggers again
+
+# Active-sensing probe (Gap-3 #34c) — DISABLED on the surrogate: it has no train/deploy proprio
+# shift (the surrogate point-robot's window is not standardizer-OOD), and keeping it off preserves
+# the pinned walking-skeleton demo trajectory hash. The probe is an Isaac-physics deployment tool.
+probe:
+  enabled: false

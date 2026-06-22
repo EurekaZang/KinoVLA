@@ -65,9 +65,13 @@ def main() -> None:
     ap.add_argument("--out", default="outputs/vla/dpo")
     ap.add_argument("--epochs", type=int, default=None)
     ap.add_argument("--grad-accum", type=int, default=None, help="override (lower=less VRAM)")
+    ap.add_argument("--set", nargs="*", default=[], help="dotted config overrides k=v")
     args = ap.parse_args()
 
     overrides: dict = {}
+    for kv in args.set:
+        k, v = kv.split("=", 1)
+        overrides[k] = v
     if args.epochs is not None:
         overrides["train.epochs"] = args.epochs
     if args.grad_accum is not None:

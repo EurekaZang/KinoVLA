@@ -91,6 +91,41 @@ def test_reveal_appearance_names_surface(cfg):
     assert "yellow_adhesive" not in user_text(ctx2, route="text")
 
 
+def test_proprio_fidelity_levels_render_distinctly(cfg):
+    """The §3 information-fidelity ablation knob (Gap-1, #35): binned ⊃ scalar ⊃ none."""
+    snap = _snapshot()
+    t_binned = user_text(
+        context_from_snapshot(snap, route="text", proprio_detail="binned"), route="text"
+    )
+    assert "slip_trace" in t_binned and "slip_mean" in t_binned  # full waveform
+    t_scalar = user_text(
+        context_from_snapshot(snap, route="text", proprio_detail="scalar"), route="text"
+    )
+    assert "slip_mean" in t_scalar  # the sustained mean survives
+    assert "slip_trace" not in t_scalar and "effort_trace" not in t_scalar  # the SHAPE is dropped
+    assert "sustained means" in t_scalar
+    ctx_none = context_from_snapshot(snap, route="text", proprio_detail="none")
+    t_none = user_text(ctx_none, route="text")
+    assert ctx_none.proprio_summary is None  # vision-only floor
+    assert "slip_mean" not in t_none and "slip_trace" not in t_none and "not provided" in t_none
+
+
+def test_reduce_proprio_keeps_means_drops_traces(cfg):
+    from kino_vla.data.oracle import _proprio_summary
+    from kino_vla.vla.prompt import _SCALAR_KEYS, _reduce_proprio
+
+    full = _proprio_summary(_snapshot())
+    assert _reduce_proprio(full, "binned") == full
+    scalar = _reduce_proprio(full, "scalar")
+    assert set(scalar) <= set(_SCALAR_KEYS) and all("trace" not in k for k in scalar)
+    assert _reduce_proprio(full, "none") is None
+
+
+def test_invalid_proprio_detail_raises(cfg):
+    with pytest.raises(ValueError):
+        context_from_snapshot(_snapshot(), route="text", proprio_detail="bogus")
+
+
 def test_format_target_round_trips_through_parser(cfg):
     """The SFT target must itself parse back to the same atomic decision (no train/serve skew)."""
     tax = FailureTaxonomy(cfg)

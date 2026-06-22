@@ -93,6 +93,44 @@ def majority_attribution(train_categories: list[str]) -> str:
     return Counter(train_categories).most_common(1)[0][0]
 
 
+def ambiguous_appearances(items: list[SemItem]) -> set[str]:
+    """The appearance classes whose look does NOT determine the category (purity < 1).
+
+    Data-driven (not hard-coded): an appearance is *appearance-ambiguous* when the same surface
+    look co-occurs with more than one privileged attribution in the set (e.g. ``ice_sheet`` =
+    low_friction OR region_collapse; ``solid_ground`` = low_friction/overload/effort_decay). On
+    these, vision alone cannot attribute — only the proprioception can — so they are the regime
+    where the latent Kino-Tokens route is claimed to earn its keep (spec §3/§4). The complement is
+    *appearance-solvable* (``brown_mud`` = compliant, ``yellow_adhesive`` = adhesion).
+    """
+    by_app: dict[str, set[str]] = {}
+    for it in items:
+        by_app.setdefault(it.snapshot.appearance_class, set()).add(it.attribution_truth)
+    return {app for app, cats in by_app.items() if len(cats) > 1}
+
+
+def evaluate_by_regime(
+    policy: VlaPolicy,
+    items: list[SemItem],
+    *,
+    ambiguous_apps: set[str],
+    feasible_sets: dict | None = None,
+) -> dict:
+    """Attribution accuracy split by appearance regime (the §3 fidelity ablation's decisive cut).
+
+    ``overall`` is the whole Suite-Sem set; ``ambiguous`` is the proprio-decided subset (appearance
+    in ``ambiguous_apps``); ``solvable`` is the vision-decided complement. The latent route's claim
+    lives in ``ambiguous`` — ``overall`` is diluted/saturated by the vision-solvable half.
+    """
+    amb = [it for it in items if it.snapshot.appearance_class in ambiguous_apps]
+    solv = [it for it in items if it.snapshot.appearance_class not in ambiguous_apps]
+    return {
+        "overall": evaluate_attribution(policy, items, feasible_sets=feasible_sets),
+        "ambiguous": evaluate_attribution(policy, amb, feasible_sets=feasible_sets),
+        "solvable": evaluate_attribution(policy, solv, feasible_sets=feasible_sets),
+    }
+
+
 def evaluate_attribution(
     policy: VlaPolicy, items: list[SemItem], *, feasible_sets: dict | None = None
 ) -> dict:

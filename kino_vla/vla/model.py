@@ -222,8 +222,18 @@ class KinoVLA(nn.Module):
         target_text: str | None = None,
         proprio_window: np.ndarray | None = None,
         target_theta: list[float] | None = None,
+        loss_span: str = "completion",
     ) -> VlaInputs:
-        """Build tokenized inputs (+ masked labels when ``target_text`` is given)."""
+        """Build tokenized inputs (+ masked labels when ``target_text`` is given).
+
+        ``loss_span`` controls which completion tokens are supervised / scored:
+        ``"completion"`` (default) the whole ``<Thought>…</Action>``; ``"action"`` only the
+        ``<Action>{…}</Action>`` decision span (the Thought is masked into the context). The
+        ``"action"`` span is the fix for on-policy DPO (CLAUDE.md §6 #36): free-form Chosen/Rejected
+        generations differ wholesale in their Thought prose, so a whole-completion preference
+        optimizes spurious narrative features; masking to the Action makes the DPO contrast the
+        *decision* (attribution + primitive), the §11 target.
+        """
         pil = [Image.fromarray((np.clip(im, 0, 1) * 255).astype(np.uint8)) for im in images]
         msgs = self._expand_messages(messages, pil)
         prompt_text = self._kino_text(
@@ -237,10 +247,17 @@ class KinoVLA(nn.Module):
         else:  # training: full = prompt + completion + <|im_end|>
             full_text = prompt_text + target_text + "<|im_end|>\n"
             enc = self.processor(text=[full_text], images=proc_imgs, return_tensors="pt")
-            prompt_enc = self.processor(text=[prompt_text], images=proc_imgs, return_tensors="pt")
-            prompt_len = int(prompt_enc["input_ids"].shape[1])
+            # Mask everything up to the supervised span. For loss_span="action" the Thought joins
+            # the masked prefix, so only the <Action> decision tokens carry the loss/logprob.
+            mask_prefix = prompt_text
+            if loss_span == "action" and "<Action>" in target_text:
+                mask_prefix = prompt_text + target_text.split("<Action>", 1)[0]
+            elif loss_span not in ("completion", "action"):
+                raise ValueError(f"loss_span must be 'completion' or 'action', got {loss_span!r}")
+            prefix_enc = self.processor(text=[mask_prefix], images=proc_imgs, return_tensors="pt")
+            mask_len = int(prefix_enc["input_ids"].shape[1])
             labels = enc["input_ids"].clone()
-            labels[:, :prompt_len] = -100
+            labels[:, :mask_len] = -100
             labels[enc["attention_mask"] == 0] = -100
 
         return VlaInputs(

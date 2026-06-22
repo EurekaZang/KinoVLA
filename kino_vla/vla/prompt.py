@@ -19,17 +19,43 @@ and the projected Kino-Tokens.
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass, field
 
 from kino_vla.data.oracle import _proprio_summary
 from kino_vla.data.schema import CoTAnnotation, Snapshot
 from kino_vla.utils.config import Config
+from kino_vla.utils.geometry import wrap_angle
 
 # The single placeholder where the Kino-Projector splices its soft tokens (latent route). It is
 # a literal text marker in the user turn; the model replaces its tokens' embeddings in-place.
 KINO_TAG = "<kino_tokens>"
 
 ROUTES = ("text", "latent")
+# Proprioception fidelity levels for the text route (the §3 information-fidelity ablation):
+#   "binned" — the full per-channel time-series (the oracle-granularity serialization, B4);
+#   "scalar" — only the sustained means + tilt peak (the realistic REFLECT-style text summary);
+#   "none"   — no proprioception at all (the vision-only floor: how appearance-solvable is it?).
+# The latent route (B5) carries the full window as Kino-Tokens regardless of this knob.
+PROPRIO_DETAILS = ("binned", "scalar", "none")
+_SCALAR_KEYS = ("slip_mean", "effort_mean", "tracking_mean", "base_height_mean", "tilt_peak")
+
+
+def _reduce_proprio(summary: dict, detail: str) -> dict | None:
+    """Drop the per-channel traces for the lower-fidelity text arms (spec §3 ablation).
+
+    ``binned`` keeps the full waveform; ``scalar`` keeps only the sustained means (discarding the
+    temporal SHAPE that separates the matched pairs — a slip STEP vs flat-high, a crouch onset);
+    ``none`` returns ``None`` (no proprioception). This is the information-fidelity axis the latent
+    route is claimed to dominate — NOT a hobbled text route but a realistic one at each budget.
+    """
+    if detail == "none":
+        return None
+    if detail == "binned":
+        return summary
+    if detail == "scalar":
+        return {k: summary[k] for k in _SCALAR_KEYS if k in summary}
+    raise ValueError(f"proprio_detail must be one of {PROPRIO_DETAILS}, got {detail!r}")
 
 
 @dataclass(frozen=True)
@@ -45,6 +71,7 @@ class PlannerContext:
     prior_outputs: list[str]
     appearance_class: str | None = None  # set iff the surface name is revealed (text-only ablation)
     proprio_summary: dict | None = None  # text route: the time-series dict; latent route: None
+    proprio_detail: str = "binned"  # how proprio_summary was rendered (label + the §3 fidelity arm)
     map_note: str = ""  # optional semantic-map crop summary (spec §7), "" when no map context
     extras: dict = field(default_factory=dict)
 
@@ -54,16 +81,29 @@ def context_from_snapshot(
     *,
     route: str = "latent",
     reveal_appearance: bool = False,
+    proprio_detail: str = "binned",
+    map_note: str = "",
 ) -> PlannerContext:
-    """Build a :class:`PlannerContext` from a dataset snapshot (training / offline eval)."""
+    """Build a :class:`PlannerContext` from a dataset snapshot (training / offline eval).
+
+    ``proprio_detail`` (text route only; spec §3 fidelity ablation) selects how much of the 500 ms
+    proprioception reaches the prompt: ``binned`` (full waveform, B4), ``scalar`` (means only, the
+    realistic text summary), or ``none`` (vision-only floor). The latent route always carries the
+    full window as Kino-Tokens.
+    """
     if route not in ROUTES:
         raise ValueError(f"route must be one of {ROUTES}, got {route!r}")
+    summary = None
+    if route == "text":
+        summary = _reduce_proprio(_proprio_summary(snapshot), proprio_detail)
     return PlannerContext(
         monitor_channel=snapshot.monitor_channel,
         pose_xy=(float(snapshot.pose_xy[0]), float(snapshot.pose_xy[1])),
         prior_outputs=list(snapshot.prior_outputs),
         appearance_class=snapshot.appearance_class if reveal_appearance else None,
-        proprio_summary=_proprio_summary(snapshot) if route == "text" else None,
+        proprio_summary=summary,
+        proprio_detail=proprio_detail,
+        map_note=map_note,
     )
 
 
@@ -129,10 +169,17 @@ def user_text(ctx: PlannerContext, *, route: str = "latent") -> str:
         raise ValueError(f"route must be one of {ROUTES}, got {route!r}")
     if route == "latent":
         proprio_line = f"- proprioceptive Kino-Tokens (500 ms): {KINO_TAG}\n"
-    else:
-        summary = ctx.proprio_summary if ctx.proprio_summary is not None else {}
+    elif ctx.proprio_summary is None:  # vision-only arm (proprio_detail="none")
+        proprio_line = "- proprioception: not provided this round (reason from the RGB frames)\n"
+    elif ctx.proprio_detail == "scalar":
         proprio_line = (
-            f"- proprioceptive window time-series (bins oldest->newest): {json.dumps(summary)}\n"
+            "- proprioceptive summary (500 ms sustained means): "
+            f"{json.dumps(ctx.proprio_summary)}\n"
+        )
+    else:
+        proprio_line = (
+            "- proprioceptive window time-series (bins oldest->newest): "
+            f"{json.dumps(ctx.proprio_summary)}\n"
         )
     appearance_line = (
         f"- visible surface appearance ahead: {ctx.appearance_class}\n"
@@ -169,6 +216,111 @@ def build_messages(
     content.append({"type": "text", "text": user_text(ctx, route=route)})
     return [
         {"role": "system", "content": [{"type": "text", "text": system_prompt(cfg)}]},
+        {"role": "user", "content": content},
+    ]
+
+
+def nav_system_prompt(cfg: Config, *, has_hazard: bool = False) -> str:  # noqa: ARG001
+    """NOMINAL-mode prompt: the VLA is the 1 Hz nav planner (no anomaly) — pick the next waypoint
+    PIXEL toward the goal (verified zero-shot in scripts/vla_nominal_nav_probe.py). When a hazard is
+    in the map context (``has_hazard``) the VLA additionally OWNS a Turn primitive (the user rule);
+    on the hazard-free cruise the prompt is the bare waypoint form, so the cruise pick is unchanged
+    (adding the Turn text shifts the zero-shot cruise pick and the marginally-stable Go2 falls)."""
+    base = (
+        "You are the navigation planner on board a Unitree Go2 quadruped driving to a goal. No "
+        "anomaly is active right now. From the body camera RGB (a forward-down view of the ground "
+        "ahead), pick the NEXT navigation waypoint as a point on the safe, traversable ground "
+        "toward the goal. Output a single object in this EXACT format and nothing else:\n"
+        "<Thought>one sentence of navigation reasoning</Thought>\n"
+        '<Action>{"attribution": "nominal", "primitive": "Replan_Waypoint", '
+        '"params": {"point_px": [u, v]}}</Action>\n'
+        "point_px is [u, v] in 0..1000 normalised image coordinates (u left->right, v top->bottom) "
+        "of a ground pixel in the goal direction. CRITICAL: if the map context lists an "
+        "untraversable hazard region (a coloured patch you already got stuck in), you MUST route "
+        "AROUND it — pick a ground pixel on the CLEAR side of it, NEVER a pixel on the hazard "
+        "surface nor one straight through it toward the goal, even though the goal is beyond it."
+    )
+    if not has_hazard:  # the bare run-#23 cruise prompt verbatim ⇒ identical (stable) cruise pick
+        return base
+    return base + (
+        " PREFER a Replan_Waypoint that skirts the patch toward the goal. Output Turn ONLY when NO "
+        "clear ground to continue toward the goal is visible in your forward view (e.g. the patch "
+        "fills the view directly ahead) — a Turn rotates you in place to bring clear ground into "
+        "view; do NOT turn when a clear forward waypoint exists:\n"
+        '<Action>{"attribution":"nominal","primitive":"Turn","params":{"yaw_deg":d}}</Action>\n'
+        "d is degrees in [-90, 90] (+left, -right). After a Turn, pick a waypoint on the clear "
+        "ground now ahead that continues around the patch toward the goal."
+    )
+
+
+def format_map_note(pos: object, heading: float, regions: list) -> str:
+    """The §7 map-crop note: each known hazard region's bearing + world box + the route-around rule.
+
+    SHARED by the deployed planner (``VlaPlanner._map_note``) and the nav-SFT data generator so the
+    training and deployment ``map_note`` are byte-identical (the VLA transfers). ``regions`` is a
+    list of rects (``.cx/.cy/.hx/.hy``); ``pos`` is (x, y). Empty string when no regions."""
+    if not regions:
+        return ""
+    px, py = float(pos[0]), float(pos[1])
+    parts = []
+    for r in regions:
+        brg = math.degrees(wrap_angle(math.atan2(r.cy - py, r.cx - px) - float(heading)))
+        parts.append(
+            f"an untraversable hazard region (the coloured patch you got stuck in) at bearing "
+            f"{brg:+.0f} deg, world x [{r.cx - r.hx:.1f}, {r.cx + r.hx:.1f}], y "
+            f"[{r.cy - r.hy:.1f}, {r.cy + r.hy:.1f}]"
+        )
+    return (
+        "; ".join(parts)
+        + ". Head toward the goal but go AROUND that region on clear ground — any waypoint on "
+        "it is REJECTED. Do not flee from the goal; keep just enough distance to skirt it."
+    )
+
+
+def nav_user_text(ctx: PlannerContext, goal_bearing_deg: float, *, route: str = "latent") -> str:
+    """The NOMINAL-mode user turn: the goal bearing + prior outputs + (latent) Kino-Tokens."""
+    side = (
+        "straight ahead"
+        if abs(goal_bearing_deg) < 8
+        else ("ahead-left" if goal_bearing_deg > 0 else "ahead-right")
+    )
+    proprio_line = (
+        f"- proprioceptive Kino-Tokens (500 ms): {KINO_TAG}\n" if route == "latent" else ""
+    )
+    map_line = f"- MAP — {ctx.map_note}\n" if ctx.map_note else ""
+    tail = (
+        "Head toward the goal on clear ground, going AROUND the hazard patch you can SEE — a pick "
+        "ON the patch (or whose straight path crosses it) is REJECTED and you will be asked again. "
+        "Skirt the patch just closely enough to keep progressing toward the goal."
+        if ctx.map_note
+        else "Pick the next ground waypoint pixel toward the goal."
+    )
+    return (
+        "Navigation step:\n"
+        f"- goal direction: {side} (bearing {goal_bearing_deg:.0f} deg)\n"
+        "- the RGB frame of the ground ahead is attached\n"
+        f"{proprio_line}"
+        f"{map_line}"
+        f"- previous outputs this episode: {ctx.prior_outputs or 'none'}\n"
+        f"{tail}"
+    )
+
+
+def build_nav_messages(
+    ctx: PlannerContext,
+    cfg: Config,
+    goal_bearing_deg: float,
+    *,
+    route: str = "latent",
+    n_images: int = 1,
+) -> list[dict]:
+    """Chat messages for NOMINAL-mode nav-pick (point 2): the nav system prompt + the goal-bearing
+    user turn + image placeholders (the model attaches the real frames)."""
+    content: list[dict] = [{"type": "image"} for _ in range(max(0, int(n_images)))]
+    content.append({"type": "text", "text": nav_user_text(ctx, goal_bearing_deg, route=route)})
+    sys_text = nav_system_prompt(cfg, has_hazard=bool(ctx.map_note))  # Turn only after a hazard
+    return [
+        {"role": "system", "content": [{"type": "text", "text": sys_text}]},
         {"role": "user", "content": content},
     ]
 

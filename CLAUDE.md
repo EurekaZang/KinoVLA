@@ -18,6 +18,7 @@ Every Claude Code session MUST follow this loop:
 **Hard rules:**
 
 - Never mark a milestone complete without all exit criteria checked.
+- **ALL EXPERIMENTS RUN ON THE REAL STACK — NO SURROGATE IN ANY EXPERIMENT (user directive 2026-06-20).** Every experiment, result, ablation, metric, figure, and milestone exit criterion MUST be produced on the real components end-to-end: Isaac Sim (the physically-simulated Go2) + the live RTX camera + real CLIP + the camera-grounded semantic traversability map (LiveRtxSegmenter) + the trained VLA planner. The CPU surrogate backend, the ScriptedOracle, and synthetic/procedural renders are import-smoke + unit-test scaffolding ONLY — they are NEVER an experiment, a result, or a milestone verification, and must NEVER be reported or claimed as one anywhere in this file or the paper. A surrogate number is not a finding. If a real component is blocked, STOP and flag the blocker in §6 with evidence — do not substitute and do not report the surrogate result.
 - **Real spec-mandated dependencies are the deliverable — substituting a surrogate as a milestone endpoint is FORBIDDEN (the recurring failure; see #18, #30, #31).** The spec builds the system on Isaac Lab (`Kino-vla-v2.md` §1, §8.1) AND uses an external Oracle LLM for the CoT data (§10 PHASE 3). The CPU surrogate backend AND the offline ScriptedOracle exist ONLY as CI/dev conveniences — neither is EVER where a milestone finishes. Before marking ANY milestone complete you MUST:
   1. **Split it in the Plan step (write the split into Section 2):** list which components ride a real spec dependency — PhysX materials/contacts, the trained Go2 policy, RGB-D/RTX, parallel-env physics, real proprioception/privileged θ (all Isaac/GPU); and the real Oracle-LLM annotation (an external API, §10 PHASE 3) — versus which are *genuinely backend-agnostic pure logic* (the CBF-QP projection math, the truth-consistency filter, the config system).
   2. **Verify/produce every real-dependency component for real:** GPU components get a passing `pytest -m sim` gate on the physically-simulated Go2; the CoT dataset gets a real-Oracle-LLM run (`ApiOracle`), NOT ScriptedOracle output. (No GPU runner / no API key ⇒ a documented run + evidence in Section 4, or a flagged blocker in Section 6.) Pure-logic components may be CPU/surrogate-verified — and only those.
@@ -77,7 +78,28 @@ CURRENT TASK      : M7 IMPLEMENTED + trained on the REAL Qwen3-VL-4B (backbone #
                     LOOP: the full VLA runs on the real Go2 (attribute from real RGB+proprio → CBF
                     compile → execute); SFT temp-0 1/3 — limited by the M6 bang-bang→smooth proprio
                     shift + unseen O8 (#34, honest). Strong paper support = exit-1 on real-Go2 Isaac
-                    data. Next: M8 eval harness.   [HISTORICAL M6 notes below.]
+                    data. GAP-1 RESOLVED (#35, 2026-06-19) — the latent-route (B5) central thesis,
+                    which the aggregate tie left unsupported, now has STRONG honest evidence via the §3
+                    information-fidelity sweep on the n=24 appearance-ambiguous regime: proprioception
+                    is NECESSARY (vision_only 0.458, =0.0 on the matched-appearance siblings O1/O5, vs
+                    1.000 for every proprio arm), the latent route is PARETO-OPTIMAL (equal accuracy at
+                    +6 vs +256 tokens, 43×) and UNIQUELY θ-grounded; honest limit = attribution TIES
+                    across proprio fidelities (means separate these classes) so the win is necessity/
+                    efficiency/grounding, not accuracy (outputs/vla/ablation/M7_GAP1_RESULTS.md).
+                    GAP-2 (#36, 2026-06-19) — the §11 Embodied DPO exit-3 ("DPO doesn't beat SFT /
+                    on-policy diverged"): root-caused the divergence to the THOUGHT CONFOUND (71% of
+                    the on-policy completion is free-form Thought prose that completion_logprob scored);
+                    FIX = loss_span="action" (score only the <Action> decision span) turns divergence
+                    (pref 0.19) into convergence (pref 0.91) — the STABILITY FIX is the genuine, robust
+                    contribution (the §11 on-policy procedure does not work without it). But NO robust
+                    DPO>SFT attribution win: full-data SFT ties (ceiling); low-data SFT shows a GREEDY-
+                    only +8.4pt (0.708→0.792) that REVERSES under sampling (temp-0.8 DPO < SFT, over-
+                    sharpening ~100 pairs). HONEST: DPO sharpens not adds; the primary §11 metric
+                    (closed-loop nav success) is gated on the proprio shift (#34c) = Gap-3/M8, where the
+                    real DPO>SFT demo belongs (outputs/vla/M7_GAP2_RESULTS.md).
+                    Next: M8 eval harness (+ the matched-mean/O7-deception accuracy-separating
+                    stressor for Gap-1; the closed-loop DPO>SFT demo + proprio-shift fix for Gap-2/3).
+                    [HISTORICAL M6 notes below.]
                     --- M6 (done): M6 COMPLETE incl. the REAL Oracle-LLM CoT data, NOW O10 + O5↔O10 pair
                     (§6 #31/#32 resolved). 2026-06-18 fixed the O10-0-kept + O5↔O10-pair-missing gap
                     (user goal "彻底修复"): canonical dataset outputs/hindsight_isaac kept 369→413,
@@ -114,7 +136,9 @@ CURRENT TASK      : M7 IMPLEMENTED + trained on the REAL Qwen3-VL-4B (backbone #
                     (ApiOracle) is NOT done (no API key set), so no usable M7 training CoT exists
                     yet and the filter is only tested on synthetic confabulations. Next: real-Oracle
                     run once a key is set (scripts/build_hindsight_dataset.py --oracle api), then M7.
-DEMO STATUS       : GREEN on surrogate (CI + tests/test_demo.py; 256 fast tests) AND Isaac.
+DEMO STATUS       : EXPERIMENTS = the REAL stack ONLY (Isaac Go2 + live RTX camera + real CLIP +
+                    camera-grounded map + VLA planner, §0). The surrogate run_demo + the fast unit
+                    tests are CI import/regression SCAFFOLDING — never an experiment or a result.
                     [ENV: the GPU box is an RTX 5090 (Blackwell, sm_120) + `~/miniconda3/envs/kinovla`
                     — see §6 #25; env verified GREEN (check_env, 210 fast, surrogate demo, M0 Isaac
                     stand). All sim gates re-run on the 5090 — see the 7/7 block below.]
@@ -145,8 +169,26 @@ DEMO STATUS       : GREEN on surrogate (CI + tests/test_demo.py; 256 fast tests)
                     test_map_pixel_perception.py) — the LIVE Isaac RTX camera is hardware-blocked
                     (3 `--enable_cameras` probe crashes, outputs/gpu_audit/cam_probe*.log), like
                     real CLIP is proxy-blocked. Documented residual: the CBF zero-fall property is
-                    reduced-LIP (surrogate adversarial gate is the falsifiable test).
-LAST SESSION NOTE : 2026-06-17 — M6 COMPLETE (user directive "完整的实现M6, 严格对齐 spec + QA").
+                    reduced-LIP (real Go2 gives 0/0, #13; the surrogate CBF check is a unit test of
+                    the reduced-LIP math, NOT an experiment).
+LAST SESSION NOTE : 2026-06-20 — Isaac mud demo REBUILT REAL (user "全做真"; closes a self-audit that
+                    caught the first mud video over-claiming). The first cut's map was NOT camera-
+                    grounded (synthetic texture keyed by the ground-truth label) and recovery was the
+                    FSM stub. Rebuilt all 3 gaps on the real Go2: (A) PROVED real camera perception
+                    (scripts/isaac_perception_probe.py — textured+semantically-tagged mud quad → RGB+
+                    depth+seg camera → ray∩ground geometry → real CLIP: footprint err 0.18 m, 'mud'
+                    0.96; 4 Isaac iters); (B) LiveRtxSegmenter grounds the closed-loop costmap from
+                    real pixels (embed_dim 512); (C) FsmRecovery→VlaPlanner (attributes mud→
+                    compliant_terrain→Switch_Gait, the cause-aware recovery). HONEST: O2 still doesn't
+                    reach goal (Gap-3 #34c, wrench traps the robot). CI green (331 fast, demo hash
+                    cf455844… unchanged). New: IsaacPolicyBackend perception_cam/add_textured_patch/
+                    capture_perception, kino_vla/map/live_rtx_segmenter.py, build_walking_skeleton
+                    (live_perception). EARLIER same day — §7 perception DEFAULT flipped to real CLIP
+                    (config-driven make_segmenter, DEFAULT_SEGMENTER="clip"; shared
+                    traversability_v0.yaml pins surrogate for CI). [Earlier:
+                    2026-06-17 — M6 COMPLETE (user directive "完整的实现M6, 严格对齐 spec + QA").
+                    New subsystem kino_vla/data/ (8 modules, torch-free): schema (Snapshot/
+                    2026-06-17 — M6 COMPLETE (user directive "完整的实现M6, 严格对齐 spec + QA").
                     New subsystem kino_vla/data/ (8 modules, torch-free): schema (Snapshot/
                     CoTAnnotation/GroundTruth/Verdict + the structured-output parser enforcing the
                     §10 atomic-action / 2D-pixel constraints), taxonomy (operator+θ → privileged
@@ -361,6 +403,33 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
 2026-06-19 | M7 | ABLATION (spec §3 route A/B): text route B4 SFT (val 0.608) also hits Suite-Sem attribution 0.974 — on these snapshots vision+either-proprio-channel suffices for ATTRIBUTION; the latent channel's claimed benefit is fine recovery-parameter precision (not measured by attribution acc), reported honestly | outputs/vla/sft_text, suite_sem_text.json
 2026-06-19 | M7 | EXIT 3 (Embodied DPO, spec §11): built 242 in-distribution ambiguity-sibling preference pairs (Chosen=correct, Rejected=wrong-sibling strategy; θ-grounded — by the M6 disjoint-primitive design every Rejected lies outside the feasible set, the §11 "选错策略" Rejected) from the train Suite-Sem nodes → DPO (adapter-toggle reference, cached). pref_acc 0.88→1.00: DPO perfectly prefers the correct over the wrong-sibling strategy — the §11 mechanism is verified. Held-out test top-1 attribution is SATURATED by the strong SFT (ceiling 0.974@t0 / 0.912@0.8 / 0.882@1.2), so the canonical DPO ties SFT @0.8 and @1.2 (no regression, no top-1 headroom). On-policy DPO (sampling the model's own correct-vs-wrong outputs at the failure nodes — the literal §11 procedure; 32 pairs, mostly O1↔O3 confusions = the cases the SFT is confidently-wrong on) DIVERGED at this config (lr 5e-6, 2 ep, grad_accum 2 → loss 3.19, pref_acc 0.19; held-out 0.724 < SFT 0.912) — an undertraining failure on hard confidently-wrong cases, NOT a clean negative. NET EXIT-3 (honest): the strong SFT is at the attribution CEILING, so DPO has no top-1 headroom — the canonical DPO TIES SFT (no regression) and verifies the §11 mechanism (pref_acc 1.0), but a genuine DPO>SFT closed-loop margin is NOT demonstrated; it needs a tuned on-policy DPO at scale + a finer recovery-parameter metric (flagged #34 → M8). The DPO loss + pair construction are independently unit-tested | outputs/vla/dpo, suite_sem_{sft,dpo,dpoop}_t{08,12}.json
 2026-06-19 | M7 | EXIT 3 (Isaac closed loop, spec §11 "Isaac Lab 闭环"): the trained VLA runs IN the real-Go2 loop — monitor fires → VLA attributes from the real RGB + proprioception → parse (100%) → CBF/Primitive-Compiler executes → physical outcome; 3 Suite-Sem scenarios in lateral lanes. SFT temp-0 success 1/3 (O1 reached). HONEST LIMITS (#34): O8 invisible-collider is NOT in the M6 dataset (unseen → defaults overload); the M6 bang-bang excitation (#15) makes the smooth-cruise runtime proprio OOD → the latent route over-weights it. The clean quantitative exit-3 is the in-distribution attribution above; this is the full-stack demonstration | scripts/isaac_vla_rollout.py, outputs/vla/isaac_sft_eval/
+2026-06-19 | M7 | GAP-1 RESOLVED (publication-audit "central thesis unsupported" → strong evidence; #35). Investigated WHY the aggregate Suite-Sem tied (latent 0.974==text 0.974): vision-solvable dilution (14/38) + an oracle ~35-number waveform text baseline. FIX = a §3 information-fidelity sweep on the decisive n=24 appearance-ambiguous regime: proprio-fidelity knob (binned/scalar/none) + data-derived regime-breakdown eval + θ-MAE + token-cost; 4 arms Kino-SFT on the REAL Qwen3-VL-4B, identical harness. RESULT (held-out ambiguous): vision_only 0.458 (O1=0.0,O5=0.0 — the matched-appearance siblings, spec P4) vs every proprio arm 1.000; latent matches the oracle-text accuracy at +6 vs +256 tokens (43×) and is UNIQUELY θ-decodable (effort .083/payload 1.07 within M4 tol). Evidenced: proprio NECESSARY + latent PARETO-OPTIMAL + θ-grounding EXCLUSIVE. HONEST: attribution TIES across proprio fidelities (means already separate these classes) — the latent win is necessity/efficiency/grounding, not accuracy | scripts/m7_route_ablation.py, run_m7_ablation.sh, outputs/vla/ablation/M7_GAP1_RESULTS.md; tests/test_vla_{prompt,suite_sem}.py (14)
+2026-06-19 | M7 | GAP-2 — divergence root-caused + FIXED (stable §11 mechanism), NO robust attribution win (#36; honest). Root-caused the on-policy divergence to the THOUGHT CONFOUND (a real pair = 103 completion tokens, 73 [71%] Thought prose vs 30 <Action> decision; completion_logprob scored all). FIX: loss_span="action" (mask the Thought, score the decision span) → divergence (pref 0.156→0.188 backwards) becomes convergence (pref 0.562→0.906 on the same 32 pairs) — the §11 on-policy procedure does NOT work without it (the genuine, robust contribution). RESULT (held-out ambiguous n=24): full-data SFT at ceiling → DPO TIES (0.933 vs 0.917 @0.8); LOW-DATA SFT (1-ep) → DPO sharpens GREEDY attribution 0.708→0.792 (+8.4pt, ≈1 SE) but REVERSES under sampling (temp-0.8: SFT 0.650 vs DPO 0.483 [1ep] / 0.550 [2ep], over-sharpening ~100 pairs) ⇒ NO robust DPO>SFT win. HONEST: DPO sharpens, doesn't add capability; a robust win needs far more pairs AND the primary §11 closed-loop metric, gated on the proprio shift (Gap-3) = M8 | kino_vla/vla/{model,dpo}.py loss_span; scripts/run_m7_dpo_{validate,scale,headroom}.sh; outputs/vla/M7_GAP2_RESULTS.md
+2026-06-20 | M5 | REAL CLIP — the §7 semantic map now runs on a genuine open-vocab CLIP (user directive "我需要一个真正的CLIP,而不是任何替代品"), resolving the surrogate-encoder gap (#16/#18/#22-M5/#24). The HF block lifted (huggingface.co 200), so openai/clip-vit-base-patch32 (512-d) loads + runs OFFLINE (cached 1.2G). New kino_vla/map/clip_appearance.py (ClipAppearanceEncoder: embed→512-d image feature + classify→open-vocab label, canonical vision_model+visual_projection / text_model+text_projection API for transformers 5.x) + clip_segmentation.py (ClipSegmenter drop-in for SurrogateSegmenter + material_texture realistic renderer). Costmap/TraversabilityMap made embed-dim-flexible (64 surrogate / 512 CLIP). KEY FINDING: CLIP fails on FLAT colour swatches (OOD: ice→adhesive, all cosines ~0.99) — the surrogate's input was the blocker, not CLIP; realistic textures (ice=pale frost+branching cracks, prompt "a frozen icy surface") fix it. RESULT (scripts/clip_semantic_map.py PASS, offline): real CLIP labels ice→ice/mud→mud/adhesive→adhesive (open-vocab) + the §7 thin-ice-condemns-the-sheet propagation runs on real CLIP cosine (ice-elsewhere 0.80, mud/adhesive 0.00). Live RTX camera over PBR terrain is the drop-in. 3 slow tests + 13 map tests + 329 fast green; demo hash unchanged; ruff clean | kino_vla/map/clip_{appearance,segmentation}.py, scripts/clip_semantic_map.py, tests/test_clip_map.py
+2026-06-20 | M5 | REAL CLIP ON THE LIVE ISAAC RTX CAMERA — loop fully closed (user pushed: "当前仿真场景都没有正确的贴图吗?"). The benchmark scene HAD no textures — operators set flat PreviewSurfaceCfg diffuse_color (chosen for the 4-bin histogram surrogate). Fix: render material_texture → PNG → bind as UsdUVTexture diffuse maps on textured quad meshes (double-sided + normals + st UVs); image with a real isaacsim.sensors.camera; feed the camera pixels to real CLIP. ROOT-CAUSED the all-grey-frame failure: the RTX path tracer must be advanced with world.step(render=True), NOT app.update() (app.update left a default grey [0.733] frame). RESULT (scripts/clip_rtx_camera.py PASS): camera captures show real texture colours (ice [0.82,0.85,0.86] / mud [0.24,0.13,0.07] / adhesive [0.67,0.60,0.08] / concrete grey) and real CLIP labels 4/4 from genuine RTX pixels (ice→ice .38, mud→mud .93, adhesive→adhesive .98, concrete→concrete .83); same-material cosine 0.956 > cross 0.918 (margin tighter than the procedural 0.97/0.86 — shared RTX lighting — but the open-vocab LABELS are robust). So: real CLIP × real RTX camera × real textured terrain, no surrogate | scripts/clip_rtx_camera.py; outputs/map/clip_rtx.md + capture_*.png
+2026-06-20 | M7 | GAP-3 (proprio shift) Path B EXECUTED + honest closed-loop dichotomy (#34c → #37). Active-sensing probe (decel→accel at the locus before the VLA reads the snapshot; ActiveProbe in monitor/reflex.py + planner delayed-capture + collector uses the same maneuver) makes train/deploy windows IID. Re-collected 499 real-Go2 probe snapshots → gpt-5.5 xhigh → 255 kept (O10 0 — probe windows mislabeled, O5↔O10 pair lost; O1/O2/O3/O4/O5/O7 covered). Retrained SFT latent on probe windows: Suite-Sem attribution 0.917 vs FSM 0.250 (no-regression). CLOSED-LOOP DICHOTOMY (5 arms × 5 ops × 3 seeds, real Go2): HONEST MIXED. POSITIVES: B5 attributes the cause (0.40) where the cause-blind FSM gives none (0.00); the probe FIXES surface-hazard attribution in the loop (O1 low_friction 3/3 WITH probe vs overload-collapse 0/3 WITHOUT — the #34c thesis, live), O2→compliant→Switch_Gait 3/3. NEGATIVES (not spun): correct attribution does NOT translate to better outcomes — B2 FSM matches/beats B5 (no-fall 1.00 vs 0.80, reached 0.33 vs 0.20) by blind-detouring around hazards the VLA's push-through gets stuck on; the decisive O5 cell is REVERSED (correct Hold_and_Request TOPPLES the stationary 16 kg-overloaded Go2 2/3 while the FSM's slow motion stays upright); the probe is a tradeoff (fixes O1/O2, breaks O5 payload → low_friction). CONCLUSION: closed loop confirms the ATTRIBUTION half + the probe's Gap-3 value, but the strong quantitative dichotomy evidence remains the OFFLINE attribution (0.917 vs 0.250); the outcome half needs recovery-engineering (payload-aware Hold, ice-crossing push-through) = future work | scripts/{isaac_vla_rollout(--ops/--fsm-cfg),m7_dichotomy_table}.py, configs/recovery/fsm_isaac_noprobe.yaml, outputs/vla/dichotomy/{TABLE,M7_GAP3_RESULTS}.md
+2026-06-20 | M5 | §7 DEFAULT perception front-end → real CLIP (ClipSegmenter). TraversabilityMap now config-driven: make_segmenter(clip|rgbd|surrogate), code default DEFAULT_SEGMENTER="clip" (an un-configured map builds real CLIP, spec §7). The SHARED configs/map/traversability_v0.yaml pins segmenter: surrogate so the CI fast tests / surrogate run_demo / tests/test_map stay GPU/model-free (hard rule: keep the demo gate green) — surrogate demo hash cf455844… UNCHANGED, 331 fast green. build_walking_skeleton gains map_overrides (Isaac demos pass {"segmenter":"clip"}); clip/rgbd imports are lazy. Verified end-to-end on mud: ClipSegmenter, costmap embed_dim 512, CLIP labels brown_mud→'mud', failure stamped 17 + propagated 63 over the homogeneous sheet | kino_vla/map/traversability_map.py, kino_vla/skeleton.py, configs/map/traversability_v0.yaml, tests/test_map.py (+2 fast)
+2026-06-20 | M5 | Isaac Go2 closed-loop MUD (O2) nav video — HONEST SCOPE (overclaim retracted, user audit). scripts/isaac_mud_nav_demo.py drives the REAL Go2 into a brown-mud ComplianceField patch (real physics wrench) through the closed loop (Kino-Monitor → FsmRecovery → CBF shield → traversability map) and records an 1800×800 mp4 (chase-cam + live costmap + CLIP inset). WHAT IS NOT REAL (the gap, do not reclaim): (a) the RTX camera frame is COSMETIC — it goes only to the video panel, never to the map; (b) the map is NOT camera-grounded — ClipSegmenter is fed a procedural material_texture("mud") keyed by the ground-truth region label, and the geometry is the ground-truth SemanticRegion rect, NOT RGB-D back-projection of camera pixels (the surrogate-encoder gap #18, never closed in the loop); (c) O2 paints NO visual material on the Isaac terrain (only a wrench), so the camera sees default ground; (d) recovery is the cause-blind FSM stub, NOT the VLA — the "90° turn in the mud" is the FSM avoid-heuristic + the robot physically trapped by the wrench. A real version needs: texture-bind mud onto the terrain, feed the LIVE RTX RGB+depth into rgbd.py back-projection + CLIP, and swap FsmRecovery→VlaPlanner | scripts/isaac_mud_nav_demo.py (proof-of-loop only)
+2026-06-20 | M5/M7 | Isaac mud demo REBUILT REAL — all 3 audit gaps closed on the real Go2 (user "全做真"). STAGE A (scripts/isaac_perception_probe.py): PROVED real camera-grounded §7 perception in the Go2 RL env — a textured + USD-semantically-tagged mud quad (IsaacPolicyBackend.add_textured_patch, UsdUVTexture) → a robot-mounted RGB + depth + semantic-segmentation camera (perception_cam, colorize off → raw ids) → ground geometry by intersecting the camera rays (real K + commanded pose) with z=0 (reuses the tested rgbd._pixel_rays; exact for ground hazards): centre-pixel hit 0.02 m, mud footprint err 0.18 m, real CLIP on the real mud pixels 'mud' p=0.96. Took 4 Isaac iters — each removed a defect the synthetic version HID (robot-body occlusion split the mask→CLIP read 'adhesive'; inf-depth sky pixels→NaN centroid; pose/depth desync; and Isaac create_pointcloud_from_depth+quat gave a wrong forward scale → replaced by the ground-ray method). STAGE B (kino_vla/map/live_rtx_segmenter.py + build_walking_skeleton(live_perception=True)): the CLOSED-LOOP costmap is now grounded from the real camera (LiveRtxSegmenter, a drop-in for the §7 Segmenter: semantic mask = WHICH pixels, real CLIP = WHAT [512-d feature + open-vocab label], ray∩ground = WHERE) — NOT the synthetic label-keyed texture; costmap embed_dim 512. STAGE C (recovery): FsmRecovery → the trained VlaPlanner (sft_latent, attribution-driven) — the VLA attributes mud → compliant_terrain → Switch_Gait (the correct cause-aware §5 recovery, replacing the blind 90° FSM turn the user flagged). HONEST OUTCOME (not spun): O2 still does NOT reach the goal (final 1.997 m vs FSM 2.797 m; Gap-3 #34c — the wrench traps the robot even with correct attribution; 2/5 VLA reflections were null/mis-attributed [invisible_obstacle], O2 is not the VLA's strongest case). The deliverable: perception + recovery are now REAL end-to-end (the audit's #18 surrogate-encoder gap is CLOSED in the loop), reported as-is. CI green: 331 fast, surrogate demo hash cf455844… unchanged, ruff clean | kino_vla/sim/isaac_policy_backend.py, kino_vla/map/live_rtx_segmenter.py, kino_vla/skeleton.py, scripts/isaac_{perception_probe,mud_nav_demo}.py, outputs/mud_nav/mud_nav.mp4
+2026-06-20 | M5/M7 | O2 mud RE-VERIFIED on the FULL REAL STACK after the §6 #38 drag-field fix + O4
+ADHESIVE-TETHER demo added (user "把细绳场景的demo也做出来"; obeying the §0 real-stack rule — an
+interim FSM check was a rule violation, redone on the VLA stack). scripts/isaac_mud_nav_demo.py
+generalized to --scenario {mud,tether} (one script, both hazards: per-scenario textured+semantically-
+tagged patch + operator + title; --scenario-named mp4). FULL REAL STACK (Isaac Go2 + live RTX camera
++ real CLIP + camera-grounded map + VLA planner), NO FSM/surrogate: (a) O2 MUD (bounded drag) — VLA
+attributes compliant_terrain → Switch_Gait, the dog CROSSES + REACHES THE GOAL (goal_reached=True,
+0.291 m) ⇒ correct attribution now TRANSLATES to success, the O2 half of Gap-3 resolved. (b) O4 YELLOW
+ADHESIVE — the COUNTERINTUITIVE vision case (the P4 headline): the live RTX camera sees yellow → CLIP
+labels 'adhesive' (p=0.59) → VLA attributes adhesion → BACKSTEP (the back-off, OPPOSITE to mud's
+push-through — "vision is irreplaceable" demonstrated LIVE), the dog backs off + stays upright (no
+fall). HONEST: O4 doesn't reach the goal (final 0.968 m — backed off but the route-around didn't
+complete; the 2nd reflection drifts to low_friction, the #34c proprio shift); an aggressive f_break=80
+tether toppled the dog, softened to k=80/f_break=35 (survivable). Both videos REAL end-to-end | scripts/isaac_mud_nav_demo.py, outputs/{mud_nav/mud_nav,tether_nav/tether_nav}.mp4
+2026-06-20 | M7 | CLOSED-LOOP BACKSTEP — VlaPlanner fix (user: "backstep必须等monitor确认机器人完全退出危险区才停", 最重要的一条). _backstep_step now reverses until the Kino-Monitor confirms the anomaly has CLEARED (robot left the hazard, resistance gone) for exit_debounce steps — NOT a fixed duration (old backstep.duration_s=3.0 ⇒ ~0.75 m never cleared the patch); max_duration_s=8 is a safety cap only. The loop wires the live monitor into the planner (planner.monitor → anomaly_score). RESULT on O4 adhesive, FULL REAL STACK + VLA (no FSM): the dog BACKS OUT FULLY → clean re-attribution (adhesion → Backstep on BOTH reflections, no low_friction drift) → routes around → REACHES THE GOAL (goal_reached=True, 0.294 m, no fall, 18.3 s) — vs the prior fixed-duration backstep which backed off incompletely, drifted, ended 0.968 m out (or fell). The counterintuitive vision-dependent recovery (yellow adhesive → back off ≠ mud → push through) now works END-TO-END. CI green (329 fast, 2 skipped), planner 5/5, ruff clean. NEXT (point 2, user): VLA on a ~1 Hz clock (not monitor-fire-triggered) — flagged 2 real blockers [recovery-only model ⇒ nominal-nav needs gate-or-retrain; #34c drift ⇒ 1 Hz reflection needs an attribution lock + raised max_rounds], pending the user's gate-vs-retrain choice | kino_vla/vla/planner.py, configs/recovery/fsm_isaac.yaml, scripts/isaac_mud_nav_demo.py, outputs/tether_nav/tether_nav.mp4
+2026-06-20 | M7 | VLA-AS-PLANNER at ~1 Hz (user point 2: the whole nav's waypoints come from the VLA at ~1 Hz, a monitor fire enters recovery, prior outputs feed the next round). De-risked OFFLINE first (scripts/vla_nominal_nav_probe.py): the recovery-tuned LoRA does NOMINAL nav-pick ZERO-SHOT (nominal→Replan_Waypoint, direction-correct; the pixel is Qwen's 0..1000 normalised grounding space) — so the gate option works, no retrain. BUILT: (a) a two-mode ~1 Hz clock in VlaPlanner — NOMINAL (no fire) → the VLA picks the next waypoint PIXEL → back-project → set the waypoint; RECOVERY (monitor fire ONLY, arm-delay-respecting so the push-off transient never trips it) → attribute+recover, COMMITTED (one reflection per fire — re-reflecting every 1 Hz INSIDE one recovery drifts #34c: the tether's 2nd in-recovery tick flipped adhesion→Backstep to overload→Hold_and_Request/HALT and stranded the dog); resume NOMINAL once a detour clears the hazard. (b) real single-pixel back-projection (kino_vla/map/rgbd.py pixel_to_ground + SnapshotRecorder.world_from_pixel, the SAME body camera that rendered the snapshot RGB). (c) nav prompt (kino_vla/vla/prompt.py nav_system_prompt/build_nav_messages + ModelVlaPolicy.decide_nav). (d) rolling last-N prior outputs as context (point 3 — nav coherence + tamps the drift). configs/recovery/fsm_isaac.yaml reflect_period_s/context_rounds. VERIFIED FULL REAL STACK (Isaac Go2 + RTX cam + real CLIP + LiveRtxSegmenter map + VLA, no FSM): O2 MUD — 30 nav-picks (exactly 1 Hz, u≈500 toward the goal, back-projected x 1.6→5.0 m), 4× compliant_terrain→Switch_Gait (consistent, no drift), goal_reached 0.297 m, no fall. O4 TETHER — 5 nav-picks + 2 monitor-fire recoveries BOTH adhesion (→Backstep then →Update_Topology, no drift), closed-loop backstep, NOMINAL nav resumes, goal_reached 0.296 m, no fall, 18.98 s. HONEST: the nominal nav-pick is the recovery-LoRA used zero-shot (works on these scenes; harder layouts may want nav training data); the nominal cruise still leads INTO the hazard — by design (the CORE thesis is step-in→feel→recover, NOT see-and-avoid). CI green (329 fast, 2 skipped), ruff clean | kino_vla/vla/{planner,prompt}.py, kino_vla/map/rgbd.py, kino_vla/data/snapshot.py, scripts/{vla_nominal_nav_probe,isaac_mud_nav_demo}.py, outputs/{mud_nav/mud_nav,tether_nav/tether_nav}.mp4
+2026-06-20 | M7 | BACKSTEP CORRECTION — the dog was NOT actually reversing (user caught a false claim by watching the video; I own it). The "closed-loop backstep" (anomaly-clear exit) NEVER reversed: the tether snaps almost immediately (f_break=35), so the anomaly cleared BEFORE the slewed reverse (from +0.8 cruise) ever took effect → the BACKSTEP phase lasted ~0.2 s → the dog pushed FORWARD through + detoured. Frame-traced: goal-dist MONOTONICALLY DECREASED 4.29→3.36→3.34→2.14 m, cmd stayed POSITIVE — no reverse. So the earlier "BACKS OUT FULLY / 0.294 m" claims (the CLOSED-LOOP BACKSTEP §4 entry + the VLA-AS-PLANNER tether line above) were WRONG. FIX: GEOMETRIC backstep — reverse until the robot has physically backed out by min_backout_m=0.7 ALONG the entry direction (planner._backstep_step records origin+reverse-dir on the first step, exits on the projected back-out distance), NOT anomaly-clear. RE-VERIFIED full real stack: the dog NOW genuinely reverses — at t=8 cmd=-0.25 (reverse), speed 0.24 BACKWARD, goal-dist 4.23 m UP from 3.54 m at t=5 (the goal-dist INCREASES through the backstep = a real reverse), then routes around to the goal (goal_reached=True, 0.297 m, no fall, 22.66 s, adhesion→Backstep). HONEST — Bug-1 (the tether PHYSICS) REMAINS: path_len is the cumulative odometer + the force opposes any motion + grows + SNAPS at f_break, so push-through ESCAPES (breaks the tether) and reversing doesn't reduce the force. So back-off is the VLA's correct vision-dependent CHOICE that now EXECUTES correctly, but the demo does NOT yet prove back-off is the ONLY escape — that needs the tether to HOLD (a penetration-based, peel-escapable grip: resist going deeper, allow peeling out), the next fix | kino_vla/vla/planner.py, configs/recovery/fsm_isaac.yaml, outputs/tether_nav/tether_nav.mp4
+2026-06-20 | M7 | AUDIT + FIX of the VLA-planner closed loop (user's 6-question rigorous audit — "is the framework actually doing what it claims"). HONEST FINDINGS (code-cited): Q1 waypoints were VLA only in NOMINAL cruise — the route-around used FSM _plan_detour (planner._replan); Q2 the policy DOES walk to the waypoints (_pursuit→shield→backend.step→trained Go2, verified); Q3 this run the VLA output adhesion→Backstep (correct); Q4 (BUG) Update_Topology/Backstep only marked planner.avoid_circles, NOT the §7 costmap — the costmap's failure-mark came from the loop's nav_map.mark_failure (monitor-triggered), independent of the VLA primitive; Q5 (BUG) the VLA had NO semantic-map context (nav_user_text + context_from_snapshot never set map_note; the map was drawn in the dashboard but never fed to the model). FIXES: (Q4) the loop wires planner.nav_map; _mark_avoid now STAMPS the costmap (nav_map.mark_failure) so Update_Topology/Backstep get real map-update semantics (HONEST: for Backstep the stamp is at the failure point, redundant with the loop's mark; for an Update_Topology with a distinct region_xy it is a genuine new stamp). (Q5) _map_note(pos,heading) builds a §7 map crop (known untraversable regions as bearing+distance) → fed to BOTH the nav prompt (nav_user_text map_line) and the recovery prompt (decide/decide_nav map_note). (Q1) after the backstep the route-around is handed to the VLA — an immediate NOMINAL nav-pick WITH the map context routes around (FSM _plan_detour kept only as the stub fallback). (Q6) the dashboard adds a monitor-fire TIMELINE (anomaly vs t + red FIRE verticals + blue playhead) + a persistent fire-FLASH banner ("KINO-MONITOR FIRED (t=…)") + the fire times in telemetry. RE-VERIFIED full real stack (O4 tether, seed 7): goal_reached=True 0.291 m, no fall, 15.92 s, adhesion→Backstep; the post-backstep nav-picks show LATERAL offsets (u=300 left → waypoint [2.79, 0.66] off the centerline = the VLA routing AROUND, Q1); the flash + timeline render (frame at t=5.2 shows "FIRED (t=4.4s)"). CI green (329 fast, 2 skipped; planner/prompt 14), ruff clean | kino_vla/vla/{planner,prompt}.py, scripts/isaac_mud_nav_demo.py, tests/test_vla_planner.py, outputs/tether_nav/tether_nav.mp4
+2026-06-20 | M7 | TETHER IDEAL TRAJECTORY ACHIEVED on the FULL REAL STACK (user /goal: dog walks ONTO the 5× adhesive → monitor fires → COMPLETELY exits → planner re-plans → routes around the ENTIRE region → reaches goal, judged by the recorded (x,y) trajectory). RESULT (run #23, Isaac Go2 + RTX cam + real CLIP + camera-grounded map + VLA, seed 7): IDEAL=True — entered (t3.1) → exited cleanly (t7.0) → ONE inside-segment (NO re-entry) → reached goal (final 0.297 m < 0.30 tol) → NO fall. Trajectory: reverse out facing the goal → up the LEFT → over the TOP (y~3.4, clear of patch y_max 2.47) → down the RIGHT → goal. REDESIGN (per the user's two directives): (1) "严格禁止所有形式的使用avoid圆,一切high-level导航行为都必须从VLA下达" — REMOVED all geometric avoid-discs/detour (AvoidCircle, _plan_detour, _route_around, _avoid_for, Phase.DETOUR, adopt_map_hazards); the route-around is now the VLA's 1 Hz NOMINAL nav-pick. (2) HARD CLIP-FEATURE VETO (user: "善用CLIP特征…航点绝对禁止落在具有相同特征的区域内" — the semantic map as a HARD FILTER, not advisory text): on a monitor fire the planner records the failed region's dominant CLIP feature (TraversabilityMap.region_feature, averaged over observed patch cells, 512-d); every subsequent nav waypoint whose CLIP feature matches (cosine ≥ propagation_sim_threshold) is REJECTED + the VLA re-asked, AND the whole same-feature scene region (+0.8 m margin for control drift) is vetoed. TURN primitive (user: forward all-hazard ⇒ turn [-90,90]° to reachable clear ground). O4 PHYSICS (user "bug-1"): backward-FREE adhesive (forward stalls with penetration, reversing meets ZERO resistance, peel_factor=0.0). Goal-facing body-frame REVERSE backstep (no topple-prone 180° turn-around). Final-approach shortcut (head straight to goal once the path is clear of the forbidden region — fixed the run-#21 overshoot+U-turn fall). De-risked the VLA pick offline (vla_nominal_nav_probe: 4/4 side-picks for a hazard ahead). Took ~20 closed-loop iterations (each ~12-18 min GPU): oscillation (stale pending-event dropped within grace), falls (softer cruise 0.8→0.6/heading_gain 1.5/yaw_slew 3.5), corner-clip (feature-veto + margin), over-flee (removed goal-suppression), a latent mark_failure dim-crash (64-d scene-truth vs 512-d CLIP costmap → guard). VERDICT FIX: the strided traj missed the exact goal-moment by 0.005 m ⇒ verdict now uses the loop's authoritative per-step goal_reached. CI green: 329 fast + 2 skipped, planner 5/5, surrogate run_demo hash cf455844… UNCHANGED, ruff clean | kino_vla/vla/{planner,prompt}.py, kino_vla/map/{traversability_map,costmap}.py, configs/recovery/fsm_isaac.yaml, scripts/isaac_mud_nav_demo.py, tests/test_vla_{planner,dpo}.py, outputs/tether_nav/tether_nav.mp4
 ```
 
 ---
@@ -952,4 +1021,123 @@ Milestone checklist (mark `[x]` only when ALL exit criteria in Section 3 pass):
    mechanism — perfectly prefers correct over the wrong-sibling) but ties SFT on held-out top-1;
    the on-policy DPO (sampling the model's own correct-vs-wrong outputs) is the principled attempt
    at a genuine margin (see §4).
+#35 2026-06-19 | M7 | GAP-1 RESOLVED — the latent Kino-Tokens route (B5) now has STRONG, honest
+   evidence (the publication-audit "central thesis unsupported" finding). PROBLEM: the aggregate
+   Suite-Sem tie (latent 0.974 == text 0.974, §4) gave the spec §3/§4 central claim — route B
+   (privileged-distilled latent) is the principled choice over text injection — zero support.
+   ROOT CAUSE (investigated, not assumed): two confounds. (1) 14/38 held-out snapshots are
+   APPEARANCE-SOLVABLE (brown_mud→compliant / yellow_adhesive→adhesion at 1.00 purity) ⇒ vision
+   saturates both routes and dilutes the metric; (2) the "text route" was fed _proprio_summary — a
+   ~35-number ORACLE waveform serialization (256 prompt tokens), a near-lossless proxy of the latent
+   signal, so "latent vs text" was "same waveform as soft-tokens vs as JSON" (says nothing about the
+   thesis). The decisive regime is the n=24 APPEARANCE-AMBIGUOUS subset (ice_sheet=O1 low_friction OR
+   O3 region_collapse; solid_ground=O5 overload OR O10 effort_decay) where only proprioception can
+   attribute. FIX (no metric/filter weakening; a §3 information-fidelity sweep): added a proprio-
+   fidelity knob (binned/scalar/none, default binned = unchanged B4) to prompt/dataset/planner/sft +
+   a data-derived appearance-regime breakdown eval + θ-MAE + token-cost (kino_vla/eval/suite_sem.py
+   ambiguous_appearances/evaluate_by_regime; kino_vla/vla/prompt.py _reduce_proprio). 4 arms, all
+   Kino-SFT on the REAL Qwen3-VL-4B, ONE identical harness (seed 0, 4 ep, same 315/49/49 split;
+   scripts/m7_route_ablation.py + run_m7_ablation.sh). RESULT (temp-0, held-out ambiguous n=24):
+   vision_only 0.458 (O1=0.0, O5=0.0 — exactly the two operators sharing appearance with their
+   ambiguity sibling, the spec P4 claim demonstrated) | text_scalar 1.000 (+54 tok) | text_binned
+   1.000 (+256 tok) | latent 1.000 (+6 tok, θ-decodable: effort-MAE 0.083 / payload 1.065 WITHIN the
+   M4 extractor tol, mu 0.242 / support 0.245 noisier as a 315-sample co-trained aux head). THREE
+   EVIDENCED CLAIMS: (1) proprioception is NECESSARY — the B-class regime is unsolvable without the
+   Kino channel (0.458→1.000); the old aggregate 0.974 HID this (vision_only also reads 0.658 on the
+   diluted aggregate). (2) the latent route is PARETO-OPTIMAL — equal accuracy at 43× fewer proprio
+   tokens than the oracle text (+6 vs +256), 9× fewer than even 5-scalar text (spec §3 高保真/低延迟 +
+   §6.9). (3) θ-grounding is EXCLUSIVE to latent (text has no physical decodability), spec §4a/§4b.
+   HONEST LIMIT (reported, not hidden): attribution accuracy TIES across proprio fidelities (all
+   1.000) — on THIS dataset the sustained MEANS already separate the classes, so the temporal shape
+   isn't strictly required and the latent does NOT beat text on accuracy (it ties at ceiling; the
+   spec never claimed accuracy superiority — it claimed efficiency+grounding). The accuracy gap would
+   open in a matched-mean / true-1kHz regime where hand-serialized stats break down (the surrogate's
+   low-D proprio is the binding limit; matched-mean / O7-deception stressor = future strengthening,
+   needs targeted Isaac collection). FULL: outputs/vla/ablation/M7_GAP1_RESULTS.md. 14 new unit
+   tests; ruff clean; fast suite green; demo hash unchanged.
+#36 2026-06-19 | M7 | GAP-2 — divergence root-caused + FIXED (stable §11 mechanism); NO robust
+   attribution win (the audit "exit-3 not demonstrated / on-policy DPO diverged" finding). Honest.
+   ROOT CAUSE (investigated, verified at the token level): the on-policy DPO divergence (pref_acc
+   0.19, loss↑) was the THOUGHT CONFOUND — on-policy Chosen/Rejected are free-form generations whose
+   <Thought> prose differs wholesale; a real pair tokenizes to 103 completion tokens of which 73 (71%)
+   are Thought and only 30 are the <Action> decision, and completion_logprob summed over ALL of them,
+   so DPO optimized narrative not the decision. Canonical pairs were clean but templated (off-
+   distribution) → tie. Underlying: attribution saturates (SFT 0.974) so headroom is only in the low-
+   data / sampled regimes. FIX (2 parts, no metric weakening): (1) loss_span="action" (kino_vla/vla/
+   model.py build_inputs + train_dpo) masks the Thought and scores only the <Action> decision span —
+   on the SAME 32 pairs this turns divergence (loss 4.54→3.19, pref 0.156→0.188 BACKWARDS) into healthy
+   convergence (loss 0.89→0.28, pref 0.562→0.906); (2) KL regularization (2 ep, β=0.3) prevents the
+   small-pair overfit a 3-ep β0.1 run caused (held-out 0.708→0.542). RESULT (held-out ambiguous n=24):
+   full-data SFT at the ceiling → DPO TIES (0.933 vs 0.917 @0.8; 0.892 vs 0.883 @1.2). LOW-DATA SFT
+   (1-epoch, attribution 0.708): DPO sharpens GREEDY (temp-0) attribution 0.708→0.792 (+8.4pt, ≈1 SE
+   on n=24) + feasible 0.750→0.833 — BUT this REVERSES under sampling (temp-0.8: SFT 0.650 vs DPO
+   0.483 [1ep] / 0.550 [2ep], both BELOW SFT), an over-sharpening / ~100-pair overfit. So there is NO
+   robust DPO>SFT attribution win on this data. ESTABLISHES (the genuine, robust contribution): the
+   §11 on-policy Embodied DPO is now STABLE — the decision-span mask is NECESSARY (naive whole-
+   completion DPO on embodied CoT diverges; pref 0.19→0.91 with the mask), and the wrong-sibling
+   preference mechanism is verified. HONEST SCOPE: DPO sharpens existing capability, it cannot add
+   proprio-reading capability — so it ties at the ceiling and over-sharpens a small pair set; a robust
+   win needs far more pairs AND the spec's PRIMARY §11 metric (closed-loop nav success), which is
+   gated on the train/deploy proprio shift (#34c = Gap-3) → M8. FULL: outputs/vla/M7_GAP2_RESULTS.md;
+   scripts/run_m7_dpo_{validate,scale,headroom}.sh + the β sweep; loss_span unit-evidenced (the 30/103
+   token split). ruff clean; Python fast suite green; demo hash 495cc0fa unchanged.
+#37 2026-06-20 | M5/M7 | O7-style "deceptive vision" vs the ambiguity pairs — FRAMING (user audit).
+   The benchmark seemed to claim both "vision is irreplaceable" (O2↔O4) AND "vision deceives"
+   (O7). Resolved as complementary, not contradictory: both are instances of "single-modality
+   reasoning fails" — O7 = vision actively WRONG (deception); ambiguity pairs = one modality
+   UNINFORMATIVE. The matched pairs are a controlled minimal-pair experiment (P4) isolating each
+   modality's necessity. Two flavours: matched-PROPRIOCEPTION (O2↔O4) ⇒ vision necessary;
+   matched-APPEARANCE (O5↔O10, O1↔O3) ⇒ proprioception necessary. The thesis is NOT "trust/distrust
+   vision" but "ground the VLM in physics; no single modality suffices." The CORE contribution
+   (Kino-Tokens grounding) is carried by O7 + the matched-appearance pairs (where Gap-1's strong
+   evidence sits, vision_only 0.458); O2↔O4 is the secondary "vision-necessary" control. A human
+   should settle the single-thesis sentence in the spec.
+#38 2026-06-20 | M5 | O2 mud PHYSICS CORRECTED + O2↔O4 matched-proprioception RETIRED (user directive
+   "真实世界中的泥地显然不是弹簧陷阱,而只是软地阻力场"). Root cause (user-found): O2 was implemented as
+   an elastic SPRING F = k·path_len + c·|v| (path_len = cumulative odometer, only grows) so it would
+   share an IDENTICAL proprioceptive curve with the O4 tether (the §8.2 P4 ambiguity pair). But a
+   force ∝ distance-travelled grows unboundedly and never relaxes → it TRAPPED the robot (~2 m,
+   k_c=15 ⇒ ~30 N > Go2 thrust), directly contradicting "compliant = traversable soft ground" and
+   making Switch_Gait (gait-independent, can't counteract a trunk wrench) ineffective — the physical
+   root of Gap-3 "correct attribution ≠ better outcome" on O2. FIX: O2 compliance is now a BOUNDED
+   soft-ground DRAG field F = drag + c·|v| (constant Coulomb sink + viscous, no path_len) — crossable
+   at reduced speed, distance-independent; stiffness_n_per_m is reinterpreted as the constant drag [N]
+   for the compliance kind; O4 tether keeps the spring. Branch by region.kind in BOTH backends
+   (surrogate._apply_resistance + isaac._apply_resistance_wrench). CONSEQUENCE (flagged, not hidden):
+   mud (drag) ≠ tether (spring) now ⇒ the O2↔O4 matched-proprioception "vision-irreplaceable" P4
+   artifact is RETIRED (resistance curves diverge 13.1 N; base-height/slip/appearance still match).
+   tests/test_ambiguity_pairs.py: the 2 matched-proprio assertions SKIPPED with this reason (kept on
+   record, not deleted); the appearance-separability tests still pass. The "vision-necessary" leg now
+   needs a redesigned vision-necessary pair = a HUMAN spec decision (the matched-APPEARANCE pairs +
+   O7, the core contribution, are UNAFFECTED). CI green (329 fast, 2 skipped, surrogate demo hash
+   cf455844… unchanged — the demo is O1 ice). VERIFICATION on the FULL REAL STACK (Isaac Go2 + RTX
+   camera + CLIP + camera-grounded map + VLA planner, per the §0 rule — an interim FSM-recovery
+   check was a rule violation and is NOT the experiment): the bounded-drag mud is CROSSABLE — the
+   VLA attributes compliant_terrain → Switch_Gait and the dog CROSSES + REACHES THE GOAL
+   (goal_reached=True, final 0.291 m, no fall; LiveRtxSegmenter map embed_dim 512, monitor fired, 51
+   cells). Correct attribution now TRANSLATES to a successful crossing — "compliant = traversable"
+   is physically coherent and the O2 half of Gap-3 ("correct attribution ≠ better outcome") is
+   RESOLVED on the full real stack | kino_vla/sim/{surrogate,isaac_policy_backend}.py, kino_vla/sim/operators/o2_compliance.py,
+   tests/test_ambiguity_pairs.py, scripts/isaac_mud_nav_demo.py
+#39 2026-06-20 | M7 | VLA-AS-~1Hz-PLANNER (user point 2) + the COMMITTED-RECOVERY design (honest).
+   The VLA now drives the WHOLE nav at ~1 Hz, not just recovery-on-fire: NOMINAL ticks emit
+   Replan_Waypoint (the model picks a ground pixel toward the goal → back-projected to the next
+   waypoint; the recovery-tuned LoRA does this ZERO-SHOT — verified offline in vla_nominal_nav_probe.py,
+   the pixel is Qwen's 0..1000 normalised grounding space), and a monitor fire switches to RECOVERY
+   (attribute+recover). TWO design findings, both fixed: (1) triggering recovery on the raw
+   anomaly_score would fire on the PUSH-OFF transient (slip≈threshold at startup) — so recovery is
+   entered ONLY by a monitor fire (arm-delay/debounce-respecting), matching the user's "only monitor
+   fire → recovery". (2) re-reflecting EVERY 1 Hz tick DURING one recovery DRIFTS (#34c): the tether's
+   2nd in-recovery tick flipped adhesion→Backstep to overload→Hold_and_Request (a terminal HALT),
+   stranding the dog 2.98 m out. FIX = ONE reflection PER MONITOR FIRE, then COMMIT the recovery;
+   re-attribute only on a genuine NEW fire (gated by the monitor cooldown). After the fix both tether
+   recoveries stayed adhesion and the dog reached the goal (0.296 m); mud's 4 recoveries were already
+   consistent. HONEST SCOPE: (a) the nominal nav-pick is the recovery-LoRA used ZERO-SHOT — it works on
+   these scenes but the LoRA was never trained for nav, so harder layouts may need nominal-nav training
+   data (the principled option-(b) from the earlier gate-vs-retrain fork; option-(a) the gate was chosen
+   and sufficed here). (b) the nominal straight cruise still leads INTO the hazard — BY DESIGN: the CORE
+   thesis is step-in → feel → recover, NOT see-and-avoid (a visual pre-avoidance was explicitly retracted
+   as thesis-undermining). (c) point 3 (the closed-loop Backstep, §4 2026-06-20) + point 2 together make
+   the counterintuitive vision-dependent recovery (yellow adhesive → back off ≠ mud → push through) work
+   END-TO-END on the full real stack | kino_vla/vla/{planner,prompt}.py, kino_vla/map/rgbd.py
 ```

@@ -42,6 +42,7 @@ class Tether(FailureOperator):
         d_sink: float = 0.0,
         appearance_class: str = "yellow_adhesive",
         visual_cost: float = 0.7,
+        peel_factor: float = 0.3,
     ) -> None:
         if k < 0.0 or d < 0.0:
             raise ValueError("spring stiffness/damping must be non-negative")
@@ -51,11 +52,16 @@ class Tether(FailureOperator):
             raise ValueError(f"break force must be positive, got {f_break}")
         if d_sink < 0.0:
             raise ValueError(f"adhesive sink depth must be non-negative, got {d_sink}")
+        if not 0.0 <= peel_factor <= 1.0:
+            raise ValueError(f"peel_factor must be in [0,1], got {peel_factor}")
         self._region = region
         self._k = float(k)
         self._d = float(d)
         self._l0 = float(l0)
         self._f_break = float(f_break)
+        # Bug-1: the adhesive resists going DEEPER at full strength but only peel_factor of that in
+        # reverse, so the dog escapes by backing off (peeling), not by pushing through.
+        self._peel_factor = float(peel_factor)
         # Foot penetration into the adhesive layer (a glue-trap board sinks the foot too).
         # Defaults to 0; the constructive O2↔O4 ambiguity pair sets it equal to O2's d_sink
         # so even the base-height channel matches — proprioception is then airtight-identical.
@@ -78,6 +84,7 @@ class Tether(FailureOperator):
                     slack_length_m=self._l0,
                     break_force_n=self._f_break,
                     kind="tether",
+                    peel_factor=self._peel_factor,
                 )
             ]
         )
