@@ -1,0 +1,15 @@
+# LaTeX build artifacts (regenerated on every build)
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.blg
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+missfont.log
+
+# editor / pre-edit backups
+*.bak

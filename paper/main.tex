@@ -1,0 +1,308 @@
+%% KinoVLA --- ICRA conference paper
+%% Sections drafted in this file: Abstract, Introduction, Related Work.
+%% Compile: pdflatex main && bibtex main && pdflatex main && pdflatex main
+%% Requires the IEEEtran document class and IEEEtran.bst (ships with most TeX
+%% distributions; otherwise: https://www.ctan.org/pkg/ieeetran).
+%%
+%% The paper is set up for DOUBLE-BLIND review (anonymous author block). For a
+%% camera-ready version, replace the anonymous block with the real authors and
+%% comment out the \def\isanonymous line below.
+\def\isanonymous{1}
+
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, calc}
+
+% Sub-millisecond, capture point, and other inline math are used in the body.
+\newcommand{\kinovla}{Kino-VLA}
+\newcommand{\kinofail}{Kino-Fail}
+\newcommand{\kinotokens}{Kino-Tokens}
+
+\begin{document}
+
+\title{\kinovla{}: Closed-Loop Embodied Reflection for\\
+Semantic Failure Recovery in Quadrupedal Locomotion}
+
+\ifdefined\isanonymous
+  \author{\IEEEauthorblockN{Anonymous Author(s)}
+  \IEEEauthorblockA{Paper under double-blind review\\
+  Affiliation and contact details omitted for anonymity}}
+\else
+  \author{\IEEEauthorblockN{First Author\IEEEauthorrefmark{1},
+  Second Author\IEEEauthorrefmark{1}, and Third Author\IEEEauthorrefmark{1}}
+  \IEEEauthorblockA{\IEEEauthorrefmark{1}Institution Name\\
+  \texttt{\{first, second, third\}@institution.edu}}}
+\fi
+
+\maketitle
+
+\begin{abstract}
+Learned controllers and rapid motor adaptation let legged robots reject a wide
+range of disturbances by reacting continuously to proprioceptive history. A
+distinct class of physical failures, however, cannot be recovered this way:
+escaping an elastic tether requires backing off rather than applying more
+torque, and a foot held by an adhesive trap is proprioceptively
+indistinguishable from one sinking into mud, yet the two demand opposite
+recoveries. Such failures require discrete, topological, strategy-level
+decisions that lie outside the hypothesis space of any continuous adaptive
+controller. We present \kinovla{}, a closed-loop embodied-reflection framework
+that couples high-frequency dynamics sensing with a vision-language recovery
+planner for a quadrupedal robot. Recovery is organized into five layers: a
+\mbox{1\,kHz} monitor-and-reflex loop that keeps the robot upright while
+reasoning proceeds; a \kinotokens{} extractor that distills \mbox{1\,kHz}
+proprioception into the language model's embedding space under privileged-physics
+supervision; a vision-language planner that performs causal failure attribution,
+selects from an expanded recovery-primitive library, and maintains a persistent
+semantic traversability map; and a control-barrier-function safety shield that
+projects every proposed primitive onto a provably safe set, with a
+forward-invariance guarantee that, under a reduced-order model, the closed loop
+never leaves that set regardless of what the language model outputs. We further contribute
+\kinofail{}, a benchmark of eleven continuously parameterized failure operators
+with privileged ground truth and constructively matched attribution-ambiguity
+pairs, and a privileged-grounded hindsight chain-of-thought data pipeline whose
+truth-consistency filter rejects any annotation contradicted by simulator
+physics. In high-fidelity simulation on a physically simulated Unitree Go2, the
+trained planner attains \mbox{0.97} attribution accuracy on
+semantic-intervention failures, against \mbox{0.24} for a tuned rule-based state
+machine, while the safety shield solves in under \mbox{0.2\,ms}.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Legged robots, vision-language-action models, failure recovery, control barrier
+functions, embodied AI, safe learning, quadrupedal locomotion.
+\end{IEEEkeywords}
+
+
+%% ===================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Reinforcement learning has made quadrupedal locomotion remarkably robust.
+Policies trained in simulation with domain randomization, and augmented with
+online motor adaptation, cross rubble, mud, and ice and reject pushes that would
+topple a hand-tuned controller~\cite{lee2020learning,miki2022learning,kumar2021rma,nahrendra2023dreamwaq}.
+This robustness rests on continuous reaction: from a window of proprioceptive
+history the controller implicitly infers the local dynamics (friction, payload,
+terrain compliance) and adjusts its gait within a continuous parameter
+space~\cite{kumar2021rma}. For a broad family of disturbances this is the
+correct response, and we claim no improvement on it.
+
+A separate family of failures defeats continuous reaction. A leg caught by an
+elastic tether is the canonical case: an adaptive controller raises torque to
+hold its commanded velocity, the tether stores that energy like a drawn bow, and
+the accumulated load eventually flings the robot off balance, so the safe action
+is the counter-intuitive one of backing off. Sudden resistance at a foot is a
+second case: if the cause is an adhesive trap the robot must step back, label the
+patch untraversable, and route around it, whereas if the cause is mud it must
+raise its gait and drive through. The recoveries are opposite, yet the two causes
+can be tuned to produce identical proprioceptive signatures, matched
+tangential-resistance curves, slip distributions, and torque spectra, so a
+controller reading proprioception alone cannot, even in principle, tell them
+apart.
+
+We make this structure explicit as a \emph{recoverability dichotomy}. A-class
+failures (uniform low friction, a static load offset, a mildly viscous floor) are
+recoverable by continuous adaptation, and an adaptive controller should handle
+them as well as any semantic system does. B-class failures require a discrete,
+topological, or strategy-level decision (back off, declare an entire region
+impassable, or abandon a torque-saturated task and request help), and an
+incorrect causal attribution produces the wrong, frequently opposite, recovery.
+What sets B-class failures apart is that the decision turns on a cause
+proprioception cannot resolve but vision can, such as the yellow sheen of a glue
+board against the brown of mud. These decisions lie outside the hypothesis space
+of any continuous adaptive controller and inside that of a semantic one. The
+scientific question we pose and answer empirically follows: which physical
+failures are recoverable by low-level adaptation, and which require semantic
+intervention?
+
+Existing learning systems leave the B-class gap open. End-to-end
+vision-language-action models map observations to actions open-loop and at low
+frequency, without a force-feedback channel, and commit to a planned action
+through a developing
+failure~\cite{brohan2023rt2,kim2024openvla,octo2024,driess2023palme}. Visually
+closed-loop planners react to RGB at camera rate~\cite{bu2024clover,zhi2024comerobot}
+and stay blind to a friction collapse or an actuator saturation until it has
+produced an overt visual symptom. Legged navigation models built on language
+backbones treat locomotion as a one-way black-box
+skill~\cite{cheng2024navila,mei2024quadrupedgpt,wu2024doggybot}: the planner
+issues velocity or waypoint commands but receives no upward report that the body
+is slipping or pinned. Closest to our aim, failure-reasoning systems such as
+REFLECT~\cite{liu2023reflect} and AHA~\cite{duan2025aha} summarize multimodal
+experience to explain and correct manipulation failures, but they attribute after
+the fact from low-frequency vision, address fixed-base manipulators rather than an
+underactuated floating-base robot, and inject conclusions as discrete text; on a
+legged platform they additionally lack the millisecond reflex that would keep the
+robot upright during the roughly one second of language-model inference.
+
+We present \kinovla{}, a closed-loop embodied-reflection framework that supplies
+the missing upward channel from \mbox{1\,kHz} dynamics to a semantic planner and
+the missing downward guarantee that the planner cannot destabilize the robot.
+\kinovla{} organizes recovery into five layers. A \mbox{1\,kHz} Kino-Monitor
+computes slip and tracking-error statistics and triggers a reflex loop that
+stabilizes the body (brake, stiffen, lower the center of mass) within
+milliseconds, bypassing the language model. A \kinotokens{} extractor compresses
+a \mbox{500\,ms} proprioceptive window with a 1D convolutional network and a
+Perceiver Resampler~\cite{jaegle2021perceiver,alayrac2022flamingo} into
+fixed-length tokens projected into the language model's embedding space; the
+latent is supervised by distillation against privileged simulator
+physics~\cite{chen2020cheating,kumar2021rma}, with an auxiliary physics-text
+contrastive objective~\cite{oord2018cpc}, so the tokens carry interpretable
+physical meaning and a calibrated out-of-distribution score. A roughly
+\mbox{1\,Hz} planner, a LoRA-adapted~\cite{hu2022lora} vision-language
+model~\cite{bai2025qwen3vl,wang2024qwen2vl}, fuses vision, text, and
+\kinotokens{} to attribute the failure causally, selects a single primitive from
+an expanded recovery library, and maintains a persistent semantic traversability
+map onto which physical evidence is written. A control-barrier-function (CBF)
+safety shield and primitive compiler then project every proposed primitive onto a
+provably safe set before execution. Two ideas carry the design. First,
+\emph{the language model proposes, the barrier function disposes}: a CBF quadratic
+program minimally edits each primitive so the capture point cannot leave a
+contracted support polygon, which yields a forward-invariance guarantee, under a
+reduced-order model, that the closed loop remains in its safe set whatever the
+language model outputs~\cite{ames2017control,pratt2006capture}. Second, privileged
+physics grounds both the latent and the training data, replacing an unanchored
+black box with quantities the simulator can verify.
+
+To study the dichotomy we introduce \kinofail{}, a benchmark of eleven
+continuously parameterized failure operators across four simulator mechanism
+axes, each exposing its parameter vector as privileged ground truth. Three
+operator pairs are constructed so their proprioceptive statistics coincide,
+making a proprioception-only baseline fail on them by design, and a dedicated
+suite sweeps an operator's parameter across the A/B frontier, turning the
+question of when semantic intervention becomes necessary into a measurable curve.
+To train the planner we build a privileged-grounded hindsight
+chain-of-thought~\cite{wei2022chain} pipeline whose central component is an
+automated truth-consistency filter: an oracle annotation is kept only if its
+physical attribution matches the privileged parameters and its chosen primitive
+lies in the feasible recovery set, which converts ``the oracle guessed'' into
+``physically grounded.'' The planner is then trained in two stages, supervised
+fine-tuning on the filtered data followed by an embodied preference-optimization
+stage~\cite{rafailov2023dpo} that scores rollouts by their physical outcome.
+
+We implement and evaluate \kinovla{} in high-fidelity simulation on a physically
+simulated Unitree Go2 in Isaac Lab~\cite{makoviychuk2021isaacgym,mittal2023orbit}.
+On held-out semantic-intervention failures the trained planner attains an
+attribution accuracy of \mbox{0.97}, against \mbox{0.24} for a tuned rule-based
+state machine, and every sampled output parses against the action schema; the
+safety shield solves its quadratic program in under \mbox{0.2\,ms} at the
+ninety-ninth percentile; and the privileged-distillation extractor regresses
+friction, payload, actuator effort, and support state to within per-operator
+tolerances. Sim-to-real transfer is treated at the level of design (an
+actuator-network model and contact-signal randomization) and left to future
+hardware studies.
+
+\noindent This paper makes the following contributions.
+\begin{itemize}
+  \item We formalize the \emph{recoverability dichotomy} as a falsifiable
+  question and instantiate it as \kinofail{}, a parameterized failure-operator
+  benchmark with privileged ground truth and three constructively matched
+  attribution-ambiguity pairs that render proprioception-only recovery provably
+  insufficient.
+  \item We cast the safety layer as a CBF quadratic program that arbitrates the
+  unconstrained output of a language model, with a forward-invariance guarantee in
+  a capture-point reduced-order model and an explicit dual-rate latency budget
+  under which the reflex loop keeps the robot alive while the planner reasons.
+  \item We ground the cross-frequency interface in privileged physics: a distilled
+  \kinotokens{} latent with a calibrated out-of-distribution score, an
+  \emph{active-sensing maneuver} that elicits an informative, deployment-consistent
+  proprioceptive observation at the failure instant and doubles as a causal probe of
+  the hidden cause, and a hindsight chain-of-thought pipeline whose truth-consistency
+  filter rejects physically inconsistent annotations.
+  \item We show, in simulation, that the resulting planner attributes and recovers
+  from semantic-intervention failures where a tuned rule-based baseline cannot,
+  evidence for the irreplaceability of vision-grounded reasoning on the B-class
+  subspace.
+\end{itemize}
+
+%% ===================================================================
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Learned legged locomotion and online adaptation}
+Model-free reinforcement learning produces quadrupedal controllers that walk over
+challenging terrain~\cite{lee2020learning,miki2022learning} and adapt online to
+unmodeled dynamics by encoding proprioceptive history into a latent that drives
+the policy~\cite{kumar2021rma,nahrendra2023dreamwaq}. These controllers are
+trained at scale with massively parallel simulation~\cite{rudin2022learning,makoviychuk2021isaacgym,mittal2023orbit}
+and transferred to hardware with actuator-network models of motor and gearbox
+nonlinearity~\cite{hwangbo2019learning}. Most use teacher-student privileged
+distillation, in which a student trained on onboard observations regresses a
+teacher's access to privileged simulator state~\cite{chen2020cheating,lee2020learning};
+we reuse exactly this mechanism for \kinotokens{}. The boundary is deliberate. These
+methods encode dynamics to drive a continuous control policy, and we make no claim
+to improve their adaptation. We distill the same privileged signal into a
+\emph{semantic} embedding that supports discrete decisions, and we target the
+B-class subspace where continuous adaptation is insufficient by construction rather
+than merely suboptimal.
+
+\subsection{Vision-language-action models and embodied foundation models}
+Large multimodal models have been adapted into robot policies that map language
+and pixels to actions~\cite{brohan2023rt1,brohan2023rt2,kim2024openvla,octo2024,driess2023palme,li2024roboflamingo,black2024pi0},
+and into high-level reasoners that sequence skills through language~\cite{ahn2022saycan,liang2023codeaspolicies,huang2022inner}.
+Legged variants extend this recipe to navigation~\cite{cheng2024navila,mei2024quadrupedgpt,wu2024doggybot},
+and visually closed-loop systems re-plan from RGB observations as a task
+unfolds~\cite{bu2024clover,zhi2024comerobot}. In all of these, action is generated
+open-loop or closed only on vision at camera rate, and on legged platforms
+locomotion is invoked as a black-box skill that returns no dynamics feedback.
+\kinovla{} adds a \mbox{1\,kHz} proprioceptive channel into the planner and a
+barrier-certified compiler beneath it, so the planner both sees the failure in the
+dynamics and cannot issue an action that destabilizes the body.
+
+\subsection{Failure detection, attribution, and language-model recovery}
+A growing line of work uses language and vision models to explain and correct
+robot failures. REFLECT~\cite{liu2023reflect} summarizes multimodal robot
+experience into a hierarchical trace for failure explanation, AHA~\cite{duan2025aha}
+trains a vision-language model to detect and reason over manipulation failures,
+and DoReMi~\cite{guo2024doremi} detects and recovers from plan-execution
+misalignment. In parallel, classical legged-robot pipelines detect slip and
+anomalies from proprioception~\cite{yan2025slip}, and introspective perception
+predicts when a vision system will fail~\cite{daftry2016introspective}. The
+distinctions are several. Attribution in the language-model line is performed after
+the fact, from low-frequency vision or audio, on fixed-base manipulators, and is
+injected as discrete text; classical legged anomaly detection stops at raising an
+alarm. \kinovla{} attributes \emph{online}, during a reflex-maintained safe
+interval, from a \mbox{1\,kHz} dynamics channel, and closes the loop through an
+expanded recovery-primitive library and a persistent map rather than terminating
+at an explanation or an alarm.
+
+\subsection{Safe control and safety filters}
+Control barrier functions provide quadratic-program safety filters with forward-invariance
+guarantees~\cite{ames2017control,ames2019control}, and legged balance has long been
+analyzed through reduced-order capture-point~\cite{pratt2006capture} and divergent-component-of-motion~\cite{englsberger2015three}
+models built on the linear inverted pendulum and zero-moment-point
+formulation~\cite{kajita2003biped}. Recent work layers barrier functions with model
+predictive control for legged robots~\cite{grandia2021multi}, certifies learning-based
+controllers with predictive safety filters~\cite{wabersich2018linear}, and surveys
+the broader safe-learning program~\cite{brunke2022safe}. These methods certify a
+\emph{known} controller against bounded disturbances. We instead place the CBF
+quadratic program downstream of an unconstrained, potentially hallucinated
+language-model output and project discrete recovery primitives onto a capture-point
+safe set, which addresses formal safety for language-model-in-the-loop legged
+control.
+
+\subsection{Semantic maps and open-vocabulary perception for navigation}
+Open-vocabulary scene representations build navigable maps by grounding vision into
+3D with CLIP~\cite{radford2021clip} and SAM~\cite{kirillov2023sam} features~\cite{huang2023vlmaps,huang2023voxposer,chen2023nlmap},
+and self-supervised traversability estimation learns terrain costs from
+experience~\cite{frey2023wvn}. These approaches write traversability from vision
+(vision $\rightarrow$ map). \kinovla{} inverts the direction: a physical failure
+rewrites the visually derived label of its 3D region and propagates the correction
+across visually homogeneous neighbors (physics $\rightarrow$ map), so that stepping
+through a single broken patch of thin ice condemns the entire visually uniform
+sheet.
+
+%% ===================================================================
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
