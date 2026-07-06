@@ -6,11 +6,11 @@ from dataclasses import replace
 
 import numpy as np
 
-from kino_vla.monitor.rule_monitor import MonitorEvent
+from kino_vla.monitor.event import MonitorEvent
 from kino_vla.utils.config import load_config
 from kino_vla.utils.geometry import segment_hits_circle
 from kino_vla.vla.fsm_recovery import AvoidCircle, FsmRecovery, Phase, plan_detour
-from tests.test_monitor import make_obs
+from tests._monitor_stub import make_obs
 
 CFG = load_config("recovery/fsm_v0.yaml")
 DT = 0.02

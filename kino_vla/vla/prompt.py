@@ -26,6 +26,7 @@ from kino_vla.data.oracle import _proprio_summary
 from kino_vla.data.schema import CoTAnnotation, Snapshot
 from kino_vla.utils.config import Config
 from kino_vla.utils.geometry import wrap_angle
+from kino_vla.vla.output import TURN_CLAMP_DEG
 
 # The single placeholder where the Kino-Projector splices its soft tokens (latent route). It is
 # a literal text marker in the user turn; the model replaces its tokens' embeddings in-place.
@@ -221,35 +222,39 @@ def build_messages(
 
 
 def nav_system_prompt(cfg: Config, *, has_hazard: bool = False) -> str:  # noqa: ARG001
-    """NOMINAL-mode prompt: the VLA is the 1 Hz nav planner (no anomaly) — pick the next waypoint
-    PIXEL toward the goal (verified zero-shot in scripts/vla_nominal_nav_probe.py). When a hazard is
-    in the map context (``has_hazard``) the VLA additionally OWNS a Turn primitive (the user rule);
-    on the hazard-free cruise the prompt is the bare waypoint form, so the cruise pick is unchanged
-    (adding the Turn text shifts the zero-shot cruise pick and the marginally-stable Go2 falls)."""
-    base = (
-        "You are the navigation planner on board a Unitree Go2 quadruped driving to a goal. No "
-        "anomaly is active right now. From the body camera RGB (a forward-down view of the ground "
-        "ahead), pick the NEXT navigation waypoint as a point on the safe, traversable ground "
-        "toward the goal. Output a single object in this EXACT format and nothing else:\n"
+    """NOMINAL-mode prompt: the VLA is the 1 Hz nav planner. It owns TWO nav actions — drive to a
+    clear ground pixel (``Replan_Waypoint``) OR rotate in place to bring clear ground into view
+    (``Turn``, an active-perception / information-gathering action). The Turn grammar is now
+    UNCONDITIONAL (``has_hazard`` retained only for call-site compatibility): the model is trained
+    on this exact prompt with both clean-cruise waypoints AND on-policy route-around Turns, so the
+    earlier zero-shot cruise destabilization (which motivated gating Turn behind a hazard) is fixed
+    at the data level — training and deployment share one prompt so the VLA transfers (#43)."""
+    return (
+        "You are the navigation planner on board a Unitree Go2 quadruped driving to a goal. From "
+        "the body camera RGB (a forward-down view of the ground ahead), choose the NEXT navigation "
+        "action toward the goal. You have TWO actions; output a single object in EXACTLY one of "
+        "these two formats and nothing else:\n"
         "<Thought>one sentence of navigation reasoning</Thought>\n"
         '<Action>{"attribution": "nominal", "primitive": "Replan_Waypoint", '
         '"params": {"point_px": [u, v]}}</Action>\n'
-        "point_px is [u, v] in 0..1000 normalised image coordinates (u left->right, v top->bottom) "
-        "of a ground pixel in the goal direction. CRITICAL: if the map context lists an "
-        "untraversable hazard region (a coloured patch you already got stuck in), you MUST route "
-        "AROUND it — pick a ground pixel on the CLEAR side of it, NEVER a pixel on the hazard "
-        "surface nor one straight through it toward the goal, even though the goal is beyond it."
-    )
-    if not has_hazard:  # the bare run-#23 cruise prompt verbatim ⇒ identical (stable) cruise pick
-        return base
-    return base + (
-        " PREFER a Replan_Waypoint that skirts the patch toward the goal. Output Turn ONLY when NO "
-        "clear ground to continue toward the goal is visible in your forward view (e.g. the patch "
-        "fills the view directly ahead) — a Turn rotates you in place to bring clear ground into "
-        "view; do NOT turn when a clear forward waypoint exists:\n"
-        '<Action>{"attribution":"nominal","primitive":"Turn","params":{"yaw_deg":d}}</Action>\n'
-        "d is degrees in [-90, 90] (+left, -right). After a Turn, pick a waypoint on the clear "
-        "ground now ahead that continues around the patch toward the goal."
+        "  (A) drive toward a point on safe, traversable ground. point_px is [u, v] in 0..1000 "
+        "normalised image coordinates (u left->right, v top->bottom) of a ground pixel in the goal "
+        "direction.\n"
+        '<Action>{"attribution": "nominal", "primitive": "Turn", "params": {"yaw_deg": d}}'
+        "</Action>\n"
+        f"  (B) rotate IN PLACE by d degrees in [-{int(TURN_CLAMP_DEG)}, {int(TURN_CLAMP_DEG)}] "
+        "(+left, -right) to bring clear ground into view; you do not move, you only re-aim the "
+        "camera, then pick a waypoint next step.\n"
+        "DECISION RULE: PREFER a Replan_Waypoint when clear ground that continues toward the goal "
+        "is VISIBLE in the forward view. Choose a Turn when the traversable ground toward the goal "
+        "is OUTSIDE your current view (e.g. an untraversable hazard patch fills the view straight "
+        "ahead, or the goal bearing is beyond the camera's horizontal field) so no safe forward "
+        "waypoint exists; turn toward the clear side to reveal the route, then continue. Do NOT "
+        "turn when a clear forward waypoint already exists.\n"
+        "CRITICAL: if the map context lists an untraversable hazard region (a coloured patch you "
+        "already got stuck in), you MUST route AROUND it: NEVER a pixel on the hazard surface nor "
+        "one straight through it toward the goal, even though the goal is beyond it; pick a ground "
+        "pixel on the CLEAR side, or Turn to bring that clear side into view."
     )
 
 

@@ -14,6 +14,15 @@ costmap:
   resolution_m: 0.25      # grid cell size
   extent: [16.0, 10.0]    # odometry-frame walkable area (matches demo terrain extent)
 
+# Rolling (egocentric) costmap for long-distance / multi-patch courses (#47). OFF by default ⇒ a
+# fixed world-frame grid of `extent` centred at the origin (the demo / existing single-patch
+# scenarios stay byte-identical). ON ⇒ the `extent`-sized grid follows the robot (re-centres when
+# within `roll_margin_m` of an edge) so distant patches/goal beyond the start-centred extent become
+# representable; marks persist in world coords, cells far behind scroll off. Long-distance gates set
+# `rolling: true` (and a wider `extent` for the local route window).
+rolling: false
+roll_margin_m: 2.0
+
 camera:
   fov_rad: 1.5708         # 90° horizontal field of view
   max_range_m: 5.0        # back-projection range gate (SurrogateSegmenter centre-in-cone gate)

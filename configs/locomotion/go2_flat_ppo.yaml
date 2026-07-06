@@ -35,6 +35,29 @@ dr:
   push_interval_s: [9.0, 13.0]
   push_velocity_range: [-0.6, 0.6]
 
+# ⚠️ FUTURE-SPRINT CURRICULUM — NOT reflected in the shipped policy (§6 #43). The active
+# outputs/locomotion/policy.pt was trained WITHOUT this `command:` block. Re-running
+# scripts/train_locomotion.py NOW would apply this curriculum and produce a NEW gait that REGRESSES
+# 5 of the 9 `pytest -m sim` gates (demo nav, M2-O9, M5-O7, M4-payload-MAE, M3-CBF-brace), because
+# the monitor/FSM/CBF/M4 stack is calibrated to the SHIPPED gait. Adopting a yaw-emphasis policy
+# requires the full gait recalibration first (#43). The retrained policy lives at policy.pt.yaw_retrain.
+#
+# Velocity-command sampling envelope (the commands the policy is trained to track). The IN-PLACE
+# TURN fix (user directive): the deployed backend commands ang_vel_z DIRECTLY (heading_command=False,
+# isaac_policy_backend.py) and an in-place Turn holds a SUSTAINED yaw rate at ~zero linear speed. The
+# stock flat task trains with heading_command=True, where ang_vel_z is derived from a sampled heading
+# target and DECAYS to ~0 as the base aligns — so a sustained in-place spin is essentially never
+# trained (the policy drifts/under-rotates on a held yaw command). Fix = train the way we deploy:
+# heading_command=False so ang_vel_z is sampled and HELD across the resample window (sustained yaw),
+# and widen the range to the backend yaw clamp (max_yaw_rate_radps=1.5, was the stock ±1.0). With
+# lin_vel still sampled, the uniform draw yields many small-linear/large-angular = in-place rotations.
+command:
+  heading_command: false          # train ang_vel_z DIRECTLY (matches deployment), sustained yaw
+  lin_vel_x: [-1.0, 1.0]
+  lin_vel_y: [-0.8, 0.8]
+  ang_vel_z: [-1.5, 1.5]          # match max_yaw_rate_radps (stock was ±1.0 ⇒ 1.5 was OOD)
+  rel_standing_envs: 0.05         # a small fraction held at a zero command (stand)
+
 # Reward shaping for a clean foot-planting trot. The stock flat reward set lets the
 # policy *skate* (feet slide while in contact), which yields a low, friction-robust
 # gait that crosses the O1 ice patch with zero measurable slip — hiding the very

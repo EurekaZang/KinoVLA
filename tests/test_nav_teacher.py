@@ -53,7 +53,7 @@ def test_label_is_turn_when_route_is_out_of_frame():
     pose, heading = np.array([0.8, 0.0]), 0.0
     label = next_nav_label(pose, heading, PATCH, GOAL, _mock_project(pose, heading), margin=0.5)
     assert label["kind"] == "turn"
-    assert -90.0 <= label["yaw_deg"] <= 90.0
+    assert -120.0 <= label["yaw_deg"] <= 120.0  # clamp raised 90→120 (#44 round-2)
     assert abs(label["yaw_deg"]) > 30.0  # a real turn toward the side corner
 
 
@@ -63,3 +63,36 @@ def test_label_is_waypoint_when_route_is_in_view():
     label = next_nav_label(pose, heading, PATCH, GOAL, _mock_project(pose, heading), margin=0.5)
     assert label["kind"] == "waypoint"
     assert 0 <= label["point_px"][0] <= 1000 and 0 <= label["point_px"][1] <= 1000
+
+
+# --- multi-patch (the DAgger scenario battery: two offset hazards, #43) -----------------------
+P_TOP = Rect(3.5, 1.2, 1.0, 1.0)  # y ∈ [0.2, 2.2]
+P_BOT = Rect(3.5, -1.2, 1.0, 1.0)  # y ∈ [-2.2, -0.2]; the +0.5 inflation overlaps over y≈0
+
+
+def test_single_patch_list_matches_single_patch_rect():
+    """Backward-compat: a one-element list routes identically to passing the bare Rect."""
+    start = np.array([0.0, 0.0])
+    assert np.allclose(
+        next_waypoint(start, GOAL, PATCH, margin=0.5),
+        next_waypoint(start, GOAL, [PATCH], margin=0.5),
+    )
+
+
+def test_next_waypoint_routes_around_two_offset_patches():
+    """Two patches straddling the centreline block the straight line; the first hop clears BOTH."""
+    start = np.array([0.0, 0.0])
+    wp = next_waypoint(start, GOAL, [P_TOP, P_BOT], margin=0.5)
+    assert not np.allclose(wp, GOAL)  # the middle is blocked by both inflated patches
+    assert not _seg_crosses_rect(start, wp, P_TOP), "first hop clears the top hazard"
+    assert not _seg_crosses_rect(start, wp, P_BOT), "first hop clears the bottom hazard"
+
+
+def test_multi_patch_label_turns_when_route_out_of_frame():
+    """Facing straight into the two-patch wall, the side route is out of the FOV ⇒ TURN."""
+    pose, heading = np.array([0.8, 0.0]), 0.0
+    label = next_nav_label(
+        pose, heading, [P_TOP, P_BOT], GOAL, _mock_project(pose, heading), margin=0.5
+    )
+    assert label["kind"] == "turn"
+    assert abs(label["yaw_deg"]) > 20.0

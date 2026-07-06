@@ -29,7 +29,7 @@ from kino_vla.data.oracle import OracleClient
 from kino_vla.data.schema import ORACLE_ERROR, DataSample, GroundTruth, Snapshot, Verdict
 from kino_vla.data.snapshot import SnapshotRecorder
 from kino_vla.data.taxonomy import FailureTaxonomy
-from kino_vla.monitor.rule_monitor import RuleMonitor
+from kino_vla.monitor.learned_monitor import load_deployed_monitor
 from kino_vla.sim.operators import OperatorStack
 from kino_vla.sim.surrogate import SurrogateBackend
 from kino_vla.tokens.features import physics_to_target
@@ -241,7 +241,7 @@ def _collect_snapshot(
     stack.on_reset(backend)
     ground_truth = taxonomy.ground_truth(cell.op_name, operator.get_privileged_state())
 
-    monitor = RuleMonitor(load_config(str(d.monitor)), dt=backend.dt)
+    monitor = load_deployed_monitor(backend.dt, threshold=0.3)
     monitor.reset()
     region = cell.scene_region(rect)
     recorder = SnapshotRecorder(

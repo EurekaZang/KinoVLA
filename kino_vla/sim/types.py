@@ -110,6 +110,26 @@ class ResistanceRegion:
     # when reversing, so the dog escapes by PEELING OUT (backing off), not by pushing through. The
     # grip still snaps at break_force_n (a LOW-break tether tears under forward load, the M5 gate).
     peel_factor: float = 1.0
+    # #49 PEEL-PLATEAU force shaping (E1 calibration; tether kind only): cap the spring grip at
+    # ``force_cap_n`` and add a constant pre-load ``force_offset_n`` ⇒ ``grip = min(k·(pen−L₀),
+    # force_cap_n) + force_offset_n``. Physically a real adhesive peel is a BOUNDED, near-constant
+    # force, not an unbounded Hookean spring. This lets O4's forward signal be made a constant drag
+    # matching O2 (set force_cap_n=0, force_offset_n=k_c) so the E1 C2ST can reach the strong claim.
+    # Defaults (inf, 0) reproduce the unshaped tether EXACTLY — no behaviour change for any caller.
+    force_cap_n: float = float("inf")
+    force_offset_n: float = 0.0
+    # A4.1 TWO-PHASE (delayed-divergence) adhesion (experiments_design.md §4 A4.1). When ``p0_m>0``
+    # the grip law is REPLACED by a plateau-then-ramp: ``grip = force_offset_n`` (a constant plateau
+    # byte-identical to O2 compliance's k_c drag, for pen ≤ p0_m) then ``force_offset_n +
+    # k2_n_per_m·(pen − p0_m)`` beyond. The plateau is where attribution happens (C2ST-
+    # indistinguishable from O2; A1.3 re-certifies it); the ramp is the CONSEQUENCE region.
+    # ``f_break`` then fires on the RAMP grip: finite ⇒ the tether tears under forward lean
+    # (a "catapult" release); ``f_break=inf`` + high ``k2`` ⇒ unbounded hold ("immobilization").
+    # Default (0, 0) reproduces the #49 path EXACTLY — no behaviour change for any caller. R7: the
+    # plateau magnitude is a free parameter (force_offset_n), so A4 places the pair where the
+    # consequence structure exists and A1.3 re-certifies byte-identity at that point.
+    p0_m: float = 0.0
+    k2_n_per_m: float = 0.0
 
 
 @dataclass(frozen=True)

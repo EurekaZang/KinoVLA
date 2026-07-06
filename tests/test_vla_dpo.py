@@ -10,6 +10,7 @@ from kino_vla.vla import scenarios as S
 from kino_vla.vla.dpo import build_preference_pairs, dpo_loss, pair_stats, save_pairs
 from kino_vla.vla.planner import StubVlaPolicy
 from kino_vla.vla.rollout import run_vla_rollout
+from tests._monitor_stub import StubMonitor
 
 
 @pytest.fixture(scope="module")
@@ -32,10 +33,13 @@ def _node_rollouts(cfg, tax):
     import dataclasses
 
     scn = S.o3_collapse()
-    good = run_vla_rollout(scn, StubVlaPolicy(cfg, tax), seed=0, backend="surrogate")
+    good = run_vla_rollout(
+        scn, StubVlaPolicy(cfg, tax), seed=0, backend="surrogate", monitor=StubMonitor()
+    )
     good = dataclasses.replace(good, success=True)  # correct recovery succeeds on the real stack
     bad = run_vla_rollout(
-        scn, StubVlaPolicy(cfg, tax, error_mode="sibling"), seed=0, backend="surrogate"
+        scn, StubVlaPolicy(cfg, tax, error_mode="sibling"), seed=0, backend="surrogate",
+        monitor=StubMonitor(),
     )
     return [good, bad]
 
@@ -53,7 +57,10 @@ def test_pairs_chosen_is_success_rejected_is_failure(cfg, tax):
 
 def test_no_pairs_when_all_succeed(cfg, tax):
     """No failure ⇒ no preference signal (the sampler must produce a loss to pair)."""
-    good = run_vla_rollout(S.o3_collapse(), StubVlaPolicy(cfg, tax), seed=0, backend="surrogate")
+    good = run_vla_rollout(
+        S.o3_collapse(), StubVlaPolicy(cfg, tax), seed=0, backend="surrogate",
+        monitor=StubMonitor(),
+    )
     assert build_preference_pairs([good, good], max_pairs=4) == []
 
 

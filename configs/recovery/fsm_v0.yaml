@@ -6,6 +6,11 @@ heading_gain: 2.0
 align_angle_rad: 0.7     # turn in place above this heading error before driving
 cmd_slew_mps2: 1.2       # keeps nominal tracking error under the monitor threshold
 yaw_slew_radps2: 6.0
+# In-place Turn primitive (NOMINAL nav): a PURE yaw rotation (vx=vy=0); the surrogate integrates wz
+# into heading directly, so it rotates in place. turn_tol_rad/turn_max_s mirror the Isaac config.
+turn_rate_radps: 1.0
+turn_tol_rad: 0.12
+turn_max_s: 4.0
 event_grace_s: 1.5       # ignore events right after a replan (turn-in-place transient)
 backstep:
   speed_mps: 0.25

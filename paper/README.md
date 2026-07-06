@@ -1,13 +1,13 @@
-# Kino-VLA — ICRA paper sources
+# KiNO — ICRA paper sources
 
-LaTeX sources for the Kino-VLA conference paper (ICRA format, IEEEtran two-column).
+LaTeX sources for the KiNO conference paper (ICRA format, IEEEtran two-column).
 
 ## Status
 All prose sections drafted (rigorous, citation-complete; compiles to an **8-page** PDF):
 - Abstract
 - Section I — Introduction
 - Section II — Related Work
-- Section III — The Kino-VLA System: overview + latency budget (Table I),
+- Section III — The KiNO System: overview + latency budget (Table I),
   Kino-Tokens privileged distillation, recovery planner + semantic map, the CBF-QP
   shield with the forward-invariance derivation (Eqs. 1–4), and the training pipeline
 - Section IV — Experiments: setup + Kino-Fail benchmark, attribution results

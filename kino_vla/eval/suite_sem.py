@@ -134,12 +134,26 @@ def evaluate_by_regime(
 def evaluate_attribution(
     policy: VlaPolicy, items: list[SemItem], *, feasible_sets: dict | None = None
 ) -> dict:
-    """Score a policy's attribution accuracy (and feasible-recovery rate) over Suite-Sem items."""
+    """Score a policy's attribution + recovery over Suite-Sem items.
+
+    Three recovery readings (the un-gated one is a known footgun — see ``correct_recovery_rate``):
+
+    - ``attribution_accuracy`` — the share whose attributed cause == the privileged truth.
+    - ``feasible_recovery_rate`` — the share whose chosen primitive lands in the TRUE cause's
+      feasible set. **NOT gated on attribution**: a wrong cause can still emit a primitive that
+      happens to be feasible for the truth (e.g. a constant-Backstep baseline scores >0 here with
+      0 attribution). Kept for backward-compat / diagnostics; do NOT headline it.
+    - ``correct_recovery_rate`` (the JOINT, load-bearing metric) — the share that BOTH attributed
+      the cause correctly AND chose a feasible primitive. This is the recovery number that actually
+      requires understanding the cause, so it is the one to report alongside attribution.
+    """
     n = len(items)
     correct = 0
     feasible_ok = 0
+    joint_ok = 0
     parsed = 0
     per_op_correct: Counter = Counter()
+    per_op_joint: Counter = Counter()
     per_op_total: Counter = Counter()
     for it in items:
         op = it.snapshot.operator_name
@@ -148,19 +162,34 @@ def evaluate_attribution(
         if not decision.ok or decision.annotation is None:
             continue
         parsed += 1
-        if decision.attribution == it.attribution_truth:
+        attr_ok = decision.attribution == it.attribution_truth
+        if attr_ok:
             correct += 1
             per_op_correct[op] += 1
-        if feasible_sets is not None:
-            feas = feasible_sets.get(it.attribution_truth, set())
-            if decision.primitive_name in feas:
-                feasible_ok += 1
+        prim_feasible = (
+            feasible_sets is not None
+            and decision.primitive_name in feasible_sets.get(it.attribution_truth, set())
+        )
+        if prim_feasible:
+            feasible_ok += 1
+        if attr_ok and prim_feasible:
+            joint_ok += 1
+            per_op_joint[op] += 1
     return {
         "n": n,
         "parse_rate": parsed / max(1, n),
         "attribution_accuracy": correct / max(1, n),
         "feasible_recovery_rate": feasible_ok / max(1, n),
+        "correct_recovery_rate": (joint_ok / max(1, n)) if feasible_sets is not None else None,
         "per_operator_accuracy": {op: per_op_correct[op] / per_op_total[op] for op in per_op_total},
+        "per_operator_counts": {
+            op: {
+                "n": per_op_total[op],
+                "attr_correct": per_op_correct[op],
+                "joint_correct": per_op_joint[op],
+            }
+            for op in per_op_total
+        },
     }
 
 

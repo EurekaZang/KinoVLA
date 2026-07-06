@@ -8,7 +8,7 @@ annotated MP4. Everything in the perception/recovery path is REAL (the audit fix
   • the costmap is grounded from a robot-mounted RGB-D + semantic-segmentation camera —
     LiveRtxSegmenter: the semantic mask says WHICH pixels are the hazard, real CLIP on those
     pixels says WHAT it is (512-d feature + open-vocab label), and ray∩ground says WHERE it is;
-  • recovery is the trained Kino-VLA planner (--recovery vla): it attributes the cause from the
+  • recovery is the trained KiNO planner (--recovery vla): it attributes the cause from the
     snapshot and picks ONE §5 primitive (attribution-driven), not the cause-blind FSM stub.
 
 The MP4 composites, every step: the RTX chase camera (the Go2 on the textured mud), the live
@@ -169,12 +169,15 @@ def main() -> int:
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Circle, Rectangle
+    from matplotlib.colors import ListedColormap
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch, Rectangle
 
     from kino_vla.loop import run_episode
     from kino_vla.skeleton import build_walking_skeleton
     from kino_vla.utils.config import REPO_ROOT, load_config
     from kino_vla.utils.seeding import seed_everything
+    from kino_vla.vla.nav_planner import obstacle_mask
 
     seed = args.seed if args.seed is not None else int(load_config("default.yaml").seed)
     seed_everything(seed)
@@ -275,6 +278,10 @@ def main() -> int:
     res = float(cm._res)
     ny, nx = cm.shape
     extent = [ox, ox + nx * res, oy, oy + ny * res]
+    # The decoupled planner's viz params — the SAME threshold/clearance A* routes around, so the
+    # costmap panel draws the planner's ACTUAL obstacle set (not the retired avoid-discs, #45).
+    nav_threshold = float(planner_ref.cfg.get("nav_cost_threshold", 0.5)) if planner_ref else 0.5
+    nav_inflation = float(planner_ref.cfg.get("nav_inflation_m", 0.6)) if planner_ref else 0.6
 
     fig = plt.figure(figsize=(18, 9), dpi=100)
     gs = fig.add_gridspec(
@@ -294,8 +301,15 @@ def main() -> int:
     ax_tel = fig.add_subplot(gs[1, 10:12])
     ax_time = fig.add_subplot(gs[2, :])  # Q6: the monitor-fire timeline (anomaly + fire markers)
     rec_txt = "VLA recovery" if args.recovery == "vla" else "FSM recovery"
+    _nav_mode = getattr(planner_ref, "_nav_mode", None) if planner_ref is not None else None
+    if _nav_mode == "decoupled":
+        arch_txt = "DECOUPLED · VLA attributes → A* planner commits the route (#45)"
+    elif _nav_mode == "vla_reactive":
+        arch_txt = f"{rec_txt} · VLA per-frame nav (reactive)"
+    else:
+        arch_txt = rec_txt
     fig.suptitle(
-        f"Kino-VLA · Isaac Go2 · {scen['title']} · real RTX-camera-grounded §7 map + {rec_txt}",
+        f"KiNO · Isaac Go2 · {scen['title']} · real RTX §7 map · {arch_txt}",
         fontsize=15,
         fontweight="bold",
     )
@@ -308,6 +322,7 @@ def main() -> int:
         "fire_times": [],  # Q6: every monitor-fire timestamp
         "anom_hist": [],  # Q6: (t, anomaly) for the timeline
         "traj_full": [],  # GOAL: (t, x, y) every step — the objective ideal-trajectory metric
+        "topo_t": None,  # #45: time of the first Update_Topology / contact mark (banner trigger)
     }
 
     def render(obs, event, decision, frame) -> np.ndarray:
@@ -326,7 +341,7 @@ def main() -> int:
             ax_cam.imshow(state["last_frame"], aspect="auto")
         else:
             ax_cam.text(0.5, 0.5, "RTX camera warming up…", ha="center", va="center")
-        ax_cam.set_title("RTX chase camera — real Go2 on the mud", fontsize=12)
+        ax_cam.set_title(f"RTX chase camera — real Go2 · {scen['title']}", fontsize=12)
         if recent_fire:  # Q6: flash a banner for ~1.2 s after the Kino-Monitor fires
             ax_cam.text(
                 0.5,
@@ -341,39 +356,62 @@ def main() -> int:
                 bbox={"boxstyle": "round", "fc": "red", "ec": "yellow", "lw": 3, "alpha": 0.95},
             )
 
-        # ---- live costmap ----
+        # ---- live costmap (§7): the DECOUPLED planner's world (no avoid-discs, #45) ----
         ax_map.cla()
-        grid = cm._cost
+        if cm.n_physical > 0 and state["topo_t"] is None:
+            state["topo_t"] = obs.t  # the first Update_Topology / contact mark — banner trigger
+        recent_topo = state["topo_t"] is not None and (obs.t - state["topo_t"]) < 2.5
+        # background: the §7 traversability cost map (slightly transparent so the marks read on top)
         im = ax_map.imshow(
-            grid, origin="lower", extent=extent, cmap="RdYlGn_r", vmin=0.0, vmax=1.0, alpha=0.92
+            cm.cost_grid, origin="lower", extent=extent, cmap="RdYlGn_r",
+            vmin=0.0, vmax=1.0, alpha=0.70,
         )
-        # mud region(s) the map grounded, outlined + labelled by CLIP
+        # the A* OBSTACLE SET the planner ACTUALLY routes around = marked cells (cost>threshold)
+        # inflated by the robot clearance — the planner's REAL input (replaces the avoid-discs).
+        occ = obstacle_mask(cm.cost_grid, nav_threshold, nav_inflation, res)
+        if occ.any():
+            ax_map.imshow(
+                np.ma.masked_where(~occ, np.ones_like(occ, dtype=float)),
+                origin="lower", extent=extent, cmap=ListedColormap(["#7a00cc"]),
+                vmin=0.0, vmax=1.0, alpha=0.22,
+            )
+        # UPDATE_TOPOLOGY: the physically CONTACT-marked cells (the VLA attributed → "physics writes
+        # the map"), drawn distinct from the lower-confidence CLIP-propagated cells around them.
+        phys = cm.physical_grid
+        if phys.any():
+            ax_map.imshow(
+                np.ma.masked_where(~phys, np.ones_like(phys, dtype=float)),
+                origin="lower", extent=extent, cmap=ListedColormap(["#b30000"]),
+                vmin=0.0, vmax=1.0, alpha=0.55,
+            )
+        # ground-truth patch outline — REFERENCE ONLY: the planner NEVER sees this rect (it routes
+        # off the marked costmap above). Faint dotted, so it cannot be mistaken for a planner input.
         for region in nav_map.scene:
             r = region.rect
             ax_map.add_patch(
-                Rectangle(
-                    (r.cx - r.hx, r.cy - r.hy),
-                    2 * r.hx,
-                    2 * r.hy,
-                    fill=False,
-                    ec="saddlebrown",
-                    lw=2.0,
-                    ls="-",
-                )
+                Rectangle((r.cx - r.hx, r.cy - r.hy), 2 * r.hx, 2 * r.hy,
+                          fill=False, ec="gray", lw=1.2, ls=":")
             )
             lab = seg.last_regions[0][0] if seg.last_regions else "?"
-            ax_map.text(
-                r.cx,
-                r.cy + r.hy + 0.15,
-                f"CLIP: '{lab}'",
-                color="saddlebrown",
-                ha="center",
-                fontsize=9,
-                fontweight="bold",
+            ax_map.text(r.cx, r.cy + r.hy + 0.15, f"CLIP: '{lab}'",
+                        color="dimgray", ha="center", fontsize=8)
+        # the DECOUPLED planner's live COMMITTED route around the marked costmap (#45, the money
+        # shot): VLA attributes on contact → marks cells; the grid-A* planner commits this route
+        # and HOLDS it (it shrinks as the dog follows it; re-planned only when new cells mark).
+        if planner_ref is not None and getattr(planner_ref, "waypoints", None):
+            pts = [[float(obs.pos[0]), float(obs.pos[1])]]
+            pts += [[float(w[0]), float(w[1])] for w in planner_ref.waypoints]
+            wp = np.array(pts)
+            ax_map.plot(
+                wp[:, 0],
+                wp[:, 1],
+                "-o",
+                color="magenta",
+                lw=2.4,
+                ms=6,
+                alpha=0.95,
+                zorder=4,
             )
-        # avoid discs handed to the planner
-        for c, rad in nav_map.nav_hazards():
-            ax_map.add_patch(Circle((c[0], c[1]), rad, fill=False, ec="red", lw=1.8, ls="--"))
         # trajectory + robot + goal
         if len(traj) > 1:
             tr = np.array(traj)
@@ -396,13 +434,30 @@ def main() -> int:
         ax_map.set_xlim(extent[0], extent[1])
         ax_map.set_ylim(extent[2], extent[3])
         ax_map.set_aspect("equal")
-        n_disc = len(nav_map.nav_hazards())
+        # unified legend (proxy handles — the imshow overlays don't auto-legend)
+        handles = [
+            Line2D([0], [0], color="magenta", marker="o", lw=2.4, label="A* committed route"),
+            Patch(facecolor="#b30000", alpha=0.55, label="Update_Topology: contact-marked"),
+            Patch(facecolor="#7a00cc", alpha=0.30, label="A* obstacle set (marked + clearance)"),
+            Line2D([0], [0], color="gray", ls=":", label="ground-truth patch (reference)"),
+        ]
+        ax_map.legend(handles=handles, loc="upper left", fontsize=7, framealpha=0.85)
+        n_phys = int(cm.n_physical)
+        n_prop = max(0, int((cm.cost_grid > nav_threshold).sum()) - n_phys)
         ax_map.set_title(
-            f"Semantic costmap  ·  physical {cm.n_physical} cells  ·  {n_disc} avoid-discs",
-            fontsize=12,
+            f"§7 semantic costmap · {n_phys} contact-marked + {n_prop} CLIP-propagated · "
+            "A* routes around (no discs)",
+            fontsize=11,
         )
         ax_map.set_xlabel("odometry x [m]")
         ax_map.set_ylabel("odometry y [m]")
+        if recent_topo:  # flash the Update_Topology event (the VLA→costmap write, #45)
+            ax_map.text(
+                0.5, 0.965, "  UPDATE_TOPOLOGY · VLA marked the surface untraversable  ",
+                transform=ax_map.transAxes, ha="center", va="top", fontsize=10.5,
+                fontweight="bold", color="white",
+                bbox={"boxstyle": "round", "fc": "#7a00cc", "ec": "white", "lw": 2, "alpha": 0.95},
+            )
 
         # ---- live perception inset: what the real RTX camera sees → CLIP ----
         ax_clip.cla()
@@ -430,6 +485,11 @@ def main() -> int:
             vla_txt = "VLA: (no reflection yet)"
         else:
             vla_txt = "recovery: FSM stub (cause-blind)"
+        route_txt = (
+            f"planner: {len(planner_ref.waypoints)}-wp committed route [{_nav_mode}]"
+            if planner_ref is not None and getattr(planner_ref, "waypoints", None)
+            else "planner: (no committed route)"
+        )
         lines = [
             f"t = {obs.t:5.2f} s",
             f"speed = {spd:.2f}  cmd = {cmd_spd:.2f} m/s",
@@ -438,6 +498,7 @@ def main() -> int:
             f"  effort {emas.get('effort_ratio', 0):.2f}  tilt {emas.get('tilt', 0):.2f}",
             f"monitor FIRED @ t = {state['fire_times'] or '—'} s",
             vla_txt,
+            route_txt,
             f"shield: {state['last_code']}",
             f"goal dist: {float(np.linalg.norm(obs.pos - goal)):.2f} m",
         ]
@@ -522,6 +583,7 @@ def main() -> int:
         max_time_s=float(skeleton.demo_cfg.max_time_s),
         on_step=on_step,
         nav_map=nav_map,
+        perceive_every=5,  # ~10 Hz RTX perception (quality-neutral; obstacles come from contact)
     )
     writer.close()
     plt.close(fig)

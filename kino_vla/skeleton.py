@@ -21,7 +21,7 @@ import numpy as np
 
 from kino_vla.loop import EpisodeResult, run_episode
 from kino_vla.map import SemanticRegion, TraversabilityMap
-from kino_vla.monitor.rule_monitor import RuleMonitor
+from kino_vla.monitor.learned_monitor import LearnedMonitor, load_deployed_monitor
 from kino_vla.shield.cbf_shield import CbfShield
 from kino_vla.sim.backend import LocomotionBackend
 from kino_vla.sim.operators import FailureOperator, MuField, OperatorStack
@@ -38,7 +38,7 @@ class WalkingSkeleton:
 
     backend: LocomotionBackend
     operators: OperatorStack
-    monitor: RuleMonitor
+    monitor: LearnedMonitor
     policy: FsmRecovery
     shield: CbfShield
     demo_cfg: Config
@@ -55,6 +55,8 @@ def build_walking_skeleton(
     operator_factory: Callable[[Rect], tuple[FailureOperator, SemanticRegion | None]] | None = None,
     map_overrides: dict[str, Any] | None = None,
     live_perception: bool = False,
+    extra_operators: list[tuple[FailureOperator, SemanticRegion]] | None = None,
+    monitor: object | None = None,
 ) -> WalkingSkeleton:
     """Assemble the full skeleton for one episode; ``backend`` is surrogate|isaac.
 
@@ -112,12 +114,11 @@ def build_walking_skeleton(
     else:
         raise ValueError(f"unknown backend {backend!r}; expected 'surrogate' or 'isaac'")
 
-    # Per-robot calibration: the real Go2 (Isaac) has a push-off slip transient and
-    # intermittent ice slip the surrogate point-robot does not, so it uses its own
-    # monitor/recovery constants (same pipeline, different thresholds).
-    monitor_cfg = "monitor/rule_v0_isaac.yaml" if backend == "isaac" else "monitor/rule_v0.yaml"
+    # The learning-based Kino-Monitor (trained + calibrated on the real Go2, see
+    # outputs/monitor_learned/RESULTS.md) is the single deployed monitor — it learned the per-robot
+    # proprioception distribution from data, so no per-robot threshold config remains.
     fsm_cfg = "recovery/fsm_isaac.yaml" if backend == "isaac" else "recovery/fsm_v0.yaml"
-    monitor = RuleMonitor(load_config(monitor_cfg), dt=backend_obj.dt)
+    monitor = monitor if monitor is not None else load_deployed_monitor(backend_obj.dt)
     policy = FsmRecovery(
         load_config(fsm_cfg),
         goal_xy=np.asarray(demo_cfg.goal.pos, dtype=np.float64),
@@ -129,32 +130,42 @@ def build_walking_skeleton(
     shield = CbfShield(load_config("shield/cbf_v0.yaml"))
     # M5: the semantic traversability map grounds the path hazard as a homogeneous visual
     # region so the physical slip can overwrite + propagate over the whole sheet (spec §7).
+    # Multi-patch readiness (#47): the primary hazard plus any ``extra_operators`` (pre-built
+    # (operator, region) pairs at other locations) share the SAME closed loop. A long/multi-patch
+    # course registers several patches; the default single-patch path stays byte-identical.
+    operators_all: list[FailureOperator] = [hazard_op]
+    scenes_all: list[SemanticRegion] = [scene_region] if scene_region is not None else []
+    for op, reg in extra_operators or []:
+        operators_all.append(op)
+        if reg is not None:
+            scenes_all.append(reg)
     nav_map = None
-    if use_map and scene_region is not None:
+    if use_map and scenes_all:
         if live_perception and backend == "isaac":
-            # REAL camera-grounded §7 map: texture + semantically tag the hazard on the terrain so
+            # REAL camera-grounded §7 map: texture + semantically tag EVERY hazard on the terrain so
             # the RTX perception camera sees it, and ground the costmap from those real pixels
             # (LiveRtxSegmenter: semantic mask + real-CLIP label + ray∩ground footprint).
             from kino_vla.map.clip_segmentation import APPEARANCE_TO_MATERIAL
             from kino_vla.map.live_rtx_segmenter import LiveRtxSegmenter
 
-            material = APPEARANCE_TO_MATERIAL.get(scene_region.appearance_class, "concrete")
-            backend_obj.add_textured_patch(scene_region.rect, material, material)
+            for reg in scenes_all:
+                material = APPEARANCE_TO_MATERIAL.get(reg.appearance_class, "concrete")
+                backend_obj.add_textured_patch(reg.rect, material, material)
             nav_map = TraversabilityMap(
-                load_config("map/traversability_v0.yaml"),
-                scene=[scene_region],
+                load_config("map/traversability_v0.yaml", map_overrides),
+                scene=scenes_all,
                 segmenter=LiveRtxSegmenter(backend_obj),
             )
         else:
             # ``map_overrides`` lets a caller pick the §7 perception front-end (e.g.
-            # {"segmenter": "clip"} for the synthetic-CLIP demo); default None keeps the shared
-            # config's surrogate front-end so the CI/demo path is unchanged.
+            # {"segmenter": "clip"} for the synthetic-CLIP demo) or enable the rolling costmap;
+            # default None keeps the shared config's surrogate front-end (CI/demo path unchanged).
             nav_map = TraversabilityMap(
-                load_config("map/traversability_v0.yaml", map_overrides), scene=[scene_region]
+                load_config("map/traversability_v0.yaml", map_overrides), scene=scenes_all
             )
     return WalkingSkeleton(
         backend=backend_obj,
-        operators=OperatorStack([hazard_op]),
+        operators=OperatorStack(operators_all),
         monitor=monitor,
         policy=policy,
         shield=shield,
@@ -168,9 +179,10 @@ def run_walking_skeleton(
     seed: int,
     backend: str = "surrogate",
     demo_overrides: dict[str, Any] | None = None,
+    monitor: object | None = None,
 ) -> tuple[EpisodeResult, WalkingSkeleton]:
     """Build and run one seeded walking-skeleton episode."""
-    skeleton = build_walking_skeleton(seed, backend, demo_overrides)
+    skeleton = build_walking_skeleton(seed, backend, demo_overrides, monitor=monitor)
     result = run_episode(
         skeleton.backend,
         skeleton.operators,

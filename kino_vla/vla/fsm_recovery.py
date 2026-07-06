@@ -18,7 +18,7 @@ from enum import Enum
 
 import numpy as np
 
-from kino_vla.monitor.rule_monitor import MonitorEvent
+from kino_vla.monitor.event import MonitorEvent
 from kino_vla.sim.types import Obs
 from kino_vla.utils.config import Config
 from kino_vla.utils.geometry import rot90, segment_hits_circle, unit, wrap_angle

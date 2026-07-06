@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import time
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -30,6 +31,47 @@ from kino_vla.vla.dataset_build import (
     split_examples,
 )
 from kino_vla.vla.model import KinoVLA
+
+
+def balance_train(
+    train: list[VlaExample],
+    *,
+    nav_weight: float = 1.0,
+    max_factor: int = 20,
+    nav_turn_frac: float = 1.0,
+) -> list[VlaExample]:
+    """Class-balanced TRAIN re-sampling that fixes the nav-``Turn`` collapse at the data level.
+
+    The deployed model collapses to "always waypoint" because ``Turn`` is a tiny fraction of all
+    ``<Action>``s (recovery + nav-waypoint dominate ⇒ held-out 0/8 turns, #43). This balances the
+    NAVIGATION stratum: ``waypoint`` → ``target`` and ``turn`` → ``target * nav_turn_frac``
+    (``nav_turn_frac=1.0`` ⇒ parity, the round-1 default; <1 damps OVER-turning, the #44 round-2
+    lever — the model turned 27/31 because parity over-weighted turning vs deploy frequency). The
+    whole nav stratum is scaled to ``nav_weight`` × the recovery count. RECOVERY examples are kept
+    VERBATIM — their per-primitive distribution (and thus the M7 attribution ceiling, 0.974) is
+    never perturbed. Deterministic (sorted tile, capped at ``max_factor``) ⇒ reproducible from seed.
+
+    Pure (no torch / no model) ⇒ unit-testable on the CI machine.
+    """
+    recovery = [e for e in train if e.operator_name != "navigation"]
+    nav = [e for e in train if e.operator_name == "navigation"]
+    if not nav:
+        return list(train)
+    by_kind: dict[str, list[VlaExample]] = defaultdict(list)
+    for e in nav:
+        by_kind[e.primitive_truth].append(e)  # "waypoint" | "turn"
+    n_kinds = len(by_kind)
+    budget = round(float(nav_weight) * len(recovery)) if recovery else len(nav)
+    # waypoint → target; turn → target*nav_turn_frac (≤1 damps over-turning). target never below the
+    # largest observed kind (no data lost at frac=1). Recovery distribution is untouched.
+    target = max(max(len(v) for v in by_kind.values()), budget // max(1, n_kinds))
+    out = list(recovery)
+    for kind in sorted(by_kind):
+        exs = sorted(by_kind[kind], key=lambda e: e.sample_id)
+        k_target = max(1, round(target * (float(nav_turn_frac) if kind == "turn" else 1.0)))
+        reps = min(int(max_factor), max(1, -(-k_target // len(exs))))  # ceil-div, capped
+        out.extend((exs * reps)[:k_target])
+    return out
 
 
 def _fit_projector_standardizer(model: KinoVLA, train: list[VlaExample], eps: float) -> None:
@@ -84,8 +126,9 @@ def train_sft(
     With ``nav_dataset_dir`` set, the RTX nav-SFT examples (route-around turn/waypoint decisions on
     real camera frames) are CO-TRAINED alongside the recovery examples in one adapter — the deployed
     planner uses one model for both recovery and 1 Hz nav (user directive 2026-06-21). Nav examples
-    carry ``target_theta=None`` (θ loss skipped) + ``loss_span="action"``; the recovery split (so
-    the M7 attribution data) is unchanged (nav is its own ``navigation`` operator stratum)."""
+    carry ``target_theta=None`` (θ loss skipped) + ``loss_span="completion"`` (the active-perception
+    REASONING is trained, #43); the recovery split (so the M7 attribution data) is unchanged (nav is
+    its own ``navigation`` operator stratum). ``balance_train`` then lifts nav-Turn to parity."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     seed = int(cfg.train.seed)
@@ -115,18 +158,30 @@ def train_sft(
         val_frac=float(cfg.data.val_frac),
         test_frac=float(cfg.data.test_frac),
     )
-    # OVERSAMPLE the nav TURN examples in TRAIN (after the split, so no frame leaks train→test): the
-    # Turn primitive is a small fraction of all <Action>s (recovery + nav-waypoint dominate), so the
-    # model collapses to "always waypoint" and never turns (held-out: 0/8 turns). Repeating balances.
-    ot = int(cfg.data.get("nav_turn_oversample", 1))
-    if ot > 1:
-        extra = [
-            e
-            for e in split.train
-            if e.operator_name == "navigation" and e.primitive_truth == "turn"
-        ]
-        split.train.extend(extra * (ot - 1))
-        print(f"[sft] oversampled {len(extra)} nav-turn train examples ×{ot}", flush=True)
+    # Class-balance the TRAIN split AFTER the split (so no frame leaks train→val/test): lift the
+    # nav-Turn class to parity with nav-waypoint and weight the nav stratum vs recovery, WITHOUT
+    # perturbing the recovery per-primitive distribution (protects the M7 attribution ceiling). This
+    # replaces the ad-hoc nav_turn_oversample band-aid (#43, data-level fix — no runtime plugin).
+    if any(e.operator_name == "navigation" for e in split.train):
+        n_before = len(split.train)
+        # in-place list assignment (DatasetSplit is a frozen dataclass ⇒ cannot rebind .train)
+        split.train[:] = balance_train(
+            split.train,
+            nav_weight=float(cfg.data.get("nav_weight", 1.0)),
+            max_factor=int(cfg.data.get("nav_balance_max_factor", 20)),
+            nav_turn_frac=float(cfg.data.get("nav_turn_frac", 1.0)),
+        )
+        n_turn = sum(
+            e.operator_name == "navigation" and e.primitive_truth == "turn" for e in split.train
+        )
+        n_wp = sum(
+            e.operator_name == "navigation" and e.primitive_truth == "waypoint" for e in split.train
+        )
+        print(
+            f"[sft] class-balanced train {n_before}->{len(split.train)} "
+            f"(nav turn={n_turn} waypoint={n_wp})",
+            flush=True,
+        )
     (out / "split.json").write_text(
         json.dumps(
             {

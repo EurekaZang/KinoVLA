@@ -21,12 +21,33 @@ startup_speed_mps: 0.35   # Go2 upright through the push-off (both an uncorrecte
                           # fires, only its turn waits out the warmup.
 recovery_anomaly: 0.8
 context_rounds: 5
+# Decoupled nominal nav (#44): the deployed grid planner (kino_vla/vla/nav_planner.py) commits a
+# route around the persistent §7 costmap the VLA attributed on contact — memory + commitment leave
+# the per-frame VLA (which oscillated at the patch edge). nav_mode=vla_reactive restores the VLA
+# per-frame pick (the ablation baseline). nav_cost_threshold = the costmap cost that counts as a
+# hazard cell (matches map hazard_threshold); nav_inflation_m = the robot-clearance margin the route
+# keeps from a marked cell (covers the ~0.3-0.5 m pursuit drift while skirting).
+nav_mode: decoupled
+nav_cost_threshold: 0.5
+nav_inflation_m: 0.6
 heading_gain: 1.5        # gentler turn command (2.0 spun the dog hard enough to topple at the apex)
 align_angle_rad: 0.7
 cmd_slew_mps2: 1.2
 yaw_slew_radps2: 3.5     # gentler yaw ramp: a slow in-place turn keeps the quadruped upright
+# In-place Turn primitive (NOMINAL nav, user directive): a PURE yaw rotation the dog physically
+# executes via a commanded yaw velocity (vx=vy=0), NOT a projected waypoint. turn_rate_radps stays
+# within the low-level policy's trained yaw-command range (<= max_yaw_rate_radps=1.5); turn_tol_rad is
+# the completion tolerance (~7 deg); turn_max_s caps a turn the policy cannot finish (safety).
+turn_rate_radps: 1.0
+turn_tol_rad: 0.12
+turn_max_s: 4.0
 event_grace_s: 12.0      # the route-AROUND takes ~25 s; hold off the monitor so a route-around
                          # stumble doesn't re-trigger recovery mid-maneuver (it clears in one pass)
+recovery_reset_dist_m: 1.5  # #47 multi-patch/long-distance: a fire farther than this from the last
+                            # attribution is a NEW distinct hazard ⇒ (1) reset the max_rounds dead-
+                            # loop counter and (2) bypass the post-maneuver grace (event_grace_s only
+                            # suppresses SAME-spot re-fires, never a new, distant patch). Larger than
+                            # the intra-maneuver drift (~0.5 m), smaller than inter-patch spacing.
 backstep:
   speed_mps: 0.25
   duration_s: 3.0        # legacy; superseded by max_duration_s

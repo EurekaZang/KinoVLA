@@ -1,0 +1,77 @@
+# E1 — Proprioceptive-indistinguishability classifier-two-sample test (C2ST).
+#
+# Strengthens spec §8.1 P4 from matching *summary statistics* (resistance curve / slip /
+# torque spectrum) to matching the JOINT distribution over the windowed observation+history
+# vector the robot consumes — the only target that binds an RMA/DreamWaQ history encoder.
+#
+# Claim per pair: over the windowed obs+history at history depth T, the strongest practical
+# discriminator gets held-out AUC ≈ 0.5 (CI covers 0.5 AND permutation p ≥ alpha) at ALL T ⇒
+# proprioception cannot separate the pair. BINDING representation = raw obs48+joint-torque
+# (what an RMA baseline consumes); the deployed 12-dim feature window is the secondary
+# (more-favorable) confirmation. All numbers live here (QA 5.1.5 — no magic numbers in code).
+
+# Drive regime: a steady forward cruise straight through the patch at the deployment point.
+regime:
+  cruise_mps: 0.6            # deployment cruise (hazard_lab.CRUISE_MPS / configs/recovery/fsm_isaac)
+  steps: 460                # ~9.2 s at 50 Hz — ample manifest duration for the T=100 windows
+  arm_steps_after_entry: 0  # regime-(B) calibration lever: drop the first N manifest steps
+                            # (the entry ramp) before windowing; 0 = use the full manifest segment
+
+# History depths (control rate 50 Hz): 500 ms deployed + RMA-style 1 s / 2 s.
+window:
+  control_hz: 50.0
+  window_lens: [25, 50, 100]   # 500 ms (deployed), 1 s, 2 s (RMA adversary)
+
+# C2ST discriminator battery + acceptance numbers.
+c2st:
+  classifiers: [logreg, mlp, cnn1d]   # weak baseline, strong flat learner, temporal (RMA-analogue)
+  decisive_classifiers: [mlp, cnn1d]  # the verdict must hold for these (logreg = reported sanity)
+  feature_sets: [feat12, obs48, obs48_tau]   # 12-dim deployed, 48-dim policy obs, +raw joint torque
+  binding_feature_set: obs48_tau      # the BINDING claim runs over this (raw, all T)
+  n_boot: 1000
+  n_perm: 500
+  alpha: 0.05
+  auc_high: 0.95            # power control / disambiguator control MUST beat this
+  stride: 1
+
+# Disjoint train/test seeds ⇒ the held-out AUC is a genuine generalization number.
+# 10/8 = the documented E1 run (6 deduped units × (10+8) = 108 lanes/run). The sim gate and the
+# smoke override these with smaller values via --seeds-train/--seeds-test for speed.
+seeds: {train: 10, test: 8, seed_base_test: 500}
+
+# --- Matched ambiguity pairs (θ keys match hazard_lab.build_scenario) ----------------------
+# Matched-ness by construction: O4↔O2 share (k, c); O3↔O1 share friction (O3 mu_collapsed ==
+# O1 mu, compared in O3's post-collapse manifest window); O5↔O10 are set at a common
+# torque-saturation operating point (the calibration target — both manifest post-onset).
+pairs:
+  - name: O4_O2          # tether (elastic adhesion) vs mud (bounded drag) — Suite-Sem pair 1
+    op_a: {id: O4, theta: {k: 14.0, c: 6.0, f_break: 1.0e+9}}
+    op_b: {id: O2, theta: {k: 14.0, c: 6.0, d_sink: 0.08}}
+    disambiguator: {kind: appearance, a: yellow_adhesive, b: brown_mud}  # terrain vision separates
+  - name: O5_O10         # invisible overload vs effort-decay — both torque-saturation, opposite cause
+    op_a: {id: O5, theta: {mass: 16.0}}
+    op_b: {id: O10, theta: {floor: 0.14}}
+    disambiguator: {kind: none}   # NOT terrain vision (overload vs decay look identical) — a finding (#37)
+  - name: O3_O1          # thin ice (collapse) vs uniform ice — both low-friction, opposite granularity
+    op_a: {id: O3, theta: {mu_collapsed: 0.09, dwell: 0.45}}
+    op_b: {id: O1, theta: {mu: 0.09}}
+    disambiguator: {kind: none}   # thin vs solid ice can look identical — characterize, don't assume
+
+# Positive control (classifier power): a genuinely-different proprio pair MUST separate (AUC ≥
+# auc_high). If it does not, the C2ST is under-powered and a ≈0.5 on a real pair is meaningless.
+control:
+  power_pair:
+    name: O2_O1
+    op_a: {id: O2, theta: {k: 14.0, c: 6.0, d_sink: 0.08}}
+    op_b: {id: O1, theta: {mu: 0.09}}
+
+# O4 #49 peel-plateau force-shaping (calibration STEP 2; ONLY the O4_O2 pair's op_a). DEFAULT OFF
+# (force_cap_n=.inf, force_offset_n=0 ⇒ the tether is byte-identical). The matching preset that
+# makes O4's forward grip a constant drag = O2's: {enabled: true, force_cap_n: 0.0,
+# force_offset_n: 14.0} (= O2 k_c). FLAG as deviation #49 in CLAUDE.md §6 before enabling.
+o4_shaping: {enabled: false, force_cap_n: .inf, force_offset_n: 0.0}
+
+# Vision/disambiguator control rendering (real CLIP path; #16/#18/#24).
+vision:
+  n_samples: 24            # textured swatches per appearance to embed
+  enabled: true            # set false to skip the CLIP control on a CLIP-less run (logged)

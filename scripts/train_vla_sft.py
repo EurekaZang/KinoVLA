@@ -51,7 +51,9 @@ def main() -> None:
 
     cfg = load_config(args.config, overrides)
     dataset_dir = args.dataset or str(cfg.data.dataset_dir)
-    metrics = train_sft(cfg, dataset_dir, args.out, nav_dataset_dir=args.nav_dataset)
+    # The canonical recipe co-trains nav by default (config-driven); --nav-dataset overrides.
+    nav_dataset_dir = args.nav_dataset or cfg.data.get("nav_dataset_dir")
+    metrics = train_sft(cfg, dataset_dir, args.out, nav_dataset_dir=nav_dataset_dir)
     print(
         json.dumps(
             {k: metrics[k] for k in ("best_val_loss", "n_train", "n_val", "n_test", "wall_time_s")},

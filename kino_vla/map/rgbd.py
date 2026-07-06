@@ -55,12 +55,27 @@ _MATERIAL_ALIASES: dict[str, str] = {
 }
 
 
+# A0.4 appearance-library colours, registered at load by kino_vla.eval.appearance_library. Checked
+# BEFORE the alias table so a library appearance (e.g. gray_tape ∈ adhesion) renders its controlled
+# colour, not the name-hash fallback. Empty until the library is loaded ⇒ no behaviour change.
+_APPEARANCE_COLORS: dict[str, tuple[float, float, float]] = {}
+
+
+def register_appearance_colors(mapping: dict[str, tuple[float, float, float]]) -> None:
+    """Register controlled diffuse colours for A0.4 appearance ids (additive; overrides hash)."""
+    _APPEARANCE_COLORS.update({k: tuple(float(c) for c in v) for k, v in mapping.items()})
+
+
 def material_color(appearance_class: str) -> tuple[float, float, float]:
     """Diffuse RGB the renderer paints for a material class (deterministic).
 
-    Known classes map onto the encoder's calibrated palette; an unknown class gets a stable
-    pseudo-colour from its name hash so distinct materials still render distinctly.
+    A registered A0.4 appearance id wins first; then the encoder's calibrated palette (canonical
+    classes); an unknown class gets a stable pseudo-colour from its name hash so distinct materials
+    still render distinctly.
     """
+    lib = _APPEARANCE_COLORS.get(appearance_class)
+    if lib is not None:
+        return lib
     alias = _MATERIAL_ALIASES.get(appearance_class)
     if alias is not None:
         return PIXEL_MATERIALS[alias]

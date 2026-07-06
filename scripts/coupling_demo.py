@@ -25,7 +25,8 @@ from pathlib import Path
 import numpy as np
 
 from kino_vla.loop import run_episode
-from kino_vla.monitor.rule_monitor import MonitorEvent, RuleMonitor
+from kino_vla.monitor.event import MonitorEvent
+from kino_vla.monitor.learned_monitor import load_deployed_monitor
 from kino_vla.shield.cbf_shield import CbfShield
 from kino_vla.sim.operators import MuField, OperatorStack
 from kino_vla.sim.surrogate import SurrogateBackend
@@ -77,6 +78,7 @@ def run_coupling_demo(
     speed: float = 0.6,
     max_time_s: float = 12.0,
     ice_mu_d: float = 0.08,
+    monitor: object | None = None,
 ) -> CouplingDemoResult:
     """Run the straight ice crossing with μ̂→shield coupling; return firm-vs-ice stats."""
     ext_cfg = load_config("tokens/extractor_v0.yaml")
@@ -84,7 +86,7 @@ def run_coupling_demo(
     backend = SurrogateBackend(sim_cfg, np.zeros(2), 0.0)
     ice_rect = Rect(cx=2.5, cy=0.0, hx=1.0, hy=1.2)
     operators = OperatorStack([MuField(region=ice_rect, mu_s=ice_mu_d + 0.02, mu_d=ice_mu_d)])
-    monitor = RuleMonitor(load_config("monitor/rule_v0.yaml"), dt=backend.dt)
+    monitor = monitor if monitor is not None else load_deployed_monitor(backend.dt)
     shield = CbfShield(load_config("shield/cbf_v0.yaml"))
     ckpt_path = Path(ckpt)
     if not ckpt_path.is_absolute():

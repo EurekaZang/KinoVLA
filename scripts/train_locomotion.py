@@ -118,6 +118,26 @@ def main() -> int:
     )
     env_cfg.rewards.feet_air_time.weight = float(cfg.rewards.feet_air_time_weight)
 
+    # In-place yaw-turn command curriculum (user directive): train the SUSTAINED yaw command the
+    # deployed backend issues. heading_command=False ⇒ ang_vel_z is sampled and HELD across the
+    # resample window (the stock heading_command=True decays it to ~0 as the base aligns, so a
+    # sustained in-place spin was never trained); widen ang_vel_z to the backend yaw clamp
+    # (max_yaw_rate_radps=1.5). No obs-shape change (the command stays a 3-vector), so the trained
+    # actor is drop-in for the inference backend. configs/locomotion/go2_flat_ppo.yaml :: command.
+    cmdc = cfg.get("command", None)
+    if cmdc is not None:
+        bv = env_cfg.commands.base_velocity
+        bv.heading_command = bool(cmdc.heading_command)
+        bv.rel_standing_envs = float(cmdc.rel_standing_envs)
+        bv.ranges.lin_vel_x = tuple(cmdc.lin_vel_x)
+        bv.ranges.lin_vel_y = tuple(cmdc.lin_vel_y)
+        bv.ranges.ang_vel_z = tuple(cmdc.ang_vel_z)
+        print(
+            f"[train] cmd curriculum: heading_command={bv.heading_command} "
+            f"ang_vel_z={tuple(cmdc.ang_vel_z)} lin_x={tuple(cmdc.lin_vel_x)} "
+            f"lin_y={tuple(cmdc.lin_vel_y)} rel_standing={bv.rel_standing_envs}"
+        )
+
     # --- agent cfg ---------------------------------------------------------------
     agent_cfg = UnitreeGo2FlatPPORunnerCfg()
     agent_cfg.max_iterations = max_iter

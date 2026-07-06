@@ -70,6 +70,10 @@ class SurrogateBackend:
         self._payload_com_demand = 0.0
         self._reflex_active = False
         self._base_height_offset = 0.0  # O2 compliance sink (lowers measured base height)
+        # Commanded body posture (the closed-loop height controller, #41). None ⇒ nominal trot.
+        self._posture_target: float | None = None
+        self._posture_stiffness = 1.0
+        self._posture_height = float(self._cfg.base_height_m)  # current tracked body height [m]
         for state in self._resistance:
             state.reset()
 
@@ -112,6 +116,15 @@ class SurrogateBackend:
     def set_reflex(self, active: bool) -> None:
         """Engage the Reflex damping/widen/lower stance (spec §6.8 fallback)."""
         self._reflex_active = bool(active)
+
+    def set_posture(self, height_m: float | None, stiffness: float = 1.0) -> None:
+        """Command a body-height posture the model tracks closed-loop (#41), so a Switch_Gait /
+        Adjust_Posture / Set_Constraint primitive produces a real, measurable body-height response
+        here too (the scaffolding mirror of the Isaac articulation controller). ``None`` ⇒ release
+        to the nominal trot. ``stiffness`` sets the convergence rate (a stiffer hold tracks faster).
+        """
+        self._posture_target = None if height_m is None else float(height_m)
+        self._posture_stiffness = float(stiffness)
 
     def friction_at(self, pos: np.ndarray) -> float:
         for region in self._regions:
@@ -160,6 +173,18 @@ class SurrogateBackend:
         cmd[:2] = np.clip(cmd[:2], -max_v, max_v)
         cmd[2] = float(np.clip(cmd[2], -max_w, max_w))
         self._cmd_prev = cmd
+
+        # Closed-loop posture tracking (#41): drive the body height toward the commanded target
+        # (or relax to nominal when released), at a rate set by the hold stiffness.
+        target = (
+            self._posture_target
+            if self._posture_target is not None
+            else float(self._cfg.base_height_m)
+        )
+        rate = float(np.clip(self._posture_stiffness, 0.1, 1.0)) * float(
+            self._cfg.get("posture_track_rate", 0.5)
+        )
+        self._posture_height += rate * (target - self._posture_height)
 
         self._update_collapse_triggers()
         mu = self.friction_at(self._pos)
@@ -262,11 +287,23 @@ class SurrogateBackend:
                 pen = float(np.linalg.norm(self._pos - state.entry))
                 moving_out = pen < state.pen_prev - 1.0e-4
                 state.pen_prev = pen
-                grip = region.stiffness_n_per_m * max(0.0, pen - region.slack_length_m)
+                if region.p0_m > 0.0:
+                    # A4.1 two-phase delayed-divergence (mirrors IsaacPolicyBackend byte-for-byte):
+                    # plateau grip = force_offset_n (≡ O2 k_c drag) for pen≤p0, then a linear ramp
+                    # force_offset_n + k2·(pen−p0) beyond; f_break fires on the ramp grip
+                    # finite, immobilization if inf + high k2). Default 0/0 ⇒ the #49 path below.
+                    grip = region.force_offset_n + region.k2_n_per_m * max(0.0, pen - region.p0_m)
+                else:
+                    grip = region.stiffness_n_per_m * max(0.0, pen - region.slack_length_m)
+                    if grip > region.break_force_n:
+                        state.broken = True
+                    # #49 peel-plateau: bound the spring grip + constant pre-load (default inf/0 ⇒
+                    # unchanged). Break is on the RAW grip (a real tether tears under spring load).
+                    grip = min(grip, region.force_cap_n) + region.force_offset_n
+                if not state.broken and grip > region.break_force_n:
+                    state.broken = True
                 force = grip * (region.peel_factor if moving_out else 1.0)
                 force += region.damping_ns_per_m * speed
-                if grip > region.break_force_n:
-                    state.broken = True
             if state.broken:
                 # Tether snapped under forward load (O4 low-break): no further resistance.
                 sink = max(sink, region.sink_depth_m)
@@ -349,7 +386,13 @@ class SurrogateBackend:
             yaw_rate=self._yaw_rate,
             cmd_prev=self._cmd_prev.copy(),
             slip_ratio=self._slip,
-            base_height=float(self._cfg.base_height_m) - self._base_height_offset,
+            # When a posture is actively commanded the height controller dominates (the dog holds
+            # the commanded height, #41); otherwise the passive O2 compliance sink applies.
+            base_height=(
+                self._posture_height
+                if self._posture_target is not None
+                else float(self._cfg.base_height_m) - self._base_height_offset
+            ),
             tilt=0.0,
             fallen=self._fallen,
             effort_ratio=self._effort,

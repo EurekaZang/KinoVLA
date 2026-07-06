@@ -126,6 +126,20 @@ def test_invalid_proprio_detail_raises(cfg):
         context_from_snapshot(_snapshot(), route="text", proprio_detail="bogus")
 
 
+def test_nav_system_prompt_turn_grammar_is_unconditional(cfg):
+    """#43 data-level fix: the nav prompt now ALWAYS describes both Replan_Waypoint AND Turn (no
+    has_hazard gate), so training and deployment share one prompt and the VLA can turn in cruise."""
+    from kino_vla.vla.prompt import nav_system_prompt
+
+    sp_free = nav_system_prompt(cfg, has_hazard=False)
+    sp_hazard = nav_system_prompt(cfg, has_hazard=True)
+    assert sp_free == sp_hazard, "the Turn grammar no longer depends on has_hazard"
+    assert sp_free.isascii(), "prompt must be all-English ASCII (project directive)"
+    assert '"primitive": "Replan_Waypoint"' in sp_free
+    assert '"primitive": "Turn"' in sp_free and "yaw_deg" in sp_free
+    assert "in place" in sp_free.lower()  # Turn framed as an in-place (active-perception) rotation
+
+
 def test_format_target_round_trips_through_parser(cfg):
     """The SFT target must itself parse back to the same atomic decision (no train/serve skew)."""
     tax = FailureTaxonomy(cfg)

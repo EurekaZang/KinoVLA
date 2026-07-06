@@ -33,6 +33,7 @@ from kino_vla.data.pipeline import PipelineResult, compute_stats
 from kino_vla.data.schema import Snapshot
 from kino_vla.tokens.features import N_FEATURES
 from kino_vla.utils.config import load_config
+from tests._monitor_stub import StubMonitor
 
 # Valid params per primitive (so constructed annotations pass schema validation).
 _PARAMS = {
@@ -450,7 +451,7 @@ def test_collect_lane_o10_effort_regime(cfg, monitor_cfg):
 
     be = _FakeBackend()
     lane = {"op": "O10_effort_decay", "y": 0.0, "appearance": "solid_ground", "floor": 0.13}
-    snap, theta, fell = collect_lane(be, cfg, monitor_cfg, lane, seed=0)
+    snap, theta, fell = collect_lane(be, cfg, monitor_cfg, lane, seed=0, monitor=StubMonitor())
     assert snap is not None and not fell
     assert "clear_payload" in be.calls  # clean slate at lane start
     assert snap.privileged_theta["effort_scale"] == pytest.approx(0.13)  # captured mid-decay
@@ -465,7 +466,7 @@ def test_collect_lane_o5_payload_regime_and_clear(cfg, monitor_cfg):
     be = _FakeBackend()
     be._payload = 99.0  # residue from a prior lane — clear_payload must wipe it (#22/#32)
     lane = {"op": "O5_payload", "y": 0.0, "appearance": "solid_ground", "mass": 16.0}
-    snap, theta, _ = collect_lane(be, cfg, monitor_cfg, lane, seed=0)
+    snap, theta, _ = collect_lane(be, cfg, monitor_cfg, lane, seed=0, monitor=StubMonitor())
     assert snap is not None
     assert snap.privileged_theta["payload_kg"] == pytest.approx(16.0)  # absolute, not 99+16
     assert snap.monitor_channel == "tracking_err"
@@ -477,7 +478,7 @@ def test_collect_lane_region_op_runs_and_cleans(cfg, monitor_cfg):
 
     be = _FakeBackend()
     lane = {"op": "O1_mu_field", "y": 0.0, "appearance": "ice_sheet", "mu": 0.1}
-    snap, _theta, _ = collect_lane(be, cfg, monitor_cfg, lane, seed=0)
+    snap, _theta, _ = collect_lane(be, cfg, monitor_cfg, lane, seed=0, monitor=StubMonitor())
     assert "clear_payload" in be.calls  # every lane starts from the nominal robot
     assert be._rects  # the friction region was installed via apply_operator
     if snap is not None:  # the high-recall monitor fires on the sustained in-region slip
@@ -499,7 +500,7 @@ def test_collect_lane_probe_drives_decel_accel(cfg, monitor_cfg):
 
     be = _ProbeSpyBackend()
     lane = {"op": "O1_mu_field", "y": 0.0, "appearance": "ice_sheet", "mu": 0.1}
-    snap, _theta, _ = collect_lane(be, cfg, monitor_cfg, lane, seed=0)
+    snap, _theta, _ = collect_lane(be, cfg, monitor_cfg, lane, seed=0, monitor=StubMonitor())
     assert snap is not None  # the probe-refilled window was captured
     rounded = {round(c, 2) for c in cmds}
     assert 0.8 in rounded, "the probe's re-accel (hi_mps=0.8) must drive the backend"

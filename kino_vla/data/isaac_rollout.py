@@ -27,8 +27,9 @@ import numpy as np
 from kino_vla.data.schema import Snapshot
 from kino_vla.data.snapshot import SnapshotRecorder
 from kino_vla.map.types import SemanticRegion
+from kino_vla.monitor.event import MonitorEvent
+from kino_vla.monitor.learned_monitor import load_deployed_monitor
 from kino_vla.monitor.reflex import ActiveProbe
-from kino_vla.monitor.rule_monitor import MonitorEvent, RuleMonitor
 from kino_vla.sim.types import CollapseRegion, FrictionRegion, Obs, ResistanceRegion
 from kino_vla.utils.config import Config
 from kino_vla.utils.geometry import Rect
@@ -250,7 +251,8 @@ def _collect_embodiment_lane(
 
 
 def collect_lane(
-    backend: Any, cfg: Config, monitor_cfg: Config, lane: dict, seed: int
+    backend: Any, cfg: Config, monitor_cfg: Config, lane: dict, seed: int,
+    monitor: object | None = None,
 ) -> tuple[Snapshot | None, dict[str, float], bool]:
     """Drive one real-Go2 lane into its failure; return ``(snapshot_or_None, op_theta, fell)``."""
     cc = cfg.isaac_collect
@@ -309,7 +311,7 @@ def collect_lane(
             backend, cc, lane, recorder, obs, speed_fn, rng, probe=probe
         )
 
-    monitor = RuleMonitor(monitor_cfg, dt=dt)
+    monitor = monitor if monitor is not None else load_deployed_monitor(dt, threshold=0.3)
     monitor.reset()
     for k in range(int(cc.n_steps)):
         if obs.fallen:

@@ -166,3 +166,42 @@ def test_m6_hindsight_isaac():
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "PASS: M6 Hindsight on Isaac" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_posture_controller_isaac():
+    """M7 #41 body-posture controller on the REAL Go2: every posture/gait primitive lands a
+    distinct, precisely-tracked body height the dog physically executes (closes the §6 #40 residual
+    where Switch_Gait/Adjust_Posture/Set_Constraint changed only the shield polygon + a speed cap).
+    The closed-loop residual (kino_vla/sim/isaac_policy_backend.py) drives the measured trunk height
+    to a crawl/high_step/Adjust_Posture command — asserts the heights are ordered, distinct,
+    tracked, return to nominal, and never fall (the M2 Reflex made real; set_reflex was a no-op)."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_posture_check.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: posture controller" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_in_place_turn_isaac():
+    """IN-PLACE TURN on the REAL Go2 (user directive): the low-level policy executes a commanded yaw
+    velocity (vx=vy=0) — it rotates in place and physically tracks the yaw command. The VLA's Turn
+    primitive is a PURE in-place rotation (kino_vla/vla/planner.py Phase.TURNING), not a projected
+    waypoint, so this gate verifies the policy half: ±1.0 (and the diagnostic ±1.5) yaw commands are
+    tracked within tolerance, with the correct sign, low translation drift, and NO fall."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_turn_check.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: in-place turn policy" in proc.stdout

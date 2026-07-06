@@ -41,6 +41,12 @@ from kino_vla.shield.primitive_compiler import (
 # criterion 2 counts (100% of outputs parse OR carry one of these).
 REJECT_SCHEMA = "REJECT_SCHEMA"
 
+# Max single in-place Turn magnitude (deg). Raised 90→120 (#44 round-2 fix): on a large patch the
+# clear route can lie >90° to the side, so a 90° cap forced the model to spin in 90° steps without
+# ever facing clear ground to commit a forward skirt-waypoint. A turn is in-place (no translation),
+# so a larger rotation is safe; the low-level policy executes the commanded yaw over time.
+TURN_CLAMP_DEG = 120.0
+
 
 @dataclass(frozen=True)
 class ParsedDecision:
@@ -55,7 +61,7 @@ class ParsedDecision:
     raw_text: str
     annotation: CoTAnnotation | None = None
     reject_code: str = ""
-    nav_turn_deg: float | None = None  # set iff a NOMINAL-nav Turn (yaw_deg in [-90,90]); §5-free
+    nav_turn_deg: float | None = None  # set iff a NOMINAL-nav Turn (yaw_deg in [-120,120]); §5-free
 
     @property
     def attribution(self) -> str | None:
@@ -111,7 +117,7 @@ def parse_nav_decision(
     text: str, *, synonyms: dict[str, str], valid_categories: frozenset[str]
 ) -> ParsedDecision:
     """Parse a NOMINAL-mode nav output: a ``Replan_Waypoint`` (2D pixel) OR a ``Turn`` (``yaw_deg``
-    in [-90, 90], relative to the current heading). ``Turn`` is a nav-only primitive — NOT a §5
+    in [-120, 120], relative to the current heading). ``Turn`` is a nav-only primitive — NOT a §5
     recovery primitive — so it is recognised here directly (the VLA may choose to rotate at ANY nav
     tick, the user directive); everything else goes to the §5 :func:`parse_vla_decision`."""
     obj = _nav_action_json(text)
@@ -119,7 +125,7 @@ def parse_nav_decision(
         params = obj.get("params") or {}
         raw = params.get("yaw_deg", obj.get("yaw_deg"))
         try:
-            yaw = max(-90.0, min(90.0, float(raw)))
+            yaw = max(-TURN_CLAMP_DEG, min(TURN_CLAMP_DEG, float(raw)))
         except (TypeError, ValueError):
             yaw = None
         if yaw is not None:  # Turn is §5-free ⇒ carried on nav_turn_deg, not a RecoveryPrimitive
@@ -159,12 +165,12 @@ def to_compiler_primitive(
     if name == "Hold_and_Request":
         return HoldAndRequest(reason=str(p["reason"]))
     if name == "Replan_Waypoint":
-        xy = point_xy if point_xy is not None else _params_xy(p, "point_xy")
+        xy = point_xy if point_xy is not None else read_params_xy(p, "point_xy")
         if xy is None:
             raise CoTParseError("Replan_Waypoint needs an unprojected odometry point_xy")
         return ReplanWaypoint(point_xy=(float(xy[0]), float(xy[1])))
     if name == "Update_Topology":
-        xy = region_xy if region_xy is not None else _params_xy(p, "region_xy")
+        xy = region_xy if region_xy is not None else read_params_xy(p, "region_xy")
         if xy is None:
             raise CoTParseError("Update_Topology needs an odometry region_xy")
         radius = region_radius_m if region_radius_m is not None else p.get("radius_m")
@@ -178,7 +184,7 @@ def to_compiler_primitive(
     raise CoTParseError(f"no compiler mapping for primitive {name!r}")
 
 
-def _params_xy(params: dict, key: str) -> tuple[float, float] | None:
+def read_params_xy(params: dict, key: str) -> tuple[float, float] | None:
     """Read a 2D ``[x, y]`` coordinate from primitive params, or None if absent/malformed."""
     xy = params.get(key)
     if isinstance(xy, (list, tuple)) and len(xy) == 2:

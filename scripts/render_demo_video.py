@@ -67,7 +67,7 @@ def main() -> int:
     ax_cmd = fig.add_subplot(gs[2, 7:12])
     res = meta["result"]
     fig.suptitle(
-        "Kino-VLA · M2 Walking Skeleton — trained Go2 policy on the Kino-Fail O1 ice patch "
+        "KiNO · M2 Walking Skeleton — trained Go2 policy on the Kino-Fail O1 ice patch "
         f"({meta['backend']})",
         fontsize=15,
         fontweight="bold",

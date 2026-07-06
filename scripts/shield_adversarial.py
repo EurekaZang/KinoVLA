@@ -20,8 +20,8 @@ import time
 
 import numpy as np
 
+from kino_vla.monitor.learned_monitor import load_deployed_monitor
 from kino_vla.monitor.reflex import Reflex
-from kino_vla.monitor.rule_monitor import RuleMonitor
 from kino_vla.shield.adversarial import HOSTILE_PROFILES, run_adversarial_suite
 from kino_vla.shield.cbf_shield import CbfShield
 from kino_vla.shield.latency import LatencyBudget
@@ -61,7 +61,7 @@ def latency_report(steps: int) -> LatencyBudget:
     lb = LatencyBudget()
     backend = SurrogateBackend(load_config("sim/surrogate.yaml"), np.zeros(2), 0.0)
     obs = backend.reset(0)
-    monitor = RuleMonitor(load_config("monitor/rule_v0.yaml"), dt=backend.dt)
+    monitor = load_deployed_monitor(backend.dt)
     reflex = Reflex(load_config("recovery/reflex_v0.yaml"), backend)
     shield = CbfShield(load_config("shield/cbf_v0.yaml"))
     rng = np.random.default_rng(0)
@@ -95,7 +95,7 @@ def main() -> int:
 
     out = REPO_ROOT / args.out
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("# Kino-VLA M3 — CBF-QP latency budget (spec §6.9)\n\n" + lb.table() + "\n")
+    out.write_text("# KiNO M3 — CBF-QP latency budget (spec §6.9)\n\n" + lb.table() + "\n")
     print(f"\nlatency table written to {out}")
 
     qp_ok = lb.within_budget("cbf_qp")

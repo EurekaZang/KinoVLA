@@ -20,7 +20,10 @@ max_speed_mps: 2.5           # backend command cap (raised so the hostile cmd ex
 max_yaw_rate_radps: 3.0
 
 # Search grid (named directions resolved in the script).
-push_impulses_ns: [18.0, 28.0, 38.0, 48.0]
+# Widened to span the recoverable→unrecoverable push range so the protective WINDOW
+# (bypassed→fall, shielded reactive-brace→recover) is captured (#42); forward/diagonal need a
+# larger push to topple the command-robust bare policy.
+push_impulses_ns: [20.0, 40.0, 60.0, 80.0]
 push_dirs: [[1.0, 0.0], [0.0, 1.0], [0.7, 0.7]]   # forward, lateral, diagonal
 seeds: [0, 1, 2]
 

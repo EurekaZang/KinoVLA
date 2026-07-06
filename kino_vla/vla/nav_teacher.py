@@ -17,11 +17,19 @@ horizontal field ⇒ a Turn toward the hop (bring clear ground into view, then p
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 import numpy as np
 
 from kino_vla.utils.geometry import Rect, wrap_angle
+from kino_vla.vla.output import TURN_CLAMP_DEG
+
+
+def _as_patches(patch: Rect | Sequence[Rect]) -> list[Rect]:
+    """Normalize a single rect OR a sequence of rects to a list (single-patch path unchanged)."""
+    if isinstance(patch, Rect):
+        return [patch]
+    return list(patch)
 
 
 def _seg_crosses_rect(p: np.ndarray, q: np.ndarray, rect: Rect) -> bool:
@@ -49,27 +57,31 @@ def _seg_crosses_rect(p: np.ndarray, q: np.ndarray, rect: Rect) -> bool:
 
 
 def next_waypoint(
-    start: np.ndarray, goal: np.ndarray, patch: Rect, *, margin: float = 0.5
+    start: np.ndarray, goal: np.ndarray, patch: Rect | Sequence[Rect], *, margin: float = 0.5
 ) -> np.ndarray:
-    """The first hop of the shortest robot→goal route that skirts the inflated patch.
+    """The first hop of the shortest robot→goal route that skirts the inflated patch(es).
 
-    Visibility graph over {start, the 4 corners of patch+margin, goal}; an edge is free when its
-    segment misses the patch+margin/2 rect (so corner→corner edges, tangent to the inflated patch,
-    stay free). Dijkstra; returns the second node on the path (the immediate target), or the goal
-    if the straight line is already clear."""
-    inf = Rect(patch.cx, patch.cy, patch.hx + margin, patch.hy + margin)
-    corners = [
-        np.array([inf.cx - inf.hx, inf.cy - inf.hy]),
-        np.array([inf.cx + inf.hx, inf.cy - inf.hy]),
-        np.array([inf.cx + inf.hx, inf.cy + inf.hy]),
-        np.array([inf.cx - inf.hx, inf.cy + inf.hy]),
-    ]
+    Visibility graph over {start, the 4 corners of EACH patch+margin, goal}; an edge is free when
+    its segment misses EVERY patch+margin/2 rect (so corner→corner edges, tangent to an inflated
+    patch, stay free). Dijkstra; returns the second node on the path (the immediate target), or the
+    goal if the straight line is already clear. ``patch`` may be one Rect (the single-patch path,
+    unchanged) or a sequence of Rects (the multi-patch scenarios, e.g. two offset hazards)."""
+    patches = _as_patches(patch)
+    corners: list[np.ndarray] = []
+    for p in patches:
+        inf = Rect(p.cx, p.cy, p.hx + margin, p.hy + margin)
+        corners += [
+            np.array([inf.cx - inf.hx, inf.cy - inf.hy]),
+            np.array([inf.cx + inf.hx, inf.cy - inf.hy]),
+            np.array([inf.cx + inf.hx, inf.cy + inf.hy]),
+            np.array([inf.cx - inf.hx, inf.cy + inf.hy]),
+        ]
     nodes = [np.asarray(start, dtype=np.float64), *corners, np.asarray(goal, dtype=np.float64)]
-    test = Rect(patch.cx, patch.cy, patch.hx + 0.5 * margin, patch.hy + 0.5 * margin)
+    tests = [Rect(p.cx, p.cy, p.hx + 0.5 * margin, p.hy + 0.5 * margin) for p in patches]
     n = len(nodes)
 
     def free(i: int, j: int) -> bool:
-        return not _seg_crosses_rect(nodes[i], nodes[j], test)
+        return not any(_seg_crosses_rect(nodes[i], nodes[j], t) for t in tests)
 
     dist = [math.inf] * n
     prev = [-1] * n
@@ -102,7 +114,7 @@ def next_waypoint(
 def next_nav_label(
     pose_xy: np.ndarray,
     heading: float,
-    patch: Rect,
+    patch: Rect | Sequence[Rect],
     goal: np.ndarray,
     project: Callable[[np.ndarray], np.ndarray | None],
     *,
@@ -131,5 +143,5 @@ def next_nav_label(
         }
     bearing = math.atan2(float(direction[1]), float(direction[0]))
     yaw = math.degrees(wrap_angle(bearing - float(heading)))
-    yaw = max(-90.0, min(90.0, yaw))
+    yaw = max(-TURN_CLAMP_DEG, min(TURN_CLAMP_DEG, yaw))
     return {"kind": "turn", "yaw_deg": round(yaw, 1), "wp": [float(wp[0]), float(wp[1])]}

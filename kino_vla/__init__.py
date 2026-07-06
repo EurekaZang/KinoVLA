@@ -1,4 +1,4 @@
-"""Kino-VLA: closed-loop embodied reflection for a Unitree Go2 quadruped in Isaac Lab.
+"""KiNO: closed-loop embodied reflection for a Unitree Go2 quadruped in Isaac Lab.
 
 Package layout (one subpackage per architecture layer, spec section 1):
 

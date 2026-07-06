@@ -29,6 +29,21 @@ effort_sat_floor: 0.7     # torque fraction below which effort_ratio reads 0 (no
 fall_check:
   min_base_height_m: 0.07
   max_tilt_rad: 0.8
+# Closed-loop BODY-POSTURE controller (#41): a residual blended onto the policy's joint targets,
+# I-controlled on the measured trunk height, so Switch_Gait/Adjust_Posture/Set_Constraint each drive
+# a real, distinct, precisely-tracked body height on the physical Go2 (the M2 Reflex made real on
+# Isaac — set_reflex was a no-op). flex_dir = the action-space leg-extension direction that RAISES
+# the trunk (calf straightens, thigh folds back); sign flips it if the measured response inverts.
+# Gains/targets are calibrated by scripts/isaac_posture_check.py against the real measured height.
+posture:
+  brace_height_m: 0.18      # §6.8 brace stance the shield-fallback Reflex crouches to (set_reflex)
+  alpha_gain: 6.0           # I-control gain on (target - measured height) per control step
+  alpha_max: 1.2            # clamp on the flex residual magnitude (policy action units)
+  thigh_gain: -0.6          # action-space delta on thigh joints to RAISE the trunk
+  calf_gain: 1.0            # action-space delta on calf joints to RAISE the trunk (straighten knee)
+  sign: 1.0                 # global flip if the measured height response is inverted (calibration)
+  release_decay: 0.80       # residual decay per step when posture is released (smooth return)
+  speed_scale: 0.5          # cap forward speed while actively holding a posture (stability)
 # Recording camera (scripts/record_demo.py; passive sensor, off by default)
 cam_height: 640
 cam_width: 960

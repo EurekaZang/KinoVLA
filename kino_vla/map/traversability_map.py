@@ -99,6 +99,11 @@ class TraversabilityMap:
         self._sim_threshold = float(cfg.propagation_sim_threshold)
         self._propagate_cost = float(cfg.propagation_cost)
         self._crop_half_extent = float(cfg.crop_half_extent_m)
+        # Rolling (egocentric) costmap for long-distance / multi-patch courses (#47): when enabled
+        # the fixed-size grid follows the robot so distant patches/goal become representable.
+        # Default OFF = a fixed world-frame grid (byte-identical for the demo / existing scenarios).
+        self._rolling = bool(cfg.get("rolling", False))
+        self._roll_margin_m = float(cfg.get("roll_margin_m", 2.0))
 
     @property
     def costmap(self) -> Costmap:
@@ -137,6 +142,13 @@ class TraversabilityMap:
 
     # ------------------------------------------------------------ online ops
 
+    def recenter(self, pose_xy: np.ndarray) -> bool:
+        """Roll the costmap to stay centred on the robot — egocentric costmap for long-distance /
+        multi-patch courses (#47). No-op (False) unless the map is configured ``rolling``."""
+        if not self._rolling:
+            return False
+        return self._costmap.recenter(pose_xy, margin_m=self._roll_margin_m)
+
     def observe(self, pose_xy: np.ndarray, heading: float) -> int:
         """Segment the visible scene and paint the visual prior; returns #regions seen."""
         regions = self._segmenter.segment(pose_xy, heading, self._scene)
@@ -156,8 +168,17 @@ class TraversabilityMap:
                 return region.embedding
         return None
 
-    def mark_failure(self, world_xy: np.ndarray, embedding: np.ndarray | None = None) -> dict:
+    def mark_failure(
+        self,
+        world_xy: np.ndarray,
+        embedding: np.ndarray | None = None,
+        radius_m: float | None = None,
+    ) -> dict:
         """Overwrite the failure site untraversable (sticky) and propagate to homogeneous cells.
+
+        ``radius_m`` lets the caller honour a VLA ``Update_Topology.radius_m`` (the model's own
+        chosen hazard extent — strict primitive obedience); when ``None`` the configured
+        ``failure_radius_m`` default is used (the unparameterised loop/FSM mark).
 
         Returns ``{"stamped", "propagated"}`` cell counts for telemetry/tests.
         """
@@ -171,9 +192,8 @@ class TraversabilityMap:
         embedding = (
             np.asarray(embedding, dtype=np.float64) if embedding is not None else np.zeros(dim)
         )
-        stamped = self._costmap.overwrite_physical(
-            world_xy, self._fail_cost, embedding, self._fail_radius
-        )
+        radius = self._fail_radius if radius_m is None else float(radius_m)
+        stamped = self._costmap.overwrite_physical(world_xy, self._fail_cost, embedding, radius)
         propagated = 0
         if float(np.linalg.norm(embedding)) > 0.0:
             propagated = self._costmap.propagate_similar(

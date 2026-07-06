@@ -5,6 +5,7 @@ control_hz: 50
 mass_kg: 15.0            # Go2 ~15 kg
 yaw_inertia_kgm2: 0.65
 base_height_m: 0.31
+posture_track_rate: 0.5   # closed-loop body-height convergence rate per step (#41 posture controller)
 max_speed_mps: 1.0
 max_yaw_rate_radps: 1.5
 tau_track_s: 0.25        # velocity tracking time constant

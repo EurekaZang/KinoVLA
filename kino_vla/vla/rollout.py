@@ -21,8 +21,8 @@ import numpy as np
 from kino_vla.data.snapshot import SnapshotRecorder
 from kino_vla.loop import run_episode
 from kino_vla.map import SemanticRegion, TraversabilityMap
+from kino_vla.monitor.learned_monitor import load_deployed_monitor
 from kino_vla.monitor.reflex import ActiveProbe
-from kino_vla.monitor.rule_monitor import RuleMonitor
 from kino_vla.shield.cbf_shield import CbfShield
 from kino_vla.shield.primitive_compiler import PrimitiveCompiler
 from kino_vla.sim.operators import FailureOperator, OperatorStack
@@ -98,12 +98,16 @@ def run_vla_rollout(
     use_compiler: bool = True,
     use_map: bool = False,
     fsm_baseline: bool = False,
+    nav_trace_sink: Callable[[dict], None] | None = None,
+    monitor: object | None = None,
 ) -> RolloutResult:
     """Run one closed-loop episode with the VLA planner; return the physical outcome.
 
     ``fsm_baseline=True`` runs the cause-blind rule-FSM (B2) instead of the VLA planner — the same
     monitor/shield/scenario wiring, a different recovery policy (spec §12 baseline). ``policy`` is
-    ignored in that case.
+    ignored in that case. ``nav_trace_sink`` (#43 DAgger collector) is installed read-only on the
+    VLA planner: called once per NOMINAL nav tick with the visited state + verdict; it never changes
+    a decision.
     """
     start_pos = np.asarray(scenario.start_xy, dtype=np.float64)
 
@@ -133,6 +137,8 @@ def run_vla_rollout(
         use_compiler=use_compiler,
         use_map=use_map,
         fsm_baseline=fsm_baseline,
+        nav_trace_sink=nav_trace_sink,
+        monitor=monitor,
     )
 
 
@@ -147,6 +153,10 @@ def run_closed_loop(
     use_compiler: bool = True,
     use_map: bool = False,
     fsm_baseline: bool = False,
+    nav_trace_sink: Callable[[dict], None] | None = None,
+    monitor: object | None = None,
+    live_camera: object | None = None,
+    deep_reset: bool = False,
 ) -> RolloutResult:
     """Run the planner closed loop on an EXISTING backend (so Isaac reuses one app across lanes).
 
@@ -154,7 +164,7 @@ def run_closed_loop(
     lateral lane (after setting ``backend._start_pos``); the surrogate path builds a fresh backend.
     """
     goal_xy = np.asarray(scenario.goal_xy, dtype=np.float64)
-    monitor = RuleMonitor(load_config(monitor_cfg), dt=backend_obj.dt)
+    monitor = monitor if monitor is not None else load_deployed_monitor(backend_obj.dt)
     shield = CbfShield(load_config("shield/cbf_v0.yaml"))
     compiler = PrimitiveCompiler(shield) if use_compiler else None
     recorder = SnapshotRecorder(
@@ -164,6 +174,7 @@ def run_closed_loop(
         appearance_class=scenario.appearance_class,
         privileged_fn=lambda: {},  # runtime: the planner never sees privileged θ (no leak)
         gate_rect=None,
+        live_camera=live_camera,  # real RTX pixels when provided (else the procedural CI render)
     )
     if fsm_baseline:
         from kino_vla.vla.fsm_recovery import FsmRecovery
@@ -180,6 +191,7 @@ def run_closed_loop(
             compiler=compiler,
             probe=ActiveProbe.from_config(fsm_config),  # active-sensing probe (Gap-3 #34c)
         )
+        planner.nav_trace_sink = nav_trace_sink  # read-only on-policy tap (None ⇒ no-op)
     nav_map = None
     if use_map:
         nav_map = TraversabilityMap(
@@ -197,6 +209,7 @@ def run_closed_loop(
         goal_tol_m=0.6,
         max_time_s=scenario.max_time_s,
         nav_map=nav_map,
+        deep_reset=deep_reset,
     )
     reached = result.goal_reached
     fell = result.fell

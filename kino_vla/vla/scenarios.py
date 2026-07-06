@@ -16,6 +16,8 @@ Each returns a :class:`~kino_vla.vla.rollout.Scenario` on a straight start→goa
 
 from __future__ import annotations
 
+import numpy as np
+
 from kino_vla.map.types import SemanticRegion
 from kino_vla.sim.operators import (
     Collapse,
@@ -23,8 +25,11 @@ from kino_vla.sim.operators import (
     EffortDecay,
     InvisibleCollider,
     MuField,
+    ObsBias,
     Payload,
+    Push,
     Tether,
+    VisualPhysicsRemap,
 )
 from kino_vla.utils.geometry import Rect
 from kino_vla.vla.rollout import Scenario
@@ -183,3 +188,278 @@ def surrogate_scenarios(y: float = 0.0) -> list[Scenario]:
     would wrongly punish the correct attribution. The Isaac closed loop covers O1 on real physics.
     """
     return [o8_invisible(y), o3_collapse(y)]
+
+
+# ----------------------------------------------------------------------------------------------
+# E2 Suite-Cal (A-class): the calibration suite where LOW-LEVEL ADAPTATION SUFFICES and no semantic
+# attribution is needed. The DR-trained base policy (friction[0.08,1]/mass±1-2kg/push) crosses these
+# without help, so B1 (proprio-only) ≈ B5 (agent) — proving B1 is a FAIR opponent, not a strawman.
+# A-class θ sit BELOW the A/B thresholds in configs/data/hindsight.yaml (O2 d_sink≤0.12, O5 mass≤5,
+# O10 floor≥0.3) and configs/operators/m5_instances.yaml (o2_class_a); all success_mode="reach".
+# ----------------------------------------------------------------------------------------------
+def o1_ice_A(y: float = 0.0) -> Scenario:
+    """Mild ice (A): higher μ than the B-class O1 — slow cruise / Set_Constraint crosses it. (Isaac
+    only; the surrogate fall model makes any ice fatal, scenarios docstring above.)"""
+    rect = _rect(y)
+    return Scenario(
+        name="O1_mu_field_A",
+        operator=MuField(region=rect, mu_s=0.35, mu_d=0.30),
+        scene_region=SemanticRegion(rect=rect, appearance_class="ice_sheet"),
+        operator_name="O1_mu_field",
+        appearance_class="ice_sheet",
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def o2_compliance_A(y: float = 0.0) -> Scenario:
+    """Shallow firm mud (A): m5_instances.yaml o2_class_a — the base policy crosses without a
+    semantic detour."""
+    rect = _rect(y)
+    op = ComplianceField(rect, k_c=6.0, c_c=3.0, d_sink=0.03)
+    return Scenario(
+        name="O2_compliance_A",
+        operator=op,
+        scene_region=op.scene_region(),
+        operator_name="O2_compliance",
+        appearance_class=op.scene_region().appearance_class,
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def o5_payload_A(y: float = 0.0) -> Scenario:
+    """Light payload 3 kg (A, mass below the 5 kg B-threshold): the policy carries it and proceeds —
+    NOT safe_halt (A-class can continue, unlike the 16 kg B-class O5)."""
+    rect = _rect(y)
+    return Scenario(
+        name="O5_payload_A",
+        operator=Payload(mass_kg=3.0, com_offset_m=(0.0, 0.0)),
+        scene_region=SemanticRegion(rect=rect, appearance_class="solid_ground"),
+        operator_name="O5_payload",
+        appearance_class="solid_ground",
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def o10_effort_decay_A(y: float = 0.0) -> Scenario:
+    """Mild effort decay to floor 0.4 (A, floor≥0.3 B-threshold): the policy absorbs the derate."""
+    rect = _rect(y)
+    return Scenario(
+        name="O10_effort_decay_A",
+        operator=EffortDecay(decay_rate_per_s=0.6, floor=0.4, t_start_s=2.0),
+        scene_region=SemanticRegion(rect=rect, appearance_class="solid_ground"),
+        operator_name="O10_effort_decay",
+        appearance_class="solid_ground",
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def o6_push_A(y: float = 0.0) -> Scenario:
+    """Sub-threshold lateral push (A, impulse below the O6 14–22 N·s B-band): the Reflex/low-level
+    policy recovers without a semantic decision (intrinsic-A, hindsight.yaml)."""
+    rect = _rect(y)
+    return Scenario(
+        name="O6_push_A",
+        operator=Push(np.array([0.0, 8.0]), t_push_s=2.0),
+        scene_region=SemanticRegion(rect=rect, appearance_class="solid_ground"),
+        operator_name="O6_push",
+        appearance_class="solid_ground",
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def o11_bias_A(y: float = 0.0) -> Scenario:
+    """Mild IMU tilt bias (A, below the O11 0.25–0.60 B-band): low-level tolerant (intrinsic-A)."""
+    rect = _rect(y)
+    return Scenario(
+        name="O11_obs_bias_A",
+        operator=ObsBias({"tilt": 0.15}),
+        scene_region=SemanticRegion(rect=rect, appearance_class="solid_ground"),
+        operator_name="O11_obs_bias",
+        appearance_class="solid_ground",
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def suite_cal_scenarios(y: float = 0.0) -> list[Scenario]:
+    """E2 Suite-Cal: six A-class operators where low-level adaptation suffices (parity panel)."""
+    return [
+        o1_ice_A(y),
+        o2_compliance_A(y),
+        o5_payload_A(y),
+        o10_effort_decay_A(y),
+        o6_push_A(y),
+        o11_bias_A(y),
+    ]
+
+
+# ----------------------------------------------------------------------------------------------
+# E2 Suite-Sem (matched construction): the #49-shaped O4 (proprio-matched to O2) + the matched O2,
+# for the closed-loop recovery half. The shaping params come from configs/eval/e2.yaml (calibrated
+# by the G1/G2 sweep). Defaults = the E1 attribution-matched preset (force_cap=0, offset=k_c=14 ⇒
+# O4 forward grip = O2's constant drag). peel_factor<1 keeps Backstep (reverse) able to escape while
+# push-through stalls — the opposite-recovery asymmetry the metric needs.
+# ----------------------------------------------------------------------------------------------
+def o2_compliance_matched(y: float = 0.0) -> Scenario:
+    """The matched O2 (k_c=14, c_c=6, d_sink=0.08 from configs/eval/e1_c2st.yaml)."""
+    rect = _rect(y)
+    op = ComplianceField(rect, k_c=14.0, c_c=6.0, d_sink=0.08)
+    return Scenario(
+        name="O2_compliance_matched",
+        operator=op,
+        scene_region=op.scene_region(),
+        operator_name="O2_compliance",
+        appearance_class=op.scene_region().appearance_class,
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def o4_tether_matched(
+    y: float = 0.0,
+    *,
+    k: float = 14.0,
+    d: float = 6.0,
+    f_break: float = 1.0e9,
+    force_cap_n: float = 0.0,
+    force_offset_n: float = 14.0,
+    peel_factor: float = 0.3,
+) -> Scenario:
+    """The #49-matched O4 (proprio-matched to O2 at the detection window). The closed-loop trapping
+    preset (a slow ramp that compounds over the crossing while staying within-noise over T=25) is
+    passed by the E2 G1/G2 sweep; defaults = the E1 attribution-matched constant-drag preset."""
+    rect = _rect(y)
+    op = Tether(
+        rect, k=k, d=d, l0=0.0, f_break=f_break,
+        force_cap_n=force_cap_n, force_offset_n=force_offset_n, peel_factor=peel_factor,
+    )
+    return Scenario(
+        name="O4_tether_matched",
+        operator=op,
+        scene_region=op.scene_region(),
+        operator_name="O4_tether",
+        appearance_class=op.scene_region().appearance_class,
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def suite_sem_matched_scenarios(y: float = 0.0, **o4_preset: float) -> list[Scenario]:
+    """E2 Suite-Sem closed-loop: the matched O4 (with the calibrated trap preset) + matched O2."""
+    return [o4_tether_matched(y, **o4_preset), o2_compliance_matched(y)]
+
+
+def o4_tether_twophase(
+    y: float = 0.0,
+    *,
+    k_c: float = 14.0,
+    c_c: float = 6.0,
+    p0_m: float = 0.30,
+    k2: float = 30.0,
+    f_break: float = 1.0e9,
+) -> Scenario:
+    """A4.1 — the consequence-grade two-phase (delayed-divergence) O4 adhesion.
+
+    A PLATEAU grip ``k_c`` (the constant drag byte-identical to ``o2_compliance_matched``'s k_c, so
+    A1.3 re-certifies C2ST-indistinguishability for pen ≤ p0_m) followed by a linear RAMP
+    ``k_c + k2·(pen − p0)`` beyond it. The plateau is where attribution happens (proprioceptively
+    identical to mud); the ramp is the consequence region — finite ``f_break`` tears under forward
+    lean (a "catapult"), ``f_break=inf`` + high ``k2`` grows without bound ("immobilization"). The
+    damping ``c_c`` equals O2's, so the PLATEAU (pen≤p0) is proprioceptively airtight-identical to
+    mud; R7 lets A4 place the plateau magnitude where the consequence structure exists.
+
+    The viscous coefficient ``c_c`` equals O2's c_c so the plateau is byte-identical to mud at all
+    speeds; ``k``/``l0`` are inert under two-phase (plateau offset + ramp k2 drive grip)."""
+    rect = _rect(y)
+    op = Tether(
+        rect, k=k_c, d=c_c, l0=0.0, f_break=f_break,
+        force_cap_n=float("inf"), force_offset_n=k_c, peel_factor=1.0,
+        p0_m=p0_m, k2_n_per_m=k2,
+    )
+    return Scenario(
+        name="O4_tether_twophase",
+        operator=op,
+        scene_region=op.scene_region(),
+        operator_name="O4_tether",
+        appearance_class=op.scene_region().appearance_class,
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+        success_mode="escape",
+    )
+
+
+# ----------------------------------------------------------------------------------------------
+# A3 T3 — visual-physics remap (spec §8.2 Axis III). A benign/deceptive appearance is DECOUPLED from
+# the physics material, + a depth_bias corrupts the D channel so RGB-D cannot see through. This is
+# the proprio-decisive mirror of the T2 matched pair: vision lies, proprio decides (A1.4: proprio
+# C2ST 1.0 / CLIP 0.31 on the same-appearance pair). Two directions for the bidirectional battery:
+# ----------------------------------------------------------------------------------------------
+def o7_visual_remap(
+    y: float = 0.0,
+    *,
+    mu_s: float = 0.09,
+    mu_d: float = 0.09,
+    depth_bias_m: float = 0.6,
+    appearance_class: str = "solid_ground",
+) -> Scenario:
+    """O7 looks-safe/is-slippery (T3, A3.1): the patch LOOKS like safe solid ground but is
+    physically a low-friction hazard (μ ≈ 0.09 ice), and depth_bias corrupts the depth channel so
+    RGB-D cannot see through. Proprio detects the slip (low_friction); vision is fooled. The
+    proprio-decisive mirror of T2 — a vision-only agent fails here by construction (A1.4).
+    ``mu_s/mu_d`` are exposed for the A3.4 dose–response sweep."""
+    rect = _rect(y)
+    op = VisualPhysicsRemap(
+        rect, mu_s=mu_s, mu_d=mu_d, depth_bias_m=depth_bias_m, appearance_class=appearance_class
+    )
+    region = op.scene_region()
+    return Scenario(
+        name="O7_visual_remap",
+        operator=op,
+        scene_region=region,
+        operator_name="O7_visual_remap",
+        appearance_class=appearance_class,
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+
+
+def o7_visual_remap_reverse(
+    y: float = 0.0,
+    *,
+    appearance_class: str = "hazard_decal_yellow",
+) -> Scenario:
+    """O7 reverse probe (T3, A3.2): a hazard-COLOURED decal on NOMINAL floor (μ = 0.8). Vision says
+    hazard; proprio says nominal ⇒ the correct answer is `continue` (do NOT intervene). An agent
+    that learned "conflict ⇒ trust camera" backsteps around paint — the vision-dominance shortcut
+    this probe exists to detect. Operator is O7_visual_remap with nominal friction."""
+    rect = _rect(y)
+    op = VisualPhysicsRemap(
+        rect, mu_s=0.8, mu_d=0.8, depth_bias_m=0.0, appearance_class=appearance_class
+    )
+    region = op.scene_region()
+    return Scenario(
+        name="O7_visual_remap_reverse",
+        operator=op,
+        scene_region=region,
+        operator_name="O7_visual_remap",
+        appearance_class=appearance_class,
+        goal_xy=(_GOAL_X, y),
+        start_xy=(0.0, y),
+        max_time_s=_MAX_T,
+    )
+

@@ -104,6 +104,7 @@ class IsaacPolicyBackend:
         self._nominal_effort: dict = {}  # actuator effort limits before O10 scaling
         self._effort_limit_nm = float(cfg.effort_limit_nm)  # current (O10-scaled) torque cap
         self._n_patches = 0
+        self._last_deep_reset_removed = 0  # A0.1: prims removed by the last deep_reset (diagnostic)
         self._record_cam = bool(record_cam)
         self._camera = None
         self._perception_cam_on = bool(perception_cam)
@@ -168,8 +169,33 @@ class IsaacPolicyBackend:
             self.mass_kg = float(self._robot.root_physx_view.get_masses().sum())
         except AttributeError:
             self.mass_kg = float(cfg.mass_fallback_kg)
+        self._setup_posture_controller()
         self._obs = None
         self._init_state()
+
+    def _setup_posture_controller(self) -> None:
+        """Build the closed-loop body-height controller (#41): the leg-extension residual direction
+        in the policy's action space (thigh/calf joints), so a commanded posture is physically
+        tracked by the real Go2. Discovers the thigh/calf joint indices (the action order follows
+        the articulation joint order for the flat env's JointPositionAction) and assembles the flex
+        vector ``calf_gain`` on calves + ``thigh_gain`` on thighs, scaled by the global ``sign``."""
+        torch = self._torch
+        p = self._cfg.posture
+        n_joints = int(self._robot.data.default_joint_pos.shape[1])
+        thigh_ids, _ = self._robot.find_joints(".*thigh.*")
+        calf_ids, _ = self._robot.find_joints(".*calf.*")
+        flex = torch.zeros(n_joints, dtype=torch.float32, device=self._device)
+        if thigh_ids:
+            flex[thigh_ids] = float(p.thigh_gain)
+        if calf_ids:
+            flex[calf_ids] = float(p.calf_gain)
+        self._flex_dir = float(p.sign) * flex  # (n_joints,) action-space RAISE direction
+        self._posture_alpha_gain = float(p.alpha_gain)
+        self._posture_alpha_max = float(p.alpha_max)
+        self._posture_release_decay = float(p.release_decay)
+        self._posture_speed_scale = float(p.speed_scale)
+        self._brace_height_m = float(p.brace_height_m)
+        print(f"[isaac] posture controller: {len(thigh_ids)} thigh + {len(calf_ids)} calf joints")
 
     def _init_state(self) -> None:
         self._t = 0.0
@@ -177,12 +203,21 @@ class IsaacPolicyBackend:
         self._slip = 0.0
         self._effort = 0.0
         self._fallen = False
+        # Closed-loop posture state (#41): None ⇒ nominal trot (policy owns the body).
+        self._posture_target: float | None = None
+        self._posture_stiffness = 1.0
+        self._reflex_posture_active = False
+        self._posture_alpha = 0.0  # I-control flex residual magnitude (carried across steps)
         for state in getattr(self, "_resistance", []):
             state["path_len"] = 0.0
             state["broken"] = False
             state["inside"] = False
             state["entry"] = None
             state["pen_prev"] = 0.0
+            state["max_pen"] = 0.0
+            state["max_grip"] = 0.0
+            state["broke_this_step"] = False
+            state["phase"] = "none"
 
     # ------------------------------------------------------------ episode API
 
@@ -196,6 +231,78 @@ class IsaacPolicyBackend:
             self._policy_step(np.zeros(3))
         self._init_state()
         return self._make_obs()
+
+    # ------------------------------------------------- A0.1 determinism-grade reset
+
+    def deep_reset(self, seed: int) -> Obs:
+        """Determinism-grade reset (A0.1): scrub EVERY operator residue before the standard
+        reset, so lane N is independent of every operator that ran in lanes 0..N-1 — the
+        #51/#52 operator-ORDER PhysX residual behind the E1 C2ST confound, the E2 Suite-Cal
+        non-reproducibility, and the E4 closed-loop order-sensitivity.
+
+        Additive + opt-in: the deployed :meth:`reset` is byte-for-byte untouched (red-line
+        discipline); only the A0 determinism/collection harness calls this. It (1) zeros the
+        persistent PhysX external-wrench buffer (``_apply_resistance_wrench`` early-returns
+        when ``_resistance`` is empty, so it never self-clears on reset), (2) restores the
+        trunk mass (O5) and actuator effort caps (O10), (3) despawns every operator collider/
+        visual/material prim so the accumulating collider set can no longer change PhysX
+        broadphase/warm-start ORDER across lanes, (4) empties the region containers, (5)
+        flushes the contact-sensor buffers, then runs the standard env reset + settle on
+        now-clean ground. See A实验/A0.md §A0.1.
+        """
+        self._zero_external_wrench()  # explicit: the wrench path early-returns when _resistance=[]
+        self.clear_payload()  # O5 → nominal trunk mass
+        self.set_effort_scale(1.0)  # O10 → nominal actuator caps
+        n_removed = self._despawn_operator_prims()  # O1/O3/O7/O8/O9 colliders + visual plates
+        self._regions = []
+        self._resistance = []
+        self._collapse = []
+        self._blocking = []
+        self._support = []
+        contact_reset = getattr(self._contact, "reset", None)
+        if callable(contact_reset):
+            try:
+                contact_reset()  # flush contact-sensor net-force buffers
+            except (RuntimeError, TypeError, ValueError):  # surface nothing; best-effort flush
+                pass
+        self._last_deep_reset_removed = int(n_removed)
+        return self.reset(seed)
+
+    def _zero_external_wrench(self) -> None:
+        """Zero the persistent PhysX external force/torque buffer on the trunk (O2/O4 wrench)."""
+        torch = self._torch
+        z = torch.zeros((1, 1, 3), dtype=torch.float32, device=self._device)
+        try:
+            self._robot.set_external_force_and_torque(z, z, body_ids=self._base_id, is_global=False)
+        except TypeError:
+            self._robot.set_external_force_and_torque(z, z, body_ids=self._base_id)
+
+    def _despawn_operator_prims(self) -> int:
+        """Delete every operator-spawned prim under ``/World`` and reset the patch counter.
+
+        Operator colliders/visuals are spawned at ``/World/{patch,collapse,wall,ridge,vplate,
+        patchtex}_<n>`` (+ the textured-patch material at ``/World/Looks/patchtex_<n>``), with
+        ``_n_patches`` the monotonic name counter. Nothing despawns them today, so they pile up
+        in the shared PhysX scene across lanes and reorder broadphase/warm-start — the dominant
+        determinism residue. Removing them + zeroing the counter restores a first-lane-clean
+        stage. Returns the number of prims removed."""
+        import omni.usd
+
+        stage = omni.usd.get_context().get_stage()
+        prefixes = ("patch_", "collapse_", "wall_", "ridge_", "vplate_", "patchtex_")
+        removed = 0
+        world = stage.GetPrimAtPath("/World")
+        if world.IsValid():
+            for child in list(world.GetChildren()):
+                if child.GetName().startswith(prefixes) and stage.RemovePrim(child.GetPath()):
+                    removed += 1
+        looks = stage.GetPrimAtPath("/World/Looks")
+        if looks.IsValid():
+            for child in list(looks.GetChildren()):
+                if child.GetName().startswith("patchtex_") and stage.RemovePrim(child.GetPath()):
+                    removed += 1
+        self._n_patches = 0
+        return removed
 
     def _teleport_to_start(self) -> None:
         root_state = self._robot.data.default_root_state.clone()
@@ -238,13 +345,18 @@ class IsaacPolicyBackend:
     def _policy_step(self, cmd: np.ndarray) -> bool:
         """Inject the command, run the actor, step the env one control step. Returns terminated."""
         torch = self._torch
-        self._cmd_term.vel_command_b[:, 0] = float(cmd[0])
-        self._cmd_term.vel_command_b[:, 1] = float(cmd[1])
+        speed_factor = self._posture_speed_factor()  # slow forward speed while holding a posture
+        self._cmd_term.vel_command_b[:, 0] = float(cmd[0]) * speed_factor
+        self._cmd_term.vel_command_b[:, 1] = float(cmd[1]) * speed_factor
         self._cmd_term.vel_command_b[:, 2] = float(cmd[2])
         # Refresh the obs so the policy sees the just-injected command.
         self._obs = self._env.observation_manager.compute()["policy"]
         with torch.no_grad():
             action = self._policy(self._obs)
+        # Closed-loop posture: ADD the leg-extension residual so the trunk physically tracks the
+        # commanded height (#41) — the dog-executed response to a posture/gait/Set_Constraint
+        # primitive (and the real §6.8 brace). Zero residual ⇒ the nominal trot is untouched.
+        action = action + self._posture_residual()
         # O2/O4 tangential-resistance/tether wrench on the trunk (re-applied each control
         # step; persists across the env's physics substeps via write_data_to_sim).
         self._apply_resistance_wrench()
@@ -610,12 +722,40 @@ class IsaacPolicyBackend:
         payload (O5), actuator-effort fraction (O10), and measured foot-support (O9)."""
         env_origin = self._env.scene.env_origins[0].cpu().numpy()
         pos = self._robot.data.root_pos_w[0].cpu().numpy()[:2] - env_origin[:2]
+        # A4.1 two-phase consequence telemetry: the max adhesive grip + penetration reached this
+        # episode, whether the tether tore (the catapult mechanism), and the current grip phase.
+        # Privileged ground truth for labeling M(s,ℓ) outcomes — the AGENT never sees this.
+        tether = self._tether_summary(pos)
         return {
             "mu": self.friction_at(pos),
             "payload_kg": float(self._payload_kg),
             "effort_scale": float(self._effort_scale),
             "support_ratio": self._measure_support(),
+            "tether_grip_n": tether["grip_n"],
+            "tether_pen_m": tether["pen_m"],
+            "tether_broken": tether["broken"],
+            "tether_phase": tether["phase_code"],
         }
+
+    def _tether_summary(self, pos: np.ndarray) -> dict[str, float]:
+        """Max adhesive grip/penetration underfoot + break/phase (A4.1 privileged telemetry)."""
+        _PHASE_CODE = {"none": 0.0, "compliance": 0.0, "plateau": 1.0, "ramp": 2.0, "spring": 3.0}
+        grip_n = 0.0
+        pen_m = 0.0
+        broken = 0.0
+        phase_code = 0.0
+        for state in self._resistance:
+            region = state["region"]
+            if region.kind == "compliance" or not region.rect.contains(pos):
+                continue
+            if state["max_grip"] > grip_n:
+                grip_n = state["max_grip"]
+            if state["max_pen"] > pen_m:
+                pen_m = state["max_pen"]
+            if state["broken"]:
+                broken = 1.0
+            phase_code = max(phase_code, _PHASE_CODE.get(state["phase"], 0.0))
+        return {"grip_n": grip_n, "pen_m": pen_m, "broken": broken, "phase_code": phase_code}
 
     def friction_at(self, pos: np.ndarray) -> float:
         for region in self._regions:
@@ -779,6 +919,13 @@ class IsaacPolicyBackend:
                     "inside": False,
                     "entry": None,
                     "pen_prev": 0.0,
+                    # A4.1 two-phase telemetry (privileged ground truth for consequence labeling):
+                    # the max grip [N] + penetration [m] reached this episode, whether the tether
+                    # tore this step (catapult mechanism), and the current phase. Reset each reset.
+                    "max_pen": 0.0,
+                    "max_grip": 0.0,
+                    "broke_this_step": False,
+                    "phase": "none",
                 }
             )
 
@@ -795,32 +942,56 @@ class IsaacPolicyBackend:
         force_b = np.zeros(3)
         for state in self._resistance:
             region = state["region"]
+            state["broke_this_step"] = False  # per-step catapult marker (privileged ground truth)
             if not region.rect.contains(pos):
                 state["inside"] = False
                 state["entry"] = None  # left the patch ⇒ the grip resets (the foot peels off)
                 state["pen_prev"] = 0.0
+                state["phase"] = "none"
                 continue
             state["inside"] = True
             if region.kind == "compliance":
                 # Soft-ground DRAG FIELD (mud): bounded constant + viscous drag, crossable (§6 #38);
                 # stiffness_n_per_m is the constant drag [N] for the compliance kind.
                 mag = region.stiffness_n_per_m + region.damping_ns_per_m * speed
+                state["phase"] = "compliance"
             else:
-                # O4 adhesive GRIP (Bug-1, entry-point form, HEADING-INDEPENDENT): the hold grows
-                # with the distance from where the dog ENTERED. It resists motion that goes DEEPER
-                # (away from the entry) at full strength (push-through STALLS), and peels (peel)
-                # when the dog moves back TOWARD the entry, so back-off escapes whatever way the dog
-                # faces. A LOW-break tether still tears under forward load (distance==path_len, M5).
+                # O4 adhesive GRIP (entry-point form, HEADING-INDEPENDENT): the hold grows with the
+                # distance from where the dog ENTERED. It resists going DEEPER (push-through STALLS)
+                # and peels (peel_factor) backing toward entry, so back-off escapes whatever way
+                # the dog faces.
                 if state["entry"] is None:
                     state["entry"] = pos.copy()
                 pen = float(np.linalg.norm(pos - state["entry"]))
                 moving_out = pen < state["pen_prev"] - 1.0e-4
                 state["pen_prev"] = pen
-                grip = region.stiffness_n_per_m * max(0.0, pen - region.slack_length_m)
+                if region.p0_m > 0.0:
+                    # A4.1 TWO-PHASE delayed-divergence (experiments_design.md §4 A4.1): a constant
+                    # PLATEAU grip = force_offset_n (≡ O2 compliance's k_c drag, byte-identical, for
+                    # pen≤p0_m) then a linear RAMP force_offset_n + k2·(pen−p0) beyond.
+                    # where attribution happens (C2ST-indistinguishable from O2 by construction;
+                    # A1.3 re-certifies it); the ramp is the CONSEQUENCE region. f_break fires on
+                    # ramp grip ⇒ finite tears under forward lean (catapult energy release); inf +
+                    # high k2 grows without bound (immobilization).
+                    grip = region.force_offset_n + region.k2_n_per_m * max(0.0, pen - region.p0_m)
+                    state["phase"] = "plateau" if pen <= region.p0_m else "ramp"
+                else:
+                    # #49 peel-plateau (E1 calibration; default inf/0 ⇒ unshaped, byte-identical).
+                    grip = region.stiffness_n_per_m * max(0.0, pen - region.slack_length_m)
+                    if grip > region.break_force_n:
+                        state["broken"] = True
+                    grip = min(grip, region.force_cap_n) + region.force_offset_n
+                    state["phase"] = "spring"
+                if not state["broken"] and grip > region.break_force_n:
+                    state["broken"] = True
+                    state["broke_this_step"] = True  # the catapult mechanism (privileged truth)
                 mag = grip * (region.peel_factor if moving_out else 1.0)
                 mag += region.damping_ns_per_m * speed
-                if grip > region.break_force_n:
-                    state["broken"] = True
+                if not state["broken"]:
+                    if pen > state["max_pen"]:
+                        state["max_pen"] = pen
+                    if grip > state["max_grip"]:
+                        state["max_grip"] = grip
             if not state["broken"] and speed > 1e-6:
                 force_b[:2] += -(vel_b / speed) * mag
         forces = torch.from_numpy(force_b.reshape(1, 1, 3).astype(np.float32)).to(
@@ -890,7 +1061,51 @@ class IsaacPolicyBackend:
         self._effort_scale = scale
         self._effort_limit_nm = float(self._cfg.effort_limit_nm) * scale
 
-    def set_reflex(self, active: bool) -> None:  # noqa: B027
-        # Reflex stance on the real robot would crouch/widen; the M2 survival gate runs
-        # on the surrogate, so this is a no-op placeholder on the Isaac path.
-        pass
+    def set_reflex(self, active: bool) -> None:
+        """Engage the §6.8 fallback Reflex: crouch the trunk to the brace height (#41). Previously a
+        no-op on Isaac — now a real physical crouch via the closed-loop posture controller, so the
+        robot's actual support/capture stance matches the brace mode the shield adjudicated against.
+        Takes priority over a planner-commanded posture while the fallback is active."""
+        self._reflex_posture_active = bool(active)
+
+    def set_posture(self, height_m: float | None, stiffness: float = 1.0) -> None:
+        """Command a target trunk height the Go2 physically tracks (#41) — the dog-executed response
+        to Switch_Gait / Adjust_Posture / Set_Constraint. ``None`` releases to the nominal trot (the
+        residual decays out). ``stiffness`` scales the I-control gain (a stiffer hold tracks faster
+        and holds tighter). The reflex brace (set_reflex) overrides this while active."""
+        self._posture_target = None if height_m is None else float(height_m)
+        self._posture_stiffness = float(stiffness)
+
+    def _effective_posture_target(self) -> float | None:
+        """The height the controller drives to this step: the brace crouch when the shield-fallback
+        Reflex is active (safety wins), else the planner-commanded posture, else None (nominal)."""
+        if self._reflex_posture_active:
+            return self._brace_height_m
+        return self._posture_target
+
+    def _posture_residual(self) -> object:
+        """The flex residual (n_joints,) to ADD to the policy action this step so the trunk tracks
+        the commanded height (I-control on the MEASURED height; #41). Returns a zero/decaying
+        residual when no posture is active, so release is smooth. Closed-loop ⇒ precise regardless
+        of the exact leg kinematics; ``_flex_dir``'s sign defines which way raises the trunk."""
+        target = self._effective_posture_target()
+        if target is None:
+            self._posture_alpha *= self._posture_release_decay  # smooth return to the policy pose
+            return self._posture_alpha * self._flex_dir
+        env_origin_z = float(self._env.scene.env_origins[0, 2].cpu())
+        base_h = float(self._robot.data.root_pos_w[0, 2].cpu()) - env_origin_z
+        stiff = float(np.clip(self._posture_stiffness, 0.1, 2.0))
+        gain = self._posture_alpha_gain * stiff * self.dt
+        self._posture_alpha = float(
+            np.clip(
+                self._posture_alpha + gain * (target - base_h),
+                -self._posture_alpha_max,
+                self._posture_alpha_max,
+            )
+        )
+        return self._posture_alpha * self._flex_dir
+
+    def _posture_speed_factor(self) -> float:
+        """Cap forward speed while actively holding a posture (blended-residual stability)."""
+        active = self._effective_posture_target() is not None
+        return self._posture_speed_scale if active else 1.0

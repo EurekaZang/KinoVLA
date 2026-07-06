@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import numpy as np
 
+from kino_vla.monitor.event import MonitorEvent
 from kino_vla.monitor.reflex import (
     Reflex,
     run_push_recovery_sweep,
     run_survival_episode,
 )
-from kino_vla.monitor.rule_monitor import MonitorEvent
 from kino_vla.sim.surrogate import SurrogateBackend
 from kino_vla.utils.config import load_config
 

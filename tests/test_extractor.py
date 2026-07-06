@@ -16,6 +16,8 @@ import sys
 import numpy as np
 import pytest
 
+from tests._monitor_stub import StubMonitor
+
 torch = pytest.importorskip("torch")  # noqa: F841 — gate: skip module when torch absent
 
 from kino_vla.tokens.dataset import build_dataset  # noqa: E402
@@ -126,7 +128,7 @@ def test_coupling_tightens_friction_bound(trained, tmp_path):
     ckpt = tmp_path / "ex"
     ex.save(ckpt)
     demo = _load_script("coupling_demo")
-    res = demo.run_coupling_demo(seed=0, ckpt=str(ckpt))
+    res = demo.run_coupling_demo(seed=0, ckpt=str(ckpt), monitor=StubMonitor())
     assert res.fired, "monitor must fire on the ice for the gate to open"
     assert res.mu_hat_firm == pytest.approx(0.8, abs=1e-3)  # gate closed off-ice ⇒ nominal
     assert res.mu_hat_ice < res.mu_hat_firm  # extractor pulls μ̂ down on ice
@@ -146,7 +148,7 @@ def test_full_milestone_gates_pass(tmp_path):
     assert metrics["all_pass"], metrics
     # Exit criterion 3: μ̂→shield coupling on the same checkpoint (spec §6.5).
     demo = _load_script("coupling_demo")
-    res = demo.run_coupling_demo(seed=0, ckpt=str(ckpt))
+    res = demo.run_coupling_demo(seed=0, ckpt=str(ckpt), monitor=StubMonitor())
     assert res.fired
     assert res.mu_hat_ice <= float(tol.coupling.max_mu_hat_on_ice)
     assert res.mu_hat_firm >= float(tol.coupling.min_mu_hat_on_firm)

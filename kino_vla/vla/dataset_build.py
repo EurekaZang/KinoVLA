@@ -151,13 +151,15 @@ def load_examples(
     return examples
 
 
-def load_nav_examples(out_dir: str | Path) -> list[VlaExample]:
+def load_nav_examples(out_dir: str | Path, *, loss_span: str = "completion") -> list[VlaExample]:
     """Load the RTX nav-SFT dataset (``nav_meta.jsonl`` + ``nav_frames.npz``) as VlaExamples.
 
     Each record carries the FULL nav prompt ``messages`` (built at generation time with the live
-    camera's geometry + map note) and the geometric target (a Turn or a Replan_Waypoint pixel), so
-    no rebuild is needed. ``target_theta=None`` (no privileged θ for a nav decision ⇒ projector/θ
-    loss skipped, model.compute_loss) and ``loss_span="action"`` (score the <Action> span)."""
+    camera's geometry + map note) and the target completion (a Turn or a Replan_Waypoint, with a
+    reasoning ``<Thought>``), so no rebuild is needed. ``target_theta=None`` (no privileged θ for a
+    nav decision ⇒ projector/θ loss skipped, model.compute_loss). ``loss_span="completion"``
+    (default) trains the active-perception REASONING + action so the VLA learns *why* it turns (the
+    Oracle CoT, #43); pass ``loss_span="action"`` for the action-only ablation."""
     out = Path(out_dir)
     records = [
         json.loads(line) for line in (out / "nav_meta.jsonl").read_text().splitlines() if line
@@ -180,7 +182,7 @@ def load_nav_examples(out_dir: str | Path) -> list[VlaExample]:
                 rgb=npz[f"{sid}__rgb"],
                 proprio_window=npz[f"{sid}__proprio"],
                 target_theta=None,
-                loss_span="action",
+                loss_span=loss_span,
             )
         )
     return examples

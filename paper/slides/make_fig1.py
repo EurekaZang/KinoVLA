@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Kino-VLA paper Fig. 1 — the closed-loop system diagram.
+"""KiNO paper Fig. 1 — the closed-loop system diagram.
 
 IEEE / top-robotics-venue aesthetic: white background, compact, high density,
 color-coded modules, labelled rates, a line-style legend, four edge types

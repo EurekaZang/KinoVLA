@@ -26,7 +26,7 @@ from kino_vla.map.rgbd import (
     render_ground_scene,
 )
 from kino_vla.map.types import SemanticRegion
-from kino_vla.monitor.rule_monitor import MonitorEvent
+from kino_vla.monitor.event import MonitorEvent
 from kino_vla.sim.types import Obs
 from kino_vla.tokens.window import RollingWindow, window_length
 from kino_vla.utils.config import Config
