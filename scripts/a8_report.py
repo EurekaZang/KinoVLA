@@ -152,8 +152,18 @@ def render(cfg: dict[str, Any], config_path: str) -> str:
             lines.append(f"- Δ_fusion (concat): **{summary['delta_fusion_concat']:.3f}**")
         if "delta_conflict" in summary:
             lines.append(f"- Δ_conflict: **{summary['delta_conflict']:.3f}**")
+        if summary.get("e3_acc"):
+            lines.append(f"- Acc_E3 by arm: `{summary['e3_acc']}`")
+        if "delta_proprio_over_vision_e3" in summary:
+            lines.append(f"- Δ proprio-over-vision (E3): **{summary['delta_proprio_over_vision_e3']:.3f}**")
+        if "delta_fusion_e3" in summary:
+            lines.append(f"- Δ_fusion on E3: **{summary['delta_fusion_e3']:.3f}**")
         if summary.get("mcnemar_conflict_vs_v"):
             lines.append(f"- McNemar latent_conflict vs V: `{summary['mcnemar_conflict_vs_v']}`")
+        if summary.get("mcnemar_p_vs_v"):
+            lines.append(f"- McNemar P vs V: `{summary['mcnemar_p_vs_v']}`")
+        if summary.get("corpus_note"):
+            lines.append(f"- Corpus note: {summary['corpus_note']}")
     lines.append("")
     lines.append("## 5. Claim bridge / falsifier")
     lines.append("")

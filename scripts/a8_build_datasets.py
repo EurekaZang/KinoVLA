@@ -15,6 +15,8 @@ from kino_vla.eval.a8_datasets import (
     write_a8a_dataset,
     write_a8b_dataset,
 )
+from kino_vla.eval.a8_reflect import audit_reflect_root, build_a8b_cards_from_reflect_zarr
+from kino_vla.eval.a8_state_audit import audit_reflect_state
 
 
 def _find_split_dirs(guardian_root: Path) -> dict[str, Path]:
@@ -73,12 +75,31 @@ def build_a8a(cfg: dict[str, Any], config_path: str, *, limit: int | None = None
 
 def build_a8b(cfg: dict[str, Any], config_path: str, *, limit: int | None = None) -> dict[str, Any]:
     out_root = repo_path(cfg["output_dir"]) / "datasets" / "a8b"
-    audit_path = repo_path(cfg["a8b"]["admission_gate"])
-    if audit_path.exists():
-        audit = json.loads(audit_path.read_text())
-    else:
-        audit = {"pass": False, "reason": "missing audit file"}
-    if not audit.get("pass"):
+    out_root.mkdir(parents=True, exist_ok=True)
+    reflect_root = repo_path(cfg["reflect"]["root"])
+    # Prefer extracted real_data tree; handle nested reflect_dataset/real_data layout.
+    candidates = [
+        reflect_root / "real_data" / "reflect_dataset" / "real_data",
+        reflect_root / "real_data",
+        reflect_root / "sim_data",
+        reflect_root,
+    ]
+    used = None
+    audit = {"pass": False, "reason": "no reflect root found"}
+    for c in candidates:
+        if not c.exists():
+            continue
+        # Prefer zarr-aware audit; fall back to generic filename audit.
+        a = audit_reflect_root(c)
+        if not a.get("pass"):
+            a = audit_reflect_state(c)
+        audit = a
+        audit["candidate"] = str(c)
+        if a.get("pass"):
+            used = c
+            break
+    write_json(repo_path(cfg["a8b"]["admission_gate"]), audit)
+    if not audit.get("pass") or used is None:
         blocked = {
             **artifact_meta(config_path),
             "status": "blocked",
@@ -88,16 +109,10 @@ def build_a8b(cfg: dict[str, Any], config_path: str, *, limit: int | None = None
         write_json(out_root / "blocked.json", blocked)
         return blocked
 
-    reflect_root = repo_path(cfg["reflect"]["root"])
-    # prefer real_data then sim_data
-    candidates = [reflect_root / "real_data", reflect_root / "sim_data", reflect_root]
-    cards = []
-    used = None
-    for c in candidates:
-        cards = build_a8b_cards_from_reflect(c, limit=limit)
-        if cards:
-            used = c
-            break
+    # Prefer zarr loader; fall back to generic directory scanner.
+    cards = build_a8b_cards_from_reflect_zarr(used, limit=limit)
+    if not cards:
+        cards = build_a8b_cards_from_reflect(used, limit=limit)
     if not cards:
         blocked = {
             **artifact_meta(config_path),
@@ -113,8 +128,18 @@ def build_a8b(cfg: dict[str, Any], config_path: str, *, limit: int | None = None
         cards,
         card_meta={**artifact_meta(config_path, sources={"reflect": str(used)}), "source": str(used)},
     )
-    index = {"status": "available", "dataset": str(dest), "n": len(cards), "source": str(used)}
+    index = {
+        "status": "available",
+        "dataset": str(dest),
+        "n": len(cards),
+        "source": str(used),
+        "stratum_hist": json.loads((dest / "dataset_card.json").read_text()).get("stratum_hist"),
+    }
     write_json(out_root / "index.json", index)
+    # clear blocked if present
+    blocked_path = out_root / "blocked.json"
+    if blocked_path.exists():
+        blocked_path.unlink()
     return index
 
 
