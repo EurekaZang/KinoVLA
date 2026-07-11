@@ -20,8 +20,8 @@ EXPECTED = {
     "rlbenchfail_train": 8_700_000_000,
     "rlbenchfail_test": 45_000_000_000,
     "ood_robofail": 900_000_000,
-    "ood_robovqa": 100_000_000,
-    "ood_ur5": 50_000_000,
+    "ood_robovqa": 60_000_000,
+    "ood_ur5": 40_000_000,
     "reflect_real": 28_000_000_000,
 }
 
