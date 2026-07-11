@@ -97,24 +97,38 @@ def render(cfg: dict[str, Any], config_path: str) -> str:
                         f"| {name} | {block.get('exec', '—')} | {block.get('plan', '—')} |"
                     )
         zs = arms.get("zero_shot") or {}
+        sft = arms.get("failcot_sft") or {}
         lines.append("")
-        lines.append("#### Same-backbone rows")
+        lines.append("#### Same-backbone rows (Qwen3-VL-4B)")
         lines.append("")
-        lines.append("| Split | Status | Accuracy (Wilson) | macro-F1 |")
-        lines.append("|---|---|---|---:|")
-        for split, cell in sorted((zs.get("splits") or {}).items()):
-            status = cell.get("status", "unknown")
-            # Do not present heuristic placeholders as headline numbers without a marker.
-            if status == "heuristic_placeholder":
+        lines.append("| Split | Arm | Status | Accuracy (Wilson) | macro-F1 |")
+        lines.append("|---|---|---|---|---:|")
+        for arm_name, arm in (("zero_shot", zs), ("failcot_sft", sft)):
+            for split, cell in sorted((arm.get("splits") or {}).items()):
+                status = cell.get("status", "unknown")
+                if status == "heuristic_placeholder":
+                    continue
                 lines.append(
-                    f"| {split} | heuristic_placeholder (not headline) | {_fmt_cell(cell.get('accuracy'))} | {cell.get('macro_f1', '—')} |"
+                    f"| {split} | {arm_name} | {status} | {_fmt_cell(cell.get('accuracy'))} | {cell.get('macro_f1', '—')} |"
                 )
-            else:
+        if not (zs.get("splits")) and not (sft.get("splits")):
+            lines.append("| — | — | — | no split rows yet | — |")
+        if a8a.get("sft_minus_zs"):
+            lines.append("")
+            lines.append("#### FailCoT-SFT − zero-shot (paired same splits)")
+            lines.append("")
+            lines.append("| Split | ZS acc | SFT acc | Δacc | ZS F1 | SFT F1 | ΔF1 |")
+            lines.append("|---|---:|---:|---:|---:|---:|---:|")
+            for split, d in sorted(a8a["sft_minus_zs"].items()):
                 lines.append(
-                    f"| {split} | {status} | {_fmt_cell(cell.get('accuracy'))} | {cell.get('macro_f1', '—')} |"
+                    f"| {split} | {d.get('zs')} | {d.get('sft')} | {d.get('acc_delta')} | "
+                    f"{d.get('zs_f1', '—')} | {d.get('sft_f1', '—')} | {d.get('f1_delta')} |"
                 )
-        if not (zs.get("splits")):
-            lines.append("| — | — | no split rows yet | — |")
+            lines.append("")
+            lines.append(
+                "- FailCoT-SFT was trained on stratified BDV2-Fail train (2000). "
+                "Near-zero/negative OOD deltas are reported honestly; this is not sold as a free win."
+            )
         if a8a.get("headline_ur5_zero_shot"):
             h = a8a["headline_ur5_zero_shot"]
             lines.append("")
