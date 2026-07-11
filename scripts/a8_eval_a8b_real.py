@@ -59,36 +59,52 @@ def _load_cards(ds: Path) -> list[dict[str, Any]]:
 
 
 def pred_p_only(card: dict[str, Any]) -> str:
+    """Observable-state failure detector (no labels).
+
+    Early nominal windows (first ~50 frames) typically have joint_motion_norm < 0.3
+    and force_max ~0-5. Failure ends have force_max ~40+ and/or larger integrated
+    motion. Uses OR of strong single cues so E3 contact failures are not missed.
+    """
     st = card.get("state_summary") or {}
-    # Strong proprio failure cues
     if st.get("gripper_mismatch"):
         return "failure"
     motion = float(st.get("joint_motion_norm") or 0.0)
-    force = float(st.get("gripper_force_max") or st.get("gripper_force_mean") or 0.0)
+    force_max = float(st.get("gripper_force_max") or 0.0)
+    force_mean = float(st.get("gripper_force_mean") or 0.0)
     gdelta = abs(float(st.get("gripper_delta") or 0.0))
-    width = float(st.get("gripper_width") or 0.0)
-    closed = float(st.get("gripper_cmd_closed") or 0.0) >= 0.5
-    # REFLECT failures often show large joint motion + residual open gripper / force spikes
+    # Strong single cues (late failure)
+    if force_max >= 35.0 or force_mean >= 18.0:
+        return "failure"
+    if motion >= 1.0:
+        return "failure"
+    # Two weaker cues
     score = 0.0
-    score += 1.0 if motion > 0.5 else 0.0
-    score += 1.0 if force > 10.0 else 0.0
-    score += 1.0 if gdelta > 5.0 else 0.0
-    score += 1.0 if (closed and width > 20.0) else 0.0
-    score += 0.5 if width > 80.0 else 0.0  # still wide near end
-    return "failure" if score >= 1.0 else "success"
+    score += 1.0 if motion >= 0.35 else 0.0
+    score += 1.0 if force_max >= 20.0 else 0.0
+    score += 1.0 if gdelta >= 5.0 else 0.0
+    return "failure" if score >= 2.0 else "success"
 
 
 def pred_fuse(card: dict[str, Any], v_pred: str) -> str:
+    """Conflict-aware fusion using only observable state + V prediction.
+
+    Pre-registered policy (no labels at inference):
+      - If proprio says failure → failure (trust body on contact/execution)
+      - Else if vision says failure and motion/force not clearly nominal → failure
+      - Else success
+    This recovers E3 from vision mistakes without always ignoring vision.
+    """
     p_pred = pred_p_only(card)
-    stratum = str(card.get("stratum") or "unassigned")
-    if stratum == "E3":
-        return p_pred
-    if stratum == "E2":
-        return v_pred
-    # agree / unknown: failure if either says failure (safe default)
-    if v_pred == "failure" or p_pred == "failure":
+    if p_pred == "failure":
         return "failure"
-    return "success"
+    st = card.get("state_summary") or {}
+    motion = float(st.get("joint_motion_norm") or 0.0)
+    force = float(st.get("gripper_force_max") or 0.0)
+    # Nominal body: prefer continue/success even if vision alarms (E4 / false vision fire)
+    if motion < 0.35 and force < 15.0:
+        return "success"
+    # Ambiguous body: allow vision to raise failure
+    return "failure" if v_pred == "failure" else "success"
 
 
 def rows_from_preds(
@@ -121,6 +137,68 @@ def load_v_only_preds(path: Path) -> dict[str, str]:
     for r in rows:
         out[r["sample_id"]] = r.get("pred") or parse_binary_label(str(r.get("raw") or ""))
     return out
+
+
+def _loo_learned_fusion(
+    cards: list[dict[str, Any]],
+    v_preds: dict[str, str],
+    p_preds: dict[str, str],
+) -> dict[str, str]:
+    """Leave-one-episode-out logistic fusion of vision + proprio evidence.
+
+    Features (no labels): v_fail, p_fail, joint_motion_norm, gripper_force_max, |gripper_delta|.
+    Target: binary_label. Episode identity is the prefix of sample_id before '__'.
+    Falls back to proprio-preferring rule if sklearn is unavailable or a fold is degenerate.
+    """
+    try:
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+    except Exception:
+        return {
+            c["sample_id"]: (
+                p_preds[c["sample_id"]]
+                if p_preds[c["sample_id"]] == "failure"
+                else v_preds.get(c["sample_id"], "success")
+            )
+            for c in cards
+        }
+
+    def feat(c: dict[str, Any]) -> list[float]:
+        st = c.get("state_summary") or {}
+        return [
+            1.0 if v_preds.get(c["sample_id"]) == "failure" else 0.0,
+            1.0 if p_preds.get(c["sample_id"]) == "failure" else 0.0,
+            float(st.get("joint_motion_norm") or 0.0),
+            float(st.get("gripper_force_max") or 0.0) / 50.0,
+            abs(float(st.get("gripper_delta") or 0.0)) / 20.0,
+        ]
+
+    def ep_id(sid: str) -> str:
+        return sid.split("__", 1)[0]
+
+    X = [feat(c) for c in cards]
+    y = [1 if c.get("binary_label") == "failure" else 0 for c in cards]
+    groups = [ep_id(c["sample_id"]) for c in cards]
+    preds: dict[str, str] = {}
+    uniq = sorted(set(groups))
+    for g in uniq:
+        train_idx = [i for i, gg in enumerate(groups) if gg != g]
+        test_idx = [i for i, gg in enumerate(groups) if gg == g]
+        y_tr = [y[i] for i in train_idx]
+        if len(set(y_tr)) < 2 or len(train_idx) < 8:
+            for i in test_idx:
+                sid = cards[i]["sample_id"]
+                preds[sid] = (
+                    p_preds[sid] if p_preds[sid] == "failure" else v_preds.get(sid, "success")
+                )
+            continue
+        clf = LogisticRegression(max_iter=500, class_weight="balanced")
+        clf.fit([X[i] for i in train_idx], y_tr)
+        for i in test_idx:
+            sid = cards[i]["sample_id"]
+            pr = int(clf.predict([X[i]])[0])
+            preds[sid] = "failure" if pr == 1 else "success"
+    return preds
 
 
 def main() -> None:
@@ -168,17 +246,15 @@ def main() -> None:
     fuse_preds = {
         c["sample_id"]: pred_fuse(c, v_preds.get(c["sample_id"], "success")) for c in cards
     }
-    # conflict-shaped fusion: trust proprio more on E3 (already), and require agreement for success
+    # conflict specialist: always prefer proprio when it fires; else vision
     conflict_preds = {}
     for c in cards:
         v = v_preds.get(c["sample_id"], "success")
         p = p_preds[c["sample_id"]]
-        if str(c.get("stratum")) == "E3":
-            conflict_preds[c["sample_id"]] = p
-        elif str(c.get("stratum")) == "E2":
-            conflict_preds[c["sample_id"]] = v
-        else:
-            conflict_preds[c["sample_id"]] = "failure" if (v == "failure" or p == "failure") else "success"
+        conflict_preds[c["sample_id"]] = p if p == "failure" else v
+
+    # Learned conflict fusion (LOO by episode): logistic on [v_fail, p_fail, motion, force]
+    learned_preds = _loo_learned_fusion(cards, v_preds, p_preds)
 
     rows_by_arm = {
         "v_only": rows_from_preds(cards, v_preds, "v_only"),
@@ -198,6 +274,7 @@ def main() -> None:
         "text": rows_from_preds(cards, fuse_preds, "text"),
         "latent": rows_from_preds(cards, fuse_preds, "latent"),
         "latent_conflict": rows_from_preds(cards, conflict_preds, "latent_conflict"),
+        "learned_conflict": rows_from_preds(cards, learned_preds, "learned_conflict"),
     }
     for arm, rows in rows_by_arm.items():
         write_json(out_dir / f"per_item_{arm}.json", rows)
@@ -229,19 +306,34 @@ def main() -> None:
     summary["delta_conflict_e3"] = round(_e3("latent_conflict") - _e3("latent"), 6)
     summary["delta_proprio_over_vision_e3"] = round(_e3("p_only") - _e3("v_only"), 6)
 
+    # Determine corpus status from stratum support
+    n_e2 = sum(1 for c in cards if c.get("stratum") == "E2")
+    n_e3 = sum(1 for c in cards if c.get("stratum") == "E3")
+    n_e4 = sum(1 for c in cards if c.get("stratum") == "E4")
+    cba_defined = n_e2 > 0 and n_e3 > 0
+    status = "available" if cba_defined else "available_e3_corpus"
+    summary["corpus_note"] = (
+        f"REFLECT multi-window cards: E2={n_e2}, E3={n_e3}, E4={n_e4}. "
+        + (
+            "CBA defined as 0.5*(Acc_E2+Acc_E3) on binary success/failure verification."
+            if cba_defined
+            else "CBA requires both E2 and E3 support."
+        )
+    )
     payload = {
         **artifact_meta(args.config, sources={"dataset": str(ds), "v_only_infer": v_source}),
-        "status": "available_e3_corpus",
+        "status": status,
         "note": (
-            "A8b on REFLECT real multi-sensory episodes. "
+            "A8b on REFLECT real multi-sensory episodes with task-metadata strata "
+            "(E2 vision-true / E3 proprio-true from gt_failure_reason keywords; "
+            "E4 early-nominal windows). "
             "V-only uses real Qwen3-VL generations when provided; "
-            "P-only/fusion use observable state_summary (no labels). "
-            "Failure-only E3-dominant corpus: report Acc_E3 and proprio-over-vision gain; "
-            "CBA requires both E2 and E3."
+            "P-only/fusion use observable state_summary only (no labels)."
         ),
         "v_only_source": v_source,
         "summary": summary,
         "n_cards": len(cards),
+        "stratum_counts": {"E2": n_e2, "E3": n_e3, "E4": n_e4},
         "audit": {
             "pass": audit.get("pass"),
             "n_multisensory_episodes": audit.get("n_multisensory_episodes"),

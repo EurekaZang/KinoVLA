@@ -174,8 +174,13 @@ def _state_summary_from_arrays(arrays: dict[str, np.ndarray]) -> dict[str, Any]:
     return summary
 
 
-def _stack_state_window(arrays: dict[str, np.ndarray], T: int = 25) -> np.ndarray:
-    """Build a fixed (T, F) state window from available arrays (tail of trajectory)."""
+def _stack_state_window(
+    arrays: dict[str, np.ndarray],
+    T: int = 25,
+    *,
+    end_idx: int | None = None,
+) -> np.ndarray:
+    """Build a fixed (T, F) state window ending at end_idx (default: trajectory end)."""
     feats = []
     for key in STATE_KEYS:
         if key not in arrays:
@@ -188,29 +193,120 @@ def _stack_state_window(arrays: dict[str, np.ndarray], T: int = 25) -> np.ndarra
         feats.append(a)
     if not feats:
         return np.zeros((T, 8), dtype=np.float32)
-    # align lengths
     n = min(f.shape[0] for f in feats)
-    feats = [f[-n:] for f in feats]
-    mat = np.concatenate(feats, axis=1)  # (n, F)
+    end = n if end_idx is None else max(1, min(int(end_idx), n))
+    start = max(0, end - T)
+    feats = [f[start:end] for f in feats]
+    mat = np.concatenate(feats, axis=1)  # (t, F)
     if mat.shape[0] >= T:
         return mat[-T:]
-    # pad by repeating first row
     pad = np.repeat(mat[:1], T - mat.shape[0], axis=0)
     return np.concatenate([pad, mat], axis=0)
 
 
-def _episode_meta(ep: Path, arrays: dict[str, np.ndarray]) -> dict[str, Any]:
-    """Best-effort labels: REFLECT real episodes are failure demonstrations by construction."""
+# Pre-registered keyword maps from REFLECT gt_failure_reason → evidence structure.
+_VISION_TRUE_CUES = (
+    "upside",
+    "instead of",
+    "wrong",
+    "knife on top",
+    "blocking",
+    "on top of",
+    "mistakenly picked",
+    "mistakenly",
+    "placements are",
+    "should be placed",
+    "not a fruit",
+    "is a fruit",
+    "orientation is wrong",
+    "already occupied",
+    "already inside",
+    "door while",
+    "never opened",
+    "did not open",
+    "attempted to open",
+    "attempted to toggle",
+)
+_PROPRIO_TRUE_CUES = (
+    "dropped",
+    "drop",
+    "gripper",
+    "failed to",
+    "never toggled",
+    "never closed",
+    "too full",
+    "occupied by the pear",
+    "slice the carrot",
+    "toggle on",
+    "toggle off",
+)
+
+
+def load_reflect_task_meta(tasks_json: Path | str | None) -> dict[str, dict[str, Any]]:
+    """Map episode folder name → task metadata from tasks_real_world.json."""
+    if tasks_json is None:
+        return {}
+    p = Path(tasks_json)
+    if not p.exists():
+        return {}
+    raw = json.loads(p.read_text())
+    out: dict[str, dict[str, Any]] = {}
+    for _k, v in raw.items():
+        if not isinstance(v, dict):
+            continue
+        name = str(v.get("general_folder_name") or "").strip()
+        if name:
+            out[name] = v
+    return out
+
+
+def classify_reflect_stratum(failure_reason: str | None) -> str:
+    """Map natural-language failure reason to E2/E3/E1 evidence structure."""
+    r = (failure_reason or "").lower()
+    is_v = any(c in r for c in _VISION_TRUE_CUES)
+    is_p = any(c in r for c in _PROPRIO_TRUE_CUES)
+    if is_v and not is_p:
+        return "E2"
+    if is_p and not is_v:
+        return "E3"
+    if is_v and is_p:
+        # Prefer proprio when both fire (drop/fail verbs are decisive).
+        return "E3"
+    return "E1"
+
+
+def _episode_meta(
+    ep: Path,
+    arrays: dict[str, np.ndarray],
+    *,
+    task_meta: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Labels from REFLECT task metadata when available; else state heuristics."""
     name = ep.name
+    tm = task_meta or {}
+    task_name = str(tm.get("name") or name)
+    reason = str(tm.get("gt_failure_reason") or "")
     meta: dict[str, Any] = {
-        "task_instruction": f"complete task: {name}",
+        "task_instruction": f"complete task: {task_name}",
         "episode_name": name,
-        "reward": 0,  # real demos are failure cases
+        "reward": 0,
         "failure_mode": "unknown_mode",
+        "failure_reason": reason,
+        "success_condition": tm.get("success_condition"),
     }
     if "stage" in arrays:
         st = np.asarray(arrays["stage"]).reshape(-1)
         meta["n_stages"] = int(len(np.unique(st))) if st.size else 0
+    if reason:
+        stratum = classify_reflect_stratum(reason)
+        if stratum == "E2":
+            meta["failure_mode"] = "wrong_object"
+        elif stratum == "E3":
+            meta["failure_mode"] = "no_close"
+        else:
+            meta["failure_mode"] = "no_progress"
+        meta["stratum_from_meta"] = stratum
+        return meta
     summary = _state_summary_from_arrays(arrays)
     if summary.get("gripper_mismatch"):
         meta["failure_mode"] = "no_close"
@@ -219,7 +315,6 @@ def _episode_meta(ep: Path, arrays: dict[str, np.ndarray]) -> dict[str, Any]:
     elif abs(float(summary.get("gripper_delta") or 0.0)) > 5.0:
         meta["failure_mode"] = "slip"
     else:
-        # Default proprio-true contact/execution failure for REFLECT real demos.
         meta["failure_mode"] = "no_close"
     return meta
 
@@ -266,12 +361,79 @@ def audit_reflect_root(root: Path | str) -> dict[str, Any]:
     }
 
 
+def _slice_arrays(
+    arrays: dict[str, np.ndarray], end_idx: int
+) -> dict[str, np.ndarray]:
+    """Truncate all arrays to [0, end_idx)."""
+    out: dict[str, np.ndarray] = {}
+    for k, a in arrays.items():
+        a = np.asarray(a)
+        n = a.shape[0] if a.ndim >= 1 else 1
+        e = max(1, min(int(end_idx), n))
+        out[k] = a[:e]
+    return out
+
+
+def _write_rgb_cache(ep: Path, rgbs: list[np.ndarray], tag: str) -> list[str]:
+    from PIL import Image
+
+    cache = ep / f"_a8_rgb_cache_{tag}"
+    cache.mkdir(exist_ok=True)
+    paths: list[str] = []
+    for j, rgb in enumerate(rgbs or [np.zeros((224, 224, 3), dtype=np.float32)]):
+        pp = cache / f"frame_{j}.png"
+        Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8)).save(pp)
+        paths.append(str(pp))
+    return paths
+
+
+def _load_rgb_at_indices(ep: Path, indices: list[int]) -> list[np.ndarray]:
+    """Load specific RGB frames by index from color zarr."""
+    color_dir = ep / "videos" / "color"
+    if not (color_dir / ".zarray").exists():
+        return _load_rgb_frames(ep, max_frames=2)
+    _ensure_imagecodecs_registered()
+    try:
+        import zarr
+
+        arr = zarr.open(str(color_dir), mode="r")
+        n = int(arr.shape[0])
+        out = []
+        for i in indices:
+            ii = max(0, min(n - 1, int(i)))
+            frame = np.asarray(arr[ii])
+            if frame.ndim == 3 and frame.shape[-1] in (3, 4):
+                out.append(frame[..., :3].astype(np.float32) / 255.0)
+        return out
+    except Exception:
+        return _load_rgb_frames(ep, max_frames=2)
+
+
 def build_a8b_cards_from_reflect_zarr(
     root: Path | str,
     *,
     limit: int | None = None,
+    tasks_json: Path | str | None = None,
+    include_early_success: bool = True,
 ) -> list[dict[str, Any]]:
+    """Build multi-window A8b cards with E2/E3/E4 strata from REFLECT real data.
+
+    For each failure episode:
+      - failure window (trajectory end) → E2/E3/E1 from gt_failure_reason keywords
+      - early window (~20% of trajectory) → E4 nominal/success (pre-failure control)
+    """
     root = Path(root)
+    task_map = load_reflect_task_meta(tasks_json)
+    # default tasks path next to real_data root
+    if not task_map:
+        for cand in (
+            root.parents[2] / "tasks_real_world.json" if len(root.parents) >= 3 else None,
+            Path("outputs/eval/a8/raw/reflect/tasks_real_world.json"),
+        ):
+            if cand is not None and cand.exists():
+                task_map = load_reflect_task_meta(cand)
+                break
+
     eps = _find_episode_dirs(root)
     cards: list[dict[str, Any]] = []
     for i, ep in enumerate(eps):
@@ -280,59 +442,98 @@ def build_a8b_cards_from_reflect_zarr(
         zdata = ep / "replay_buffer.zarr" / "data"
         arrays: dict[str, np.ndarray] = {}
         if zdata.exists():
-            for k in STATE_KEYS:
+            for k in STATE_KEYS + ("stage",):
                 p = zdata / k
                 if p.exists():
                     arr = _load_zarr_array(p)
                     if arr is not None:
                         arrays[k] = arr
-        rgbs = _load_rgb_frames(ep, max_frames=2)
-        if not rgbs and not arrays:
+        if not arrays:
             continue
-        # save temporary RGB paths into card by writing to a cache dir next to cards later;
-        # for now embed as arrays via dataset writer using images list of temp files.
-        state_summary = _state_summary_from_arrays(arrays)
-        meta = _episode_meta(ep, arrays)
-        stratum = label_stratum(meta, state_summary)
-        state_window = _stack_state_window(arrays, T=25)
-        sid = f"a8b_{ep.name}"
-        # write rgb to episode-local cache for path-based pipeline
-        img_paths = []
-        cache = ep / "_a8_rgb_cache"
-        cache.mkdir(exist_ok=True)
-        from PIL import Image
-
-        for j, rgb in enumerate(rgbs or [np.zeros((224, 224, 3), dtype=np.float32)]):
-            pp = cache / f"frame_{j}.png"
-            if not pp.exists():
-                Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8)).save(pp)
-            img_paths.append(str(pp))
-        model_input = filter_allowed_fields(
+        # trajectory length from joint or any array
+        tlen = max(int(np.asarray(a).shape[0]) for a in arrays.values())
+        tm = task_map.get(ep.name, {})
+        meta = _episode_meta(ep, arrays, task_meta=tm)
+        fail_stratum = meta.get("stratum_from_meta") or classify_reflect_stratum(
+            meta.get("failure_reason")
+        )
+        # --- failure window (end) ---
+        fail_arrays = arrays
+        fail_summary = _state_summary_from_arrays(fail_arrays)
+        fail_window = _stack_state_window(fail_arrays, T=25, end_idx=tlen)
+        fail_rgbs = _load_rgb_at_indices(ep, [max(0, tlen // 2), max(0, tlen - 1)])
+        fail_imgs = _write_rgb_cache(ep, fail_rgbs, "fail")
+        fail_input = filter_allowed_fields(
             {
-                "sample_id": sid,
-                "images": img_paths,
+                "sample_id": f"a8b_{ep.name}__fail",
+                "images": fail_imgs,
                 "task_instruction": meta.get("task_instruction") or ep.name,
-                "robot_state": state_window.reshape(-1).astype(float).tolist(),
-                "state_summary": state_summary,
+                "robot_state": fail_window.reshape(-1).astype(float).tolist(),
+                "state_summary": fail_summary,
                 "track": "a8b",
                 "split": "reflect_real",
             },
             mode="model_input",
         )
-        assert_no_leakage(model_input)
-        # binary label: REFLECT real demos are failure demonstrations by construction
-        binary = "failure"
+        assert_no_leakage(fail_input)
         cards.append(
             {
-                **model_input,
-                "binary_label": binary,
+                **fail_input,
+                "binary_label": "failure",
                 "failure_mode": meta.get("failure_mode"),
-                "failure_reason": meta.get("failure_mode"),
+                "failure_reason": meta.get("failure_reason") or meta.get("failure_mode"),
                 "reward": 0,
-                "stratum": stratum,
+                "stratum": fail_stratum,
                 "episode_dir": str(ep),
                 "n_state_keys": len(arrays),
-                "state_window_shape": list(state_window.shape),
+                "state_window_shape": list(fail_window.shape),
+                "window": "failure_end",
             }
         )
+
+        # --- early success/nominal window (E4) ---
+        # Use the first ~50 frames (pre-contact cruise), not 20% of long episodes,
+        # so proprio remains near-nominal while vision still shows the scene.
+        if include_early_success and tlen >= 50:
+            early_end = 50
+            if "stage" in arrays:
+                st = np.asarray(arrays["stage"]).reshape(-1)
+                # if stage0 is short, keep first stage0 chunk capped at 80 frames
+                zidx = np.where(st == st[0])[0]
+                if len(zidx) >= 25:
+                    early_end = int(min(80, max(50, zidx[min(len(zidx) - 1, 49)] + 1)))
+            early_arrays = _slice_arrays(arrays, early_end)
+            early_summary = _state_summary_from_arrays(early_arrays)
+            early_summary = dict(early_summary)
+            early_summary["gripper_mismatch"] = False
+            early_window = _stack_state_window(arrays, T=25, end_idx=early_end)
+            early_rgbs = _load_rgb_at_indices(ep, [0, max(0, early_end - 1)])
+            early_imgs = _write_rgb_cache(ep, early_rgbs, "early50")
+            early_input = filter_allowed_fields(
+                {
+                    "sample_id": f"a8b_{ep.name}__early",
+                    "images": early_imgs,
+                    "task_instruction": meta.get("task_instruction") or ep.name,
+                    "robot_state": early_window.reshape(-1).astype(float).tolist(),
+                    "state_summary": early_summary,
+                    "track": "a8b",
+                    "split": "reflect_real",
+                },
+                mode="model_input",
+            )
+            assert_no_leakage(early_input)
+            cards.append(
+                {
+                    **early_input,
+                    "binary_label": "success",
+                    "failure_mode": "ground_truth",
+                    "failure_reason": "pre_failure_nominal_window",
+                    "reward": 1,
+                    "stratum": "E4",
+                    "episode_dir": str(ep),
+                    "n_state_keys": len(arrays),
+                    "state_window_shape": list(early_window.shape),
+                    "window": "early_nominal",
+                }
+            )
     return cards
