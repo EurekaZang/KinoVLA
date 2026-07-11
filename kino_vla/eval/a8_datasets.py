@@ -247,14 +247,27 @@ def write_a8a_dataset(out_dir: Path | str, cards: list[dict[str, Any]], card_met
             # placeholder black frame keeps shape stable for smoke tests; real eval skips missing
             rgb_list = [np.zeros((224, 224, 3), dtype=np.float32)]
         rgb = np.stack(rgb_list, axis=0)
-        # dummy proprio zeros (vision-only A8a)
-        proprio = np.zeros((25, 8), dtype=np.float32)
+        # dummy proprio zeros (vision-only A8a); width must match Go2 FEATURE_SCHEMA (11)
+        proprio = np.zeros((25, 11), dtype=np.float32)
         depth = np.zeros(rgb.shape[:-1], dtype=np.float32)
         frames[f"{sid}__rgb"] = rgb
         frames[f"{sid}__depth"] = depth
         frames[f"{sid}__proprio"] = proprio
         label = c.get("binary_label", "unknown")
-        thought = f"External failure verification: predicted class is {label}."
+        # Map Guardian success/failure onto the KiNO SFT schema:
+        # attribution carries the verification label; primitive must be from §5 library.
+        if label == "success":
+            thought = (
+                "The robot completed the instructed subtask successfully. "
+                "Answer: <answer> True </answer> <category> success </category>."
+            )
+            reason = "execution_success"
+        else:
+            thought = (
+                "The robot failed the instructed subtask. "
+                "Answer: <answer> False </answer> <category> failure </category>."
+            )
+            reason = "execution_failure"
         rec = {
             "sample_id": sid,
             "snapshot": {
@@ -270,15 +283,25 @@ def write_a8a_dataset(out_dir: Path | str, cards: list[dict[str, Any]], card_met
                 "depth_shape": list(depth.shape),
                 "proprio_shape": list(proprio.shape),
             },
-            "ground_truth": {"category": label, "primitive": "Hold"},
+            "ground_truth": {
+                "category": label,
+                "ab_class": "A",
+                "theta": {},
+                "feasible": ["Hold_and_Request"],
+                "canonical_primitive": "Hold_and_Request",
+                "is_sudden_trap": False,
+            },
             "annotation": {
                 "thought": thought,
                 "attribution": label,
                 "attribution_raw": label,
-                "action": {"primitive": "Hold", "params": {}},
+                "action": {
+                    "primitive": "Hold_and_Request",
+                    "params": {"reason": reason},
+                },
             },
             "verdict": {"keep": True, "reason": "a8a"},
-            "target_theta": None,
+            "target_theta": [0.0, 0.0, 0.0, 0.0],
             "ambiguity_pair": None,
             "a8": {
                 "track": "a8a",
@@ -491,15 +514,22 @@ def write_a8b_dataset(out_dir: Path | str, cards: list[dict[str, Any]], card_met
                 "depth_shape": list(depth.shape),
                 "proprio_shape": list(proprio.shape),
             },
-            "ground_truth": {"category": label, "primitive": "Hold"},
+            "ground_truth": {
+                "category": label,
+                "ab_class": "A",
+                "theta": {},
+                "feasible": ["Hold_and_Request"],
+                "canonical_primitive": "Hold_and_Request",
+                "is_sudden_trap": False,
+            },
             "annotation": {
                 "thought": f"Cross-modal failure attribution on external episode ({c.get('stratum')}).",
                 "attribution": label,
                 "attribution_raw": label,
-                "action": {"primitive": "Hold", "params": {}},
+                "action": {"primitive": "Hold_and_Request", "params": {"reason": "execution_failure"}},
             },
             "verdict": {"keep": True, "reason": "a8b"},
-            "target_theta": None,
+            "target_theta": [0.0, 0.0, 0.0, 0.0],
             "ambiguity_pair": None,
             "a8": {
                 "track": "a8b",
