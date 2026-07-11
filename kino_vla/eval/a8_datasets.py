@@ -34,30 +34,50 @@ def _load_rgb(path: Path, size: tuple[int, int] = (224, 224)) -> np.ndarray:
 
 
 def parse_binary_label(text: str | None, reward: float | int | None = None) -> str:
-    """Map Guardian-style answers to success|failure."""
+    """Map Guardian-style answers to success|failure.
+
+    Guardian InternVL answers look like:
+      ``<answer> False </answer> <category> ...``
+      ``<answer> True </answer> <category> success </category>``
+    where True=success and False=failure.
+    """
+    t = (text or "").strip()
+    # Prefer explicit <answer> tags over reward when both exist (reward can be missing).
+    m = re.search(r"<answer>\s*(true|false|success|failure|yes|no|1|0)\s*</answer>", t, flags=re.I)
+    if m:
+        tok = m.group(1).lower()
+        if tok in {"true", "success", "yes", "1"}:
+            return "success"
+        if tok in {"false", "failure", "no", "0"}:
+            return "failure"
     if reward is not None:
         try:
             return "success" if float(reward) >= 0.5 else "failure"
         except (TypeError, ValueError):
             pass
-    t = (text or "").strip().lower()
-    # common patterns: "Success", "Failure: slip", "The execution failed"
-    if any(tok in t for tok in ("success", "succeeded", "completed successfully")):
-        if "fail" not in t[:20]:
+    tl = t.lower()
+    # category success
+    if re.search(r"<category>\s*success\s*</category>", tl):
+        return "success"
+    if any(tok in tl for tok in ("failure", "failed", "fail", "error", "wrong object", "no close", "no progress")):
+        # avoid matching "successfully failed" nonsense; still treat explicit fail words as failure
+        if "success" in tl and "fail" not in tl:
             return "success"
-    if any(tok in t for tok in ("failure", "failed", "fail", "error")):
         return "failure"
-    head = re.split(r"[\s:,.]", t)[0] if t else ""
+    if any(tok in tl for tok in ("success", "succeeded", "completed successfully")):
+        return "success"
+    head = re.split(r"[\s:,.]", tl)[0] if tl else ""
     if head in SUCCESS_TOKENS:
         return "success"
     if head in FAIL_TOKENS:
         return "failure"
-    return "failure" if "fail" in t else "success" if "success" in t else "unknown"
+    return "unknown"
 
 
 def extract_gt_from_internvl_row(row: dict[str, Any]) -> dict[str, Any]:
     """Pull ground-truth answer/category from InternVL conversation or metadata fields."""
     gt_answer = row.get("ground_truth_answer") or row.get("label")
+    category = None
     if gt_answer is None:
         conv = row.get("conversations") or []
         # last gpt turn
@@ -65,13 +85,18 @@ def extract_gt_from_internvl_row(row: dict[str, Any]) -> dict[str, Any]:
             if turn.get("from") in {"gpt", "assistant"}:
                 gt_answer = turn.get("value")
                 break
+    if isinstance(gt_answer, str):
+        mcat = re.search(r"<category>\s*(.*?)\s*</category>", gt_answer, flags=re.I | re.S)
+        if mcat:
+            category = mcat.group(1).strip()
     reward = row.get("reward", row.get("execution_reward", row.get("planning_reward")))
     binary = parse_binary_label(str(gt_answer) if gt_answer is not None else None, reward)
+    failure_mode = row.get("failure_mode") or category
     return {
         "ground_truth_answer": gt_answer,
         "binary_label": binary,
-        "failure_mode": row.get("failure_mode"),
-        "failure_reason": row.get("failure_reason"),
+        "failure_mode": failure_mode,
+        "failure_reason": row.get("failure_reason") or category,
         "reward": reward,
         "task_instruction": row.get("task_instruction")
         or row.get("instruction")

@@ -16,6 +16,13 @@ from kino_vla.eval.a8_leakage import EVAL_ONLY_FIELDS
 def test_parse_binary_label():
     assert parse_binary_label("Success", 1) == "success"
     assert parse_binary_label("Failure: slip", 0) == "failure"
+    assert (
+        parse_binary_label(
+            "<answer> False </answer> <category> wrong object state or placement: x </category>"
+        )
+        == "failure"
+    )
+    assert parse_binary_label("<answer> True </answer> <category> success </category>") == "success"
 
 
 def test_a8a_cards_strip_leakage(tmp_path: Path):
