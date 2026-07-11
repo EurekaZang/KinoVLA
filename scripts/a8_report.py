@@ -100,14 +100,29 @@ def render(cfg: dict[str, Any], config_path: str) -> str:
         lines.append("")
         lines.append("#### Same-backbone rows")
         lines.append("")
-        lines.append("| Split | Accuracy (Wilson) | macro-F1 |")
-        lines.append("|---|---|---:|")
+        lines.append("| Split | Status | Accuracy (Wilson) | macro-F1 |")
+        lines.append("|---|---|---|---:|")
         for split, cell in sorted((zs.get("splits") or {}).items()):
-            lines.append(
-                f"| {split} | {_fmt_cell(cell.get('accuracy'))} | {cell.get('macro_f1', '—')} |"
-            )
+            status = cell.get("status", "unknown")
+            # Do not present heuristic placeholders as headline numbers without a marker.
+            if status == "heuristic_placeholder":
+                lines.append(
+                    f"| {split} | heuristic_placeholder (not headline) | {_fmt_cell(cell.get('accuracy'))} | {cell.get('macro_f1', '—')} |"
+                )
+            else:
+                lines.append(
+                    f"| {split} | {status} | {_fmt_cell(cell.get('accuracy'))} | {cell.get('macro_f1', '—')} |"
+                )
         if not (zs.get("splits")):
-            lines.append("| — | no split rows yet | — |")
+            lines.append("| — | — | no split rows yet | — |")
+        if a8a.get("headline_ur5_zero_shot"):
+            h = a8a["headline_ur5_zero_shot"]
+            lines.append("")
+            lines.append(
+                f"- **Headline real ZS (UR5-Fail exec):** acc={h.get('acc')} "
+                f"CI={h.get('ci')} macro-F1={h.get('macro_f1')} "
+                f"failure_recall={h.get('failure_recall')} success_recall={h.get('success_recall')} n={h.get('n')}"
+            )
     lines.append("")
     lines.append("### 4.2 A8b — Multi-sensory conflict transfer")
     lines.append("")
