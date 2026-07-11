@@ -121,18 +121,40 @@ def resolve_image_paths(row: dict[str, Any], split_root: Path) -> list[Path]:
         images = [images]
     paths: list[Path] = []
     for rel in images:
-        p = Path(rel)
-        if not p.is_absolute():
-            # try split root and records/
-            for base in (split_root, split_root / "records", split_root.parent):
-                cand = base / rel
-                if cand.exists():
-                    p = cand
-                    break
-            else:
-                p = split_root / rel
-        if p.exists():
+        rel_s = str(rel)
+        p = Path(rel_s)
+        if p.is_absolute() and p.exists():
             paths.append(p)
+            continue
+        # Common layouts after tar extract:
+        #   split/records/<rel>
+        #   split/records/records/<rel>   (double-nested extract)
+        #   split/<rel>
+        #   split/records/<rel without records/ prefix>
+        rel_noprefix = rel_s.removeprefix("records/").removeprefix("data/failure_forge/data/")
+        candidates = [
+            split_root / rel_s,
+            split_root / "records" / rel_s,
+            split_root / "records" / "records" / rel_s,
+            split_root / "records" / rel_noprefix,
+            split_root / "records" / "records" / rel_noprefix,
+            split_root / rel_noprefix,
+            # OOD bundle paths like data/failure_forge/data/robofail_dataset/records/...
+            split_root / "records" / Path(rel_noprefix).name,
+        ]
+        # also try stripping leading dataset folders after /records/
+        if "/records/" in rel_s:
+            tail = rel_s.split("/records/", 1)[1]
+            candidates.extend(
+                [
+                    split_root / "records" / tail,
+                    split_root / "records" / "records" / tail,
+                    split_root / tail,
+                ]
+            )
+        found = next((c for c in candidates if c.exists()), None)
+        if found is not None:
+            paths.append(found)
     return paths
 
 
