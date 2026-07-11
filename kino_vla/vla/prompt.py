@@ -36,19 +36,47 @@ ROUTES = ("text", "latent")
 # Proprioception fidelity levels for the text route (the §3 information-fidelity ablation):
 #   "binned" — the full per-channel time-series (the oracle-granularity serialization, B4);
 #   "scalar" — only the sustained means + tilt peak (the realistic REFLECT-style text summary);
+#   "rich"   — derived per-channel statistics (mean/std/min/max/slope) plus traces for A7;
 #   "none"   — no proprioception at all (the vision-only floor: how appearance-solvable is it?).
 # The latent route (B5) carries the full window as Kino-Tokens regardless of this knob.
-PROPRIO_DETAILS = ("binned", "scalar", "none")
+PROPRIO_DETAILS = ("binned", "scalar", "rich", "none")
 _SCALAR_KEYS = ("slip_mean", "effort_mean", "tracking_mean", "base_height_mean", "tilt_peak")
+_TRACE_PREFIXES = ("slip", "effort", "tracking", "base_height")
+
+
+def _rich_stats_from_summary(summary: dict) -> dict:
+    """A7 rich text schema: traces plus derived stats, without privileged θ leakage.
+
+    The frozen prompt path already exposes observable proprio traces via ``_proprio_summary``. A7's
+    rich-text arm keeps those traces and adds deterministic reductions that a text-only model could
+    reasonably compute from the same window: std/min/max/range/slope over the down-sampled trace.
+    It intentionally does NOT include the privileged ``target_theta`` vector.
+    """
+    out = dict(summary)
+    for prefix in _TRACE_PREFIXES:
+        key = f"{prefix}_trace"
+        vals = summary.get(key)
+        if not isinstance(vals, list) or not vals:
+            continue
+        xs = [float(v) for v in vals]
+        mean = sum(xs) / len(xs)
+        var = sum((x - mean) ** 2 for x in xs) / len(xs)
+        out[f"{prefix}_std"] = round(math.sqrt(var), 3)
+        out[f"{prefix}_min"] = round(min(xs), 3)
+        out[f"{prefix}_max"] = round(max(xs), 3)
+        out[f"{prefix}_range"] = round(max(xs) - min(xs), 3)
+        out[f"{prefix}_slope"] = round(xs[-1] - xs[0], 3)
+    return out
 
 
 def _reduce_proprio(summary: dict, detail: str) -> dict | None:
-    """Drop the per-channel traces for the lower-fidelity text arms (spec §3 ablation).
+    """Drop or enrich proprio text for the §3/A7 information-fidelity arms.
 
     ``binned`` keeps the full waveform; ``scalar`` keeps only the sustained means (discarding the
     temporal SHAPE that separates the matched pairs — a slip STEP vs flat-high, a crouch onset);
-    ``none`` returns ``None`` (no proprioception). This is the information-fidelity axis the latent
-    route is claimed to dominate — NOT a hobbled text route but a realistic one at each budget.
+    ``rich`` adds per-channel statistics to the waveform; ``none`` returns ``None``. This is the
+    information-fidelity axis the latent route is tested against — not a hobbled text route but a
+    realistic one at each budget.
     """
     if detail == "none":
         return None
@@ -56,6 +84,8 @@ def _reduce_proprio(summary: dict, detail: str) -> dict | None:
         return summary
     if detail == "scalar":
         return {k: summary[k] for k in _SCALAR_KEYS if k in summary}
+    if detail == "rich":
+        return _rich_stats_from_summary(summary)
     raise ValueError(f"proprio_detail must be one of {PROPRIO_DETAILS}, got {detail!r}")
 
 
@@ -175,6 +205,11 @@ def user_text(ctx: PlannerContext, *, route: str = "latent") -> str:
     elif ctx.proprio_detail == "scalar":
         proprio_line = (
             "- proprioceptive summary (500 ms sustained means): "
+            f"{json.dumps(ctx.proprio_summary)}\n"
+        )
+    elif ctx.proprio_detail == "rich":
+        proprio_line = (
+            "- proprioceptive rich summary (500 ms traces + derived stats): "
             f"{json.dumps(ctx.proprio_summary)}\n"
         )
     else:

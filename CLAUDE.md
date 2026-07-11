@@ -38,7 +38,7 @@ Claims (full text: `experiments_design.md` §0.1):
 
 ## 2. Progress State _(EDIT EVERY SESSION)_
 
-**Current work:** Paper-A experiment battery (`experiments_design.md` v1.1). KiNO substrate M0–M7 complete on RTX 5090 / Go2; “M8” = Paper-A eval.
+**Current work:** Paper-A experiment battery (`experiments_design.md` v1.1) complete through A7 and manuscript polishing. KiNO substrate M0–M7 complete on RTX 5090 / Go2; “M8” = Paper-A eval.
 
 **Experiment status (real-Go2 unless stated):**
 
@@ -50,7 +50,8 @@ Claims (full text: `experiments_design.md` §0.1):
 - **A5 DONE (C4).** Appearance OOD scales with modality reliance (B-V −0.21 worst, B1 −0.03 least); LOO-O5 rescued by OOD-θ residual 16.09 ⇒ abstain/Hold ⇒ 100% safe; LOO-O8 is contact-mode boundary; composition 16/16; abstention AUROC 0.87; risk-coverage 1.63 < always 2.80 and never 1.71. See `A实验/A5.md`, `outputs/eval/a5/`.
 - **A6 DONE (C4).** O10 θ\*=0.2754 from privileged base sweep (reach 1.0 at floors 0.4/0.3, 0.0 at 0.25/0.2/0.15); OOD-θ residual tracks θ\* (0.629→0.949, crosses ~0.85); O2 remains modality-dependent (proprio detector fires, cross-modal agent attributes compliant terrain). See `A实验/A6.md`, `outputs/eval/a6/`.
 - **E4 precursor DONE/PARTIALLY UNBLOCKED.** A/B-aware monitor (`monitor_abaware`) cuts A-class false-fire 5–80×; hardened debounce 25 gives O10 left endpoint (b1 reach 1.00 at floors 0.9/0.7/0.4). See `A实验/E4.md`, `outputs/eval/e4/`.
-- **Pending:** **A7** method ablations (latent-vs-text, ERS/regret ranking, OOD-θ abstention, θ\*-residual, conflict-data dose curve). **A8** real-world snapshots optional.
+- **A7 DONE (C2 method ablations) — publication-grade, protocol-clean.** Real artifact-backed A7 under config hash `1640c26279ef`. **Headline conflict-dose is single-recipe only** (unique-sample `dose_XX` + epochs=4 + nav_weight=1.0): best mean O4 attr at **dose 10 = 0.733** (range 0.6–0.8); ERS best regret dose 10 = 0.40; protocol dose5 is unstable (mean 0.333, seed1 O4=0.0) and is reported honestly—not replaced by unequal-recipe adapters. Unequal-recipe upsample×8/epochs=6 stabilization is **sensitivity-only** under `conflict_dose/sensitivity_dose05_upsample/`. Latent-vs-text pure injection claim is the M7 route table (vision 0.458 vs text/latent 1.0; θ head; token ratio 1.27); taxonomy T3/grounding deltas are curriculum-confounded and not sold as pure injection. Truth-filter GC 0.604→0.765; test-time emitted GC up to 0.8; encoder 18/18; A7.1 n=588. No surrogates. See `A实验/A7.md`, `outputs/eval/a7/`.
+- **Pending:** **A8** real-world snapshots optional.
 
 **Sim gates:** `pytest -m sim` covers stand, walking/map, M2/M3/M4/M5/M6, decoupled route-around, multi-patch, E1 C2ST, E2/E4 infra, A0.1 determinism, A4 matrix. Fast gate: `env -u PYTHONPATH pytest -m "not slow"` (green incl. A0/A1/A2/A4 tests; use env drop to avoid ROS/`lark` collection issues).
 
@@ -85,7 +86,14 @@ Claims (full text: `experiments_design.md` §0.1):
 2026-07-04 | A4 C3 done: 630-episode label-swap matrix, cost asymmetry, safe default, regret. | A实验/A4.md; outputs/eval/a4/
 2026-07-04 | A5 C4 done: appearance/composition generalization, OOD-θ abstention, safe coverage; O5 rescue, O8 boundary. | A实验/A5.md; outputs/eval/a5/
 2026-07-04 | A6 C4 done: O10 θ*=0.2754 + OOD-θ residual tracking + O2 modality-dependence. | A实验/A6.md; outputs/eval/a6/
+2026-07-07 | A7 method ablations completed: latent-vs-text, 3-seed conflict-dose (best mean dose 10), real ApiOracle truth-filter gain, ERS/regret, OOD-θ/θ* method add-ons, and full 18-cell encoder grid on real binding windows. | A实验/A7.md; outputs/eval/a7/
+2026-07-07 | Paper-A manuscript rewritten from claim-ledger/technical-report style into problem-first ICRA narrative while preserving A0--A7 evidence scope. | paper/main.tex; paper/main.pdf; docs/superpowers/specs/2026-07-07-problem-first-paper-rewrite-design.md
+2026-07-09 | A7.1 publication-hardening pass: restored direct VLA posterior cache sidecars, fixed ensemble-variance regeneration, preserved exact A7.1 thresholds for traceability, corrected posterior reliability/ECE to use posterior-argmax correctness (ECE 0.471 diagnostic), regenerated A7 report wording, and verified gates. | A实验/A7.md; outputs/eval/a7/abstention_baselines/summary.json; outputs/eval/a7/calibration/ece.json; tests/test_a7_ablation.py; env -u PYTHONPATH ~/miniconda3/envs/kinovla/bin/python -m pytest -m "not slow" -q
+2026-07-09 | A7 full ICRA-hardening audit: closed test-time emitted-rationale grounding (best GC 0.8) and paired T4 taxonomy falsifier; no surrogates. | A实验/A7.md; outputs/eval/a7/{test_time_grounding,text_schema_taxonomy}; scripts/a7_eval.py
+2026-07-09 | A7 protocol integrity fix: demoted unequal-recipe dose5 upsample push to sensitivity-only; restored protocol-matched seed1/2 dose05 adapters+per_items+train_meta; headline dose knee back to protocol dose10 (mean O4 0.733, ERS regret 0.40); narrowed latent-vs-rich T3/grounding claims as curriculum-confounded. | A实验/A7.md; outputs/eval/a7/conflict_dose/{summary.json,sensitivity_dose05_upsample}; scripts/a7_report.py; tests/test_a7_ablation.py
 ```
+
+
 
 ---
 
@@ -102,5 +110,6 @@ A3 SCOPE — no blocker. B5-conflict-bi is a conflict-only T2/T3 specialist (tra
 A4 SCOPE — no blocker. Sim has no distinct gait; Regret is headline, ERS upper-bound; A1.3 real-Go2 two-phase spot-check is follow-up; O7 looks-safe crossable and O10_decay_B below θ*. See A实验/A4.md.
 A5 SCOPE — no blocker. A5.1 uses procedural appearance OOD; LOO-O8 remains contact-mode/nominal-θ boundary needing active probing; B1 AUROC=0.25 is anti because θ-residual is a VLM/fusion abstention signal. See A实验/A5.md.
 A6 SCOPE — no blocker. Literal snapshot continue/intervene flip did not hold; result is abstention-residual-tracks-θ*. O2 agents emit benign Switch_Gait rather than literal continue; θ* located only for O10. See A实验/A6.md.
-Pending experiments — A7 method ablations; A8 optional real-world snapshots.
+A7 SCOPE — no blocker; protocol-clean post-hardening. No surrogate substitution. Headline dose axis is unique-sample/epochs=4 only (best mean dose10); dose5 collapses stay in the protocol curve; upsample push is sensitivity-only. Greedy latent vs text ties on M7 ambiguity; T4 taxonomy match-at-floor among conflict packages; taxonomy T3/grounding not pure injection (curriculum confound). Conformal UCB empirical not formal; ECE 0.471 diagnostic. See A实验/A7.md.
+Pending experiments — A8 optional real-world snapshots.
 ```

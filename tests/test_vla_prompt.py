@@ -104,6 +104,12 @@ def test_proprio_fidelity_levels_render_distinctly(cfg):
     assert "slip_mean" in t_scalar  # the sustained mean survives
     assert "slip_trace" not in t_scalar and "effort_trace" not in t_scalar  # the SHAPE is dropped
     assert "sustained means" in t_scalar
+    t_rich = user_text(
+        context_from_snapshot(snap, route="text", proprio_detail="rich"), route="text"
+    )
+    assert "rich summary" in t_rich
+    assert "slip_trace" in t_rich and "slip_std" in t_rich and "slip_slope" in t_rich
+    assert "target_theta" not in t_rich and "privileged_theta" not in t_rich
     ctx_none = context_from_snapshot(snap, route="text", proprio_detail="none")
     t_none = user_text(ctx_none, route="text")
     assert ctx_none.proprio_summary is None  # vision-only floor
@@ -118,6 +124,9 @@ def test_reduce_proprio_keeps_means_drops_traces(cfg):
     assert _reduce_proprio(full, "binned") == full
     scalar = _reduce_proprio(full, "scalar")
     assert set(scalar) <= set(_SCALAR_KEYS) and all("trace" not in k for k in scalar)
+    rich = _reduce_proprio(full, "rich")
+    assert "slip_trace" in rich and "slip_std" in rich and "slip_slope" in rich
+    assert "target_theta" not in rich and "privileged_theta" not in rich
     assert _reduce_proprio(full, "none") is None
 
 
