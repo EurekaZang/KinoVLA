@@ -108,7 +108,10 @@ def git_commit() -> str:
 
 
 def artifact_meta(
-    config_path: str | Path, *, sources: dict[str, str] | None = None
+    config_path: str | Path,
+    *,
+    sources: dict[str, str] | None = None,
+    experiment: str | None = None,
 ) -> dict[str, Any]:
     src_hashes: dict[str, str] = {}
     for name, path in (sources or {}).items():
@@ -119,8 +122,15 @@ def artifact_meta(
             src_hashes[name] = sha256_file(p)
         else:
             src_hashes[name] = "missing"
+    exp = experiment
+    if exp is None:
+        try:
+            cfg = load_yaml(config_path)
+            exp = str(cfg.get("experiment") or "unknown")
+        except Exception:
+            exp = "unknown"
     return {
-        "experiment": "A7",
+        "experiment": exp,
         "config_path": str(config_path),
         "config_sha256": config_hash(config_path),
         "commit": git_commit(),
