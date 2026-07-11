@@ -1,0 +1,102 @@
+experiment: A8
+output_dir: outputs/eval/a8
+
+seeds:
+  train: [0, 1, 2]
+  split_seed: 0
+  eval_seed: 0
+
+model:
+  model_id: /home/eureka/models/Qwen3-VL-4B-Instruct
+  # Fixed LoRA budget for all same-backbone method rows (not Guardian-8B).
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.05
+  train:
+    epochs: 2
+    lr: 1.0e-4
+    batch_size: 1
+
+statistics:
+  ci: wilson
+  ci_level: 0.95
+  bootstrap_n: 2000
+  mcnemar: exact_two_sided
+
+prompt_policy: execution_vanilla  # fixed across same-backbone A8a rows
+
+guardian:
+  root: outputs/eval/a8/raw/guardian
+  train:
+    - repo: paulpacaud/rlbenchfail_train_dataset
+      name: rlbenchfail_train
+    - repo: paulpacaud/bdv2fail_train_dataset
+      name: bdv2fail_train
+    - repo: paulpacaud/ur5fail_train_dataset
+      name: ur5fail_train
+      optional: true
+  test:
+    - repo: paulpacaud/rlbenchfail_test_dataset
+      name: rlbenchfail_test
+    - repo: paulpacaud/bdv2fail_test_dataset
+      name: bdv2fail_test
+    - repo: paulpacaud/ur5fail_test_dataset
+      name: ur5fail_test
+    - repo: paulpacaud/Guardian-FailCoT-OOD-datasets
+      name: ood_bundle
+
+reflect:
+  root: outputs/eval/a8/raw/reflect
+  real_url: https://www.cs.columbia.edu/~liuzeyi/reflect_data/real_data.zip
+  sim_url: https://www.cs.columbia.edu/~liuzeyi/reflect_data/sim_data.zip
+  tasks_url: https://www.cs.columbia.edu/~liuzeyi/reflect_data/tasks_real_world.json
+  require_real: true
+  download_sim_if_real_insufficient: true
+
+a8a:
+  rows:
+    - name: zero_shot
+      train: null
+      input: rgb
+    - name: failcot_sft
+      train: failcot_sft
+      input: rgb
+    - name: kino_general_masked
+      train: kino_general
+      input: rgb
+      mask_proprio: true
+  reference:
+    - name: guardian_8b_paper
+      role: reference_only
+
+a8b:
+  arms: [v_only, p_only, concat, text, latent, latent_conflict]
+  strata: [E1, E2, E3, E4]
+  admission_gate: outputs/eval/a8/a8b_state_audit.json
+
+leakage:
+  allowed_input_fields:
+    - images
+    - image
+    - views
+    - task_instruction
+    - instruction
+    - robot_state
+    - proprio
+    - proprio_window
+    - state_window
+    - state_summary
+  eval_only_fields:
+    - failure_mode
+    - failure_reason
+    - reward
+    - planning_reward
+    - execution_reward
+    - start_caption
+    - end_caption
+    - gt_item
+    - wrong_item
+    - ground_truth_answer
+    - label
+    - stratum
