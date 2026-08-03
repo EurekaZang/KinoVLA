@@ -1,0 +1,192 @@
+{
+  "schema_version": "kinofail.o4-action-consequence-v35-development-freeze.v1",
+  "created_utc": "2026-07-23T09:45:00Z",
+  "freeze_status": "frozen_before_first_v35_development_execution",
+  "purpose": "One-shot development falsification of the v35 state-triggered adaptive Backstep architecture on the complete frozen v36 realistic cohort. This is not held-out confirmation and is not A0-A7 evidence.",
+  "cohort_postrun": {
+    "path": "outputs/kinofail_realistic/operator_development/o4_action_v36_scene_stream/postrun_audit.json",
+    "sha256": "1befb48fe8c2e4e483e6f08b6406d6c90863dff813776387c25005589f875a85",
+    "json_passed": true,
+    "json_sealed": true
+  },
+  "runtime_source": {
+    "version": "v32_early_branch_full_horizon_architecture",
+    "path": "configs/data/kinofail_o4_action_consequence_v32_development_freeze_v1.json",
+    "sha256": "1637f3856591881def98bef491551de442fde08ca35c1d4d78e91348b411aece",
+    "inheritance": "Every runtime field is exact except the collector revision and two preregistered v35 additions in architecture_delta."
+  },
+  "architecture_delta": {
+    "emergency_backstep_speed_mps": {"v32": null, "v35": 0.48},
+    "maximum_postdecision_forward_penetration_m": {"v32": null, "v35": 0.025},
+    "trigger_inputs": "body_state_only_no_scene_identity_or_adhesion_release",
+    "latching": true
+  },
+  "phase_aware_route_contract": {
+    "route_budget_m": 0.3,
+    "matched_prefix_within_route_budget": true,
+    "backstep_full_horizon_within_route_budget": true,
+    "continue_through_physical_failure_onset_within_route_budget": true,
+    "physical_failure_onset": {
+      "tilt_rad_at_least": 0.08,
+      "height_drop_m_at_least": 0.02,
+      "conjunction_required": true,
+      "route_deviation_used_to_define_onset": false
+    },
+    "continue_post_onset_deviation_reported_not_gated": true,
+    "legacy_full_horizon_continue_deviation_retained": true
+  },
+  "visual_qa_contract": {
+    "strict_labels": ["initial", "decision", "backstep_outcome"],
+    "strict_minimum_std_luminance": 0.025,
+    "strict_maximum_black_fraction": 0.95,
+    "strict_minimum_quantized_color_count_5bit": 32,
+    "minimum_mean_luminance": 0.02,
+    "maximum_mean_luminance": 0.98,
+    "fallen_continue_outcome_maximum_black_fraction": 0.98,
+    "fallen_continue_outcome_minimum_quantized_color_count_5bit": 16
+  },
+  "evidence_policy": {
+    "development_only": true,
+    "counts_as_realistic_o4_operator_confirmation": false,
+    "counts_as_a0_a7_evidence": false,
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "a8_in_scope": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "successful_v35_development_requires_fresh_heldout_confirmation": true
+  },
+  "execution_policy": {
+    "one_attempt_per_scene": true,
+    "execute_every_case_regardless_of_prior_outcome": true,
+    "scene_removal_after_outcome_forbidden": true,
+    "parameter_changes_after_preflight_forbidden": true,
+    "all_attempts_retained_and_sealed": true,
+    "rerun_on_v35_development_scenes_forbidden": true,
+    "unprocessed_v36_suffix_169_184_forbidden": true
+  },
+  "operator_output_root": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep",
+  "scene_exclusions": [
+    "indoor_livingroom_45", "indoor_kitchen_46", "indoor_bathroom_49",
+    "indoor_office_72", "indoor_livingroom_73", "indoor_kitchen_74", "indoor_office_78",
+    "indoor_office_84", "indoor_house_87", "indoor_office_90", "indoor_livingroom_91",
+    "indoor_office_96", "indoor_bedroom_100", "indoor_office_102", "indoor_house_105",
+    "indoor_diningroom_113", "indoor_office_114", "indoor_livingroom_115", "indoor_bedroom_118", "indoor_kitchen_122",
+    "indoor_livingroom_139", "indoor_kitchen_140", "indoor_livingroom_151", "indoor_house_153", "indoor_office_156", "indoor_livingroom_157"
+  ],
+  "runtime": {
+    "camera_profile": "go2_front_calib_b",
+    "horizon_steps": 300,
+    "minimum_decision_dwell_steps": 1,
+    "maximum_decision_dwell_steps": 1,
+    "decision_tilt_urgency_rad": 0.08,
+    "decision_height_drop_urgency_m": 0.02,
+    "decision_urgency_dwell_steps": 2,
+    "maximum_backstep_steps": 300,
+    "target_recovery_distance_m": 0.2,
+    "minimum_recovery_distance_m": 0.15,
+    "adhesion_clearance_dwell_steps": 5,
+    "forward_speed_mps": 0.32,
+    "backstep_speed_mps": 0.24,
+    "maximum_route_deviation_m": 0.3,
+    "tangential_force_cap_n": 18.0,
+    "normal_force_cap_n": 8.0,
+    "peel_height_m": 0.025,
+    "unload_steps_to_peel": 3,
+    "reattach_cooldown_steps": 2,
+    "max_active_feet": 2,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.2,
+    "yaw_rate_limit_radps": 0.6,
+    "collector_sha256": "90a9d00d7d27334987789846782ca09f34ee7bc5b349c34676bbc59fa4bdb4bd",
+    "surface_interface_sha256": "9ca3b51941ff878f8762e5c2a3b1e121c396b4aea01e86f97065d0a0778282db",
+    "surface_model_sha256": "a634078b425a336be6a0fca67e3df6434ea1fa3d24e43187ec9c559447984fea",
+    "backend_adapter_sha256": "d7ba7375acb9a0290ad2e5a8810198f2fb55fdb9e476939bdad61e88d68e7481",
+    "parent_backend_adapter_sha256": "954a27cc79ae42c32f2ab13dee1f3aff5d383b8f44ecff572fb09ff352a172a1",
+    "emergency_backstep_speed_mps": 0.48,
+    "maximum_postdecision_forward_penetration_m": 0.025
+  },
+  "locked_files": [
+    {"path": "scripts/isaac_collect_o4_action_consequence_v35.py", "sha256": "90a9d00d7d27334987789846782ca09f34ee7bc5b349c34676bbc59fa4bdb4bd"},
+    {"path": "scripts/run_o4_action_development_v35.py", "sha256": "ea3b4b3f1dcaad1971a819fe083344d226b1228e5bd9d7d40c37142d842efc30"},
+    {"path": "scripts/audit_o4_action_consequence_v35_development_preflight.py", "sha256": "3aac98dee160f6d28494389d6ddab7e4696437a40a704cb73d05946c6944069c"},
+    {"path": "scripts/audit_o4_action_consequence_v35_development_postrun.py", "sha256": "9bf0a18dca7eccc0d225379c17fdc3cc3813325c945d96df9a7c186fbb94b1c9"},
+    {"path": "tests/test_o4_action_consequence_v35.py", "sha256": "f8472bb0c8ebaa9c6213e1dbd63a08f74f29655abc468e939210363b784345db"},
+    {"path": "tests/test_o4_action_consequence_v35_audit.py", "sha256": "8b74fe82604a762d12a5f6fe08b1ed4b0f855e9c03dffe9faa5124f0565d1403"},
+    {"path": "scripts/audit_o4_action_consequence_v34_confirmation_postrun.py", "sha256": "06ea47fd2ec7c3cf795b61a73317f600a08fd95b0c16285db2ca212e279ee672"},
+    {"path": "scripts/audit_o4_action_consequence_v32_development_postrun.py", "sha256": "cd27095cf413b6631e5a16c277d0a1fbf8dbb77fe6b9113dcc82a0f49f620f8c"},
+    {"path": "scripts/audit_o4_action_consequence_v27_development_postrun.py", "sha256": "3b28ffdb2e44bd6e84c922e933fd48a2866be199a4c985f9aac44dbe88f2a1d9"},
+    {"path": "configs/data/kinofail_o4_action_consequence_v32_development_freeze_v1.json", "sha256": "1637f3856591881def98bef491551de442fde08ca35c1d4d78e91348b411aece"},
+    {"path": "configs/data/kinofail_o4_scene_stream_v36_development_acquisition_freeze_v1.json", "sha256": "8af273e48cbba62d2be883639704e9c0ccab82a7a048b2e0f057dc1e0c57488e"},
+    {"path": "outputs/kinofail_realistic/operator_development/o4_action_v36_scene_stream/postrun_audit.json", "sha256": "1befb48fe8c2e4e483e6f08b6406d6c90863dff813776387c25005589f875a85", "json_passed": true, "json_sealed": true},
+    {"path": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_heldout_confirmation/postrun_audit.json", "sha256": "ad772be27917ceadac9cffa86f782740ee29159b0aa7a33119b20329a58bfae0", "json_passed": false, "json_sealed": true},
+    {"path": "kino_vla/sim/adhesion_v3.py", "sha256": "9ca3b51941ff878f8762e5c2a3b1e121c396b4aea01e86f97065d0a0778282db"},
+    {"path": "kino_vla/sim/adhesion_v2.py", "sha256": "a634078b425a336be6a0fca67e3df6434ea1fa3d24e43187ec9c559447984fea"},
+    {"path": "kino_vla/sim/isaac_o4_v3_backend.py", "sha256": "d7ba7375acb9a0290ad2e5a8810198f2fb55fdb9e476939bdad61e88d68e7481"},
+    {"path": "kino_vla/sim/isaac_o4_v2_backend.py", "sha256": "954a27cc79ae42c32f2ab13dee1f3aff5d383b8f44ecff572fb09ff352a172a1"},
+    {"path": "outputs/locomotion/policy.pt", "sha256": "167633df29b6c29db8864869338dc829249be60665d598bb206354bd1daca3f3"},
+    {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"}
+  ],
+  "cases": [
+    {
+      "scene_id": "indoor_office_162", "room_family": "Office", "runtime_seed": 20261482, "material_id": "train_tiles141", "operator": "o4_adhesive_contact_action_branch_v35_adaptive_backstep",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261481/route_surface_o4_v36_development_stream/train_tiles141/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v36_candidate_receipt": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261481_v30_candidate_receipt.json", "sha256": "f58a07f028e75e7dc46dac83aa25833b89152dbe85d40958d6021dfbe5b1b275", "json_passed": true, "json_sealed": true},
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261481/route_surface_o4_v36_development_stream/train_tiles141/terrain_route_v2/compiled_scene_audit.json", "sha256": "29cb1400a8f8bfff2066b60ff4d58f5fff6cf4b2dad95207c6d80b97d6af18df", "json_passed": true},
+        "stack_v17_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261481/route_surface_o4_v36_development_stream/train_tiles141/terrain_route_v2/realistic_stack_v17_admission.json", "sha256": "312f1f13bad33c491b5d75c4d0c09164785093002644103df537af23b74f88f9", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/indoor_office_162/attempt1"
+    },
+    {
+      "scene_id": "indoor_livingroom_163", "room_family": "LivingRoom", "runtime_seed": 20261484, "material_id": "val_tiles139", "operator": "o4_adhesive_contact_action_branch_v35_adaptive_backstep",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261483/route_surface_o4_v36_development_stream/val_tiles139/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v36_candidate_receipt": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261483_v30_candidate_receipt.json", "sha256": "8896880588dcbf95abd8f672a00e8f355e37178599de9ebe2a622a7e90240ea0", "json_passed": true, "json_sealed": true},
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261483/route_surface_o4_v36_development_stream/val_tiles139/terrain_route_v2/compiled_scene_audit.json", "sha256": "d264dd22e6be6f61959ecd1108b1c6cdccaeb4b670696a4c76c04600e17b5d77", "json_passed": true},
+        "stack_v17_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261483/route_surface_o4_v36_development_stream/val_tiles139/terrain_route_v2/realistic_stack_v17_admission.json", "sha256": "fea72ef32b93a5da789972189ce58a467f22dd9ff38c6cccb64ae62e185dc08b", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/indoor_livingroom_163/attempt1"
+    },
+    {
+      "scene_id": "indoor_kitchen_164", "room_family": "Kitchen", "runtime_seed": 20261486, "material_id": "test_tiles140", "operator": "o4_adhesive_contact_action_branch_v35_adaptive_backstep",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261485/route_surface_o4_v36_development_stream/test_tiles140/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v36_candidate_receipt": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261485_v30_candidate_receipt.json", "sha256": "137680ce5b7a5a9d1ce336b7d119e7d5e46345481654080623c0d56a14156ef9", "json_passed": true, "json_sealed": true},
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261485/route_surface_o4_v36_development_stream/test_tiles140/terrain_route_v2/compiled_scene_audit.json", "sha256": "2133c1a3406ab2594d52df43d31af438800d2091adcc457051b9e709d36ba5f4", "json_passed": true},
+        "stack_v17_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261485/route_surface_o4_v36_development_stream/test_tiles140/terrain_route_v2/realistic_stack_v17_admission.json", "sha256": "da291c05116592f1b8426fd1eb909e638c7b7117855975843504c8678e79170e", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/indoor_kitchen_164/attempt1"
+    },
+    {
+      "scene_id": "indoor_house_165", "room_family": "House", "runtime_seed": 20261488, "material_id": "train_concrete034", "operator": "o4_adhesive_contact_action_branch_v35_adaptive_backstep",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20261487/route_surface_o4_v36_development_stream/train_concrete034/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v36_candidate_receipt": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20261487_v30_candidate_receipt.json", "sha256": "0509fccd4887e2bd65f2732c3eade78100b00d926ff555e6c43e2075e18d7b0f", "json_passed": true, "json_sealed": true},
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20261487/route_surface_o4_v36_development_stream/train_concrete034/terrain_route_v2/compiled_scene_audit.json", "sha256": "823eca2e9ac6416516749a67cf738d72044968278e9d277ba65cbd40e0cccfac", "json_passed": true},
+        "stack_v17_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20261487/route_surface_o4_v36_development_stream/train_concrete034/terrain_route_v2/realistic_stack_v17_admission.json", "sha256": "48f18cc45ad0031d0cb62608c2a715d91acf60d84a9213b0c951b3f67951dbb8", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/indoor_house_165/attempt1"
+    },
+    {
+      "scene_id": "indoor_diningroom_167", "room_family": "DiningRoom", "runtime_seed": 20261492, "material_id": "test_concrete039", "operator": "o4_adhesive_contact_action_branch_v35_adaptive_backstep",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20261491/route_surface_o4_v36_development_stream/test_concrete039/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v36_candidate_receipt": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20261491_v30_candidate_receipt.json", "sha256": "bc231773237416441287af5209e582215d82dfc5197572fad777fcb39bda8eae", "json_passed": true, "json_sealed": true},
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20261491/route_surface_o4_v36_development_stream/test_concrete039/terrain_route_v2/compiled_scene_audit.json", "sha256": "b78e5593510b4e135d611a0f5b3861b52af4c2893702e1e7e7aa923451310ace", "json_passed": true},
+        "stack_v17_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20261491/route_surface_o4_v36_development_stream/test_concrete039/terrain_route_v2/realistic_stack_v17_admission.json", "sha256": "3cf33375fee8a18dde55632f52fc3ee10068406983db85f27b3b5089b87be64a", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/indoor_diningroom_167/attempt1"
+    },
+    {
+      "scene_id": "indoor_office_168", "room_family": "Office", "runtime_seed": 20261494, "material_id": "train_road007", "operator": "o4_adhesive_contact_action_branch_v35_adaptive_backstep",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261493/route_surface_o4_v36_development_stream/train_road007/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v36_candidate_receipt": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261493_v30_candidate_receipt.json", "sha256": "583446515c3d0e957cc94177e5e33d6adb6d686135acf621ec853e9e64d44cca", "json_passed": true, "json_sealed": true},
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261493/route_surface_o4_v36_development_stream/train_road007/terrain_route_v2/compiled_scene_audit.json", "sha256": "cb4c19584af7408e1714a3249ad3aff6bf1645550ca4e7e2c6ecb0f5d77a0423", "json_passed": true},
+        "stack_v17_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261493/route_surface_o4_v36_development_stream/train_road007/terrain_route_v2/realistic_stack_v17_admission.json", "sha256": "7003548dc665139976dde928f9cf70e94bbd0cff66a780dbbb0e0a6b08e26088", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/indoor_office_168/attempt1"
+    }
+  ]
+}

@@ -28,6 +28,7 @@ from kino_vla.data.schema import CoTAnnotation, CoTParseError, RecoveryPrimitive
 from kino_vla.shield.primitive_compiler import (
     AdjustPosture,
     Backstep,
+    Continue,
     HoldAndRequest,
     Primitive,
     ReplanWaypoint,
@@ -150,6 +151,8 @@ def to_compiler_primitive(
     """
     p = prim.params
     name = prim.name
+    if name == "continue":
+        return Continue()
     if name == "Backstep":
         return Backstep(distance_m=float(p["distance_m"]))
     if name == "Switch_Gait":

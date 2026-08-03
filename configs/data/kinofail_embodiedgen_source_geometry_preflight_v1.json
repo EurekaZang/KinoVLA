@@ -1,0 +1,76 @@
+{
+  "schema_version": "kinofail.embodiedgen-source-preflight-validation-plan.v1",
+  "created_date": "2026-07-22",
+  "purpose": "Freeze a precompile source-geometry gate that catches known EmbodiedGen transform and visual-complexity failures without changing the downstream compiler thresholds.",
+  "scope": "development_calibration_only",
+  "threshold_contract": {
+    "minimum_visual_meshes": 5,
+    "minimum_visual_faces": 1000,
+    "maximum_absolute_indoor_coordinate_m": 100.0,
+    "metres_per_unit": 1.0,
+    "source": "Existing kino_vla/sim/embodiedgen_scene.py compiler gates"
+  },
+  "frozen_artifacts": {
+    "decision_logic": {
+      "path": "kino_vla/eval/embodiedgen_source_preflight_v1.py",
+      "sha256": "494419ebbf14ca662b8621014efb2cb9452385c3a6d50df7da90a4feae9b56cf"
+    },
+    "usd_scanner": {
+      "path": "scripts/audit_embodiedgen_source_preflight_v1.py",
+      "sha256": "41114a2fa21292cba346c2380ecd7a457b72adc8fe13f59117637dcafe5335d0"
+    },
+    "unit_tests": {
+      "path": "tests/test_embodiedgen_source_preflight_v1.py",
+      "sha256": "5756684115f8dfffead274123bc4365181e3c835b0a6eda69a329d1c09765c4c"
+    },
+    "validation_auditor": {
+      "path": "scripts/audit_embodiedgen_source_preflight_validation_v1.py",
+      "sha256": "889f3be10bd8f14ea8d55fe81b6595ddcee33f4ac39e0c42145998b431503bac"
+    }
+  },
+  "validation_cases": [
+    {
+      "scene_id": "indoor_house_18",
+      "expected_role": "known_implausible_transform_rejection",
+      "expected_passed": false,
+      "expected_primary_failed_gate": "implausible_world_transform",
+      "source_manifest": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20260833/source_manifest.json",
+        "sha256": "27f34f958831a75e41332eab209278d85a5c9d36f87edc9324a043b62b442ba4"
+      },
+      "preflight_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20260833/source_geometry_preflight_v1/source_geometry_preflight_audit.json",
+        "sha256": "d5d6dcc2a62fa86cc7da32bc832290054d34aafe2fc9243ffe793b484ca0436e"
+      }
+    },
+    {
+      "scene_id": "indoor_diningroom_19",
+      "expected_role": "known_low_face_count_rejection",
+      "expected_passed": false,
+      "expected_primary_failed_gate": "insufficient_visual_faces",
+      "source_manifest": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260835/source_manifest.json",
+        "sha256": "13b75f34da3e44cfb3206854a8593e2d2910540085a38e38a0cf493d4e07f545"
+      },
+      "preflight_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260835/source_geometry_preflight_v1/source_geometry_preflight_audit.json",
+        "sha256": "3c4367d71423204eb47edd34670961a00db66daee1d6c96af19a086116526cc5"
+      }
+    },
+    {
+      "scene_id": "indoor_kitchen_20",
+      "expected_role": "known_admitted_control",
+      "expected_passed": true,
+      "expected_primary_failed_gate": null,
+      "source_manifest": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260837/source_manifest.json",
+        "sha256": "90f16ab149a17feb09a0d176d415660433c8849cb4b7ce92dc604c2e815b367e"
+      },
+      "preflight_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260837/source_geometry_preflight_v1/source_geometry_preflight_audit.json",
+        "sha256": "9eed91e571e8129d5314afc6b8e059366386afbdf9b4cbc4d3d85e0127db9dab"
+      }
+    }
+  ],
+  "interpretation": "This gate saves expensive compile/RTX/Go2 work and preserves the no-replacement accounting of later frozen batches; it is not itself benchmark confirmation evidence."
+}

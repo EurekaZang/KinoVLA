@@ -23,9 +23,10 @@ slip_force_threshold_n: 2.0  # net foot contact force above which a foot counts 
 slip_ref_speed_mps: 0.30  # load-bearing-foot horizontal speed that maps to slip_ratio = 1
 effort_limit_nm: 23.5     # Go2 DCMotor effort limit (for the measured effort-saturation channel)
 effort_sat_floor: 0.7     # torque fraction below which effort_ratio reads 0 (nominal walking)
-# Fall detection is primarily the env's own base_contact termination (authoritative);
-# these are backstops for a near-ground collapse / topple that hasn't contacted yet.
-# The trained policy trots low (~0.13 m base), so the height backstop sits well under it.
+# Kino-Fail disables the training task's automatic base_contact termination: O9 intentionally
+# puts the lower shell in load-bearing contact and must remain observable instead of auto-resetting.
+# These height/tilt checks therefore own benchmark fall detection. The height threshold remains
+# below a valid crouch but above a chassis lying flat on the ground.
 fall_check:
   min_base_height_m: 0.07
   max_tilt_rad: 0.8
@@ -47,3 +48,10 @@ posture:
 # Recording camera (scripts/record_demo.py; passive sensor, off by default)
 cam_height: 640
 cam_width: 960
+# Dataset perception camera: the RTX RGB-D sensor is synchronized from the measured Go2 base
+# transform every capture. These are body-frame front-camera extrinsics; final publication values
+# still require calibration against the physical fixture.
+perception_cam_x_m: 0.335
+perception_cam_y_m: 0.0
+perception_cam_z_m: 0.065
+perception_cam_pitch_down_rad: 0.52

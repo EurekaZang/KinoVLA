@@ -1,0 +1,25 @@
+{
+  "schema_version": "kinofail.o4-action-consequence-v35-development-audit-correction-v2-freeze.v1",
+  "created_utc": "2026-07-23T09:56:00Z",
+  "freeze_status": "frozen_before_v35_v2_offline_reaudit",
+  "purpose": "Correct only the sealed v35 offline audit's inherited action-phase name and decision-trigger compatibility checks. Do not reexecute Isaac Sim and do not alter any recorded artifact.",
+  "simulation_reexecution_allowed": false,
+  "recorded_artifact_mutation_allowed": false,
+  "counts_as_a0_a7_evidence": false,
+  "realistic_a0_a7_readiness": "0/8",
+  "original_postrun": {
+    "path": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/postrun_audit.json",
+    "sha256": "744be03d933209bc6f6a28f63b3dd1c62bf5d6cab7cf63cc6d81ebcc92f8b3a2",
+    "json_passed": false,
+    "json_sealed": true
+  },
+  "locked_files": [
+    {"path": "configs/data/kinofail_o4_action_consequence_v35_development_freeze_v1.json", "sha256": "537aa55dedde099c71856c1e9cd5487b5be3c5f97a47741c13249378940a1857"},
+    {"path": "outputs/kinofail_realistic/operator_development/o4_action_v35_preflight/preflight_audit.json", "sha256": "53aa298cf2dca8261a21535a9b0e4eb8c50e41461cd79f5e97b0c01a6bec09cc", "json_passed": true},
+    {"path": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/runner_audit.json", "sha256": "827a861db6c703c604004d72a7668bc06424b50fb82eda80f42f19d1e88fd0c4"},
+    {"path": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/postrun_audit.json", "sha256": "744be03d933209bc6f6a28f63b3dd1c62bf5d6cab7cf63cc6d81ebcc92f8b3a2", "json_passed": false, "json_sealed": true},
+    {"path": "scripts/audit_o4_action_consequence_v35_development_postrun.py", "sha256": "9bf0a18dca7eccc0d225379c17fdc3cc3813325c945d96df9a7c186fbb94b1c9"},
+    {"path": "scripts/audit_o4_action_consequence_v35_development_postrun_v2.py", "sha256": "0d6a0440e5b228ffb59d951ffca6040db385a084d8d1c5e96443b1eebbb72656"},
+    {"path": "tests/test_o4_action_consequence_v35_audit_v2.py", "sha256": "bc55cccc7fe0947ecab1e608a4f76ab5a855b1e1533edbed2645149d249a9500"}
+  ]
+}

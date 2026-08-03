@@ -1,0 +1,86 @@
+{
+  "schema_version": "kinofail.embodiedgen-terrain-operator-v5-calibration.v1",
+  "purpose": "Calibrate O1/O2/O3 physical-effect endpoints under the confirmed lane-aware controller before any Office27/Bedroom28 anomaly run.",
+  "evidence_boundary": {
+    "evidence_role": "kitchen31_calibration_only",
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "completion_requires_new_realistic_corpus_a0_a7_replication": true
+  },
+  "source_freeze": {
+    "collector": {"path": "scripts/isaac_collect_realistic_route_operator_lane_v5.py", "sha256": "cd6331ab5c9346cea469936f992212172e4fa4d9d7635e1cea05d22eda200dda"},
+    "runtime_gate": {"path": "kino_vla/eval/realistic_route_runtime_gate.py", "sha256": "9148478366022e4ae3db4a0bfe45218a272d5b57ceede1cce8593db41c146bb5"},
+    "scene_contract": {"path": "kino_vla/eval/realistic_route_scene_contract.py", "sha256": "c466a8a6aa5b29d70cbe426e5c092a5cbac1e7792bcdf51812d3f5e7125e0022"},
+    "candidate_admission": {"path": "kino_vla/eval/realistic_operator_admission_v3.py", "sha256": "c6a98a095722c624c502ec0c9cfe36f29ffff76724a5be8853c0c6aff8d0c83b"},
+    "route_protocol": {"path": "kino_vla/sim/realistic_route_protocol_v2.py", "sha256": "10256042d810456526a6ab5b93f291a612ff4ebd642adda7fd9d0de3d750572e"},
+    "backend": {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "4f602d4f178c08e685ba9bd4a69bab6dbf111f7d175142471c3a0e821e7b2bb1"},
+    "o1_operator": {"path": "kino_vla/sim/operators/o1_mu_field.py", "sha256": "226d1b71d8ebe69b9cccca3cee389aa286e8ebc64ea3eca398198251156bd9e5"},
+    "o2_operator": {"path": "kino_vla/sim/operators/o2_compliance.py", "sha256": "63abd0dbde8b38d90597e3a6daf7997d3936e9dedfeb72d1ddf715a5de13517e"},
+    "o3_operator": {"path": "kino_vla/sim/operators/o3_collapse.py", "sha256": "4331e659b907a07f5e6d6b602bab14d82adf202023a7f6c982376d6ddf9ab4c9"},
+    "o1_pair_auditor": {"path": "scripts/audit_realistic_route_o1_pair_v3.py", "sha256": "e01b11a78b83e39f5c2bd55e5f005521231df7652c9039bb969f69001a65bf17"},
+    "o2_pair_auditor": {"path": "scripts/audit_realistic_route_o2_pair_v3.py", "sha256": "e7c0f08c6c1889743d0c82dab5fe4a9c979317bc1ca5b71d8e71f82ba15ee375"},
+    "o3_pair_auditor": {"path": "scripts/audit_realistic_route_o3_pair_v3.py", "sha256": "243eb6c87d1d518431b3a5fd68a62eaa881b148164ac09dfe4181f82f55a3e1b"},
+    "material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+    "controller_confirmation": {"path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_native_v4_tracking_confirmation_v2/postrun_audit.json", "sha256": "558a7ba30dc820e595cbe3c075bf7452f1263987b987ece0bad8864c9f1728fc"}
+  },
+  "scene": {
+    "scene_id": "indoor_kitchen_31",
+    "scene_family": "Kitchen",
+    "material_id": "test_ground073",
+    "route_surface_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/route_surface_v7_admission_audit.json", "sha256": "492729e6bc7315737976299ba0eb24b540480216a3be6816d62a5b185f2c45d9"},
+    "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/compiled_scene_audit.json", "sha256": "81155f31d69c0f05f8d5d55a51061589e3bc1a2e574a05444069788889141cf3"},
+    "terrain_episode": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/episode_terrain_v2.usda", "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"},
+    "offline_usd_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/offline_usd_audit.json", "sha256": "5f07c3fb7a45e10b3ef1bdbf5685fde0410fba1a9cf46e5cc498ac5ab8d334e3"}
+  },
+  "execution_policy": {
+    "fresh_isaac_process_per_lane": true,
+    "one_attempt_per_operator_lane": true,
+    "failed_attempts_retained": true,
+    "no_threshold_change_after_first_anomaly": true,
+    "o1_o2_order": ["nominal", "anomaly", "pair_audit"],
+    "o3_order": ["anomaly", "derive_trigger_step", "nominal_matched_replay", "pair_audit"]
+  },
+  "common_runtime": {
+    "camera_profile": "go2_front_calib_b",
+    "steps": 650,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": -0.15,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.4,
+    "start_lateral_offset_m": 0.0,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": -0.25,
+    "forward_speed_mps": 0.2,
+    "maximum_route_deviation_m": 0.3,
+    "minimum_nominal_region_samples": 40
+  },
+  "operators": {
+    "o1": {
+      "seed": 20261001,
+      "parameters": {"static_friction": 0.04, "dynamic_friction": 0.03},
+      "candidate_v3_endpoint": {"progress_deficit_m_min": 0.75, "slip_delta_min": 0.3, "absolute_lateral_delta_m_min": 0.1, "kinematic_combination": "OR", "anomaly_falls": true},
+      "nominal_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o1/nominal",
+      "anomaly_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o1/anomaly",
+      "pair_audit": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o1/pair_audit.json"
+    },
+    "o2": {
+      "seed": 20261002,
+      "parameters": {"vertical_stiffness_n_per_m": 240.0, "shear_retention": 0.32, "sink_depth_m": 0.11},
+      "candidate_v3_endpoint": {"absolute_visual_depth_m_min": 0.05, "visual_depth_to_sinkage_ratio_min": 0.65, "contact_local_imprint_count_min": 4, "deformed_vertex_count_min_exclusive": 0, "anomaly_failure": true},
+      "nominal_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o2/nominal",
+      "anomaly_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o2/anomaly",
+      "pair_audit": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o2/pair_audit.json"
+    },
+    "o3": {
+      "seed": 20261003,
+      "parameters": {"damage_threshold_ns": 25.0, "drop_m": 0.12, "residual_support": 0.18},
+      "frozen_endpoint": {"measured_trigger": true, "disabled_support_cells": 13, "minimum_visual_offset_m_max": -0.1, "deformed_vertex_count_min_exclusive": 50, "progress_deficit_m_min": 1.0, "base_height_delta_m_min": 0.1, "anomaly_falls": true},
+      "anomaly_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o3/anomaly",
+      "nominal_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o3/nominal",
+      "pair_audit": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o3/pair_audit.json"
+    }
+  },
+  "post_calibration_requirement": "Freeze successful operator parameters/endpoints before any Office27 or Bedroom28 anomaly lane; calibration failures remain failures and trigger a new versioned architecture cycle."
+}

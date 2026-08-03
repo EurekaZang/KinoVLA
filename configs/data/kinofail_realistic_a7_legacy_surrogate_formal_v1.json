@@ -1,0 +1,82 @@
+{
+  "a7_design_path": "configs/eval/kinofail_realistic_a7_matched_design_v1.json",
+  "a7_design_sha256": "629c7f89d71648a288d91c898c25259f39425a28c8dedd92d03c2d7271bcee68",
+  "allowed": {
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_1ea8dafccd9ea4932c07",
+      "cf_456f7436e5799c37def7",
+      "cf_4937d49ea2126a40181b",
+      "cf_524a97838ae8fde07dc9",
+      "cf_54f9a007d38c6e7c0b98",
+      "cf_636e425737a5d705cc59",
+      "cf_7f0b35e6343b4817b231",
+      "cf_8e97fcad3c8c4abbfff2",
+      "cf_95f408320256df288cb3",
+      "cf_a0d040f780d7e67b4cda",
+      "cf_a0d5a84cd7c53a2567ca",
+      "cf_b3cf7a4ac02ca966db32",
+      "cf_b4cbd65ad84de52a89c8",
+      "cf_b57355577041dd86796f",
+      "cf_c85d56a56c410fe7b25f",
+      "cf_caf44c7fe9fb1f49e99a",
+      "cf_d9f9bcb08cd744cf1f6f",
+      "cf_ea42027cc3498b05e2dd"
+    ],
+    "geometry_profiles": [
+      "irregular_protective_film",
+      "pressure_sinkage_field"
+    ],
+    "physical_realizations": [
+      "legacy_base_wrench_surrogate"
+    ],
+    "scene_families": [
+      "forest_river_walk_metric_g07",
+      "forest_slope_metric_g06",
+      "forest_trail_metric_g03",
+      "indoor_bedroom_118",
+      "indoor_kitchen_140",
+      "indoor_livingroom_139",
+      "indoor_office_162",
+      "indoor_office_168",
+      "indoor_office_186"
+    ],
+    "severity_ids": [
+      "moderate"
+    ],
+    "target_operators": [
+      "O2_compliance",
+      "O4_tether"
+    ]
+  },
+  "base_schedule_path": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+  "base_schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+  "benchmark_id": "kinofail_realistic_a7_legacy_surrogate_v1",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "counterfactual_pairs": 18,
+    "model_outcomes_available_at_freeze": false,
+    "negative_or_null_results_retained": true,
+    "only_mechanism_architecture_changes": true,
+    "pair_shared_scene_camera_controller_and_nuisance": true,
+    "physical_episodes": 36,
+    "physical_nuisance_profile_index": 2,
+    "scene_families": 9
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_a7_legacy_surrogate_v1.py",
+  "collector_sha256": "59dcc3572abfd143cbf50b91bdd355421527f8911922b09ae3ddadd7836ced16",
+  "frozen_utc": "2026-07-23T19:50:30.227140+00:00",
+  "protocol_id": "kinofail_realistic_a7_legacy_surrogate_formal_v1",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule_path": "outputs/kinofail_realistic/design_a7_legacy_surrogate_v1/schedule.jsonl",
+  "schedule_sha256": "d9ccf38c7d92ff2ea4d46ee9246b8395ad7f3452d7b3b4ea267128bb377822c1",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "36 episodes / 18 pairs / O2+O4 moderate / 9 scenes / nuisance profile 2; legacy base-wrench mechanism only; A8 excluded.",
+  "status": "frozen"
+}

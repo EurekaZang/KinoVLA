@@ -1,0 +1,80 @@
+{
+  "schema_version": "kinofail.embodiedgen-o2-v11-unseen-nominal-confirmation.v1",
+  "purpose": "Confirm the frozen v11 O2 nominal controller on two scene families untouched by Kitchen31 controller calibration before any O2 anomaly run.",
+  "evidence_boundary": {
+    "evidence_role": "unseen_scene_operator_controller_confirmation_only",
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "completion_requires_new_realistic_corpus_training_inference_and_a0_a7": true
+  },
+  "calibration_freeze": {
+    "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_stable_speed_v11_calibration_v1/postrun_audit.json",
+    "sha256": "08c478ccf9d516a66cf4c07f38eac8e012774fd489bd7099e6fee0db830fc144"
+  },
+  "source_freeze": {
+    "collector_wrapper": {"path": "scripts/isaac_collect_realistic_route_operator_lane_v11.py", "sha256": "4de9fe16ed468769f70e403ad6ce4242e78351b7f40fcd596afb579e7805169a"},
+    "collector_engine": {"path": "scripts/isaac_collect_realistic_route_operator_lane_v6.py", "sha256": "080bf4e3771a16d641909e83e14920cf121cebbc291a147b2c2780cb84d763ef"},
+    "backend": {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "2a2572dfdffb90b871fbeef37b242e4963f09c1a9c05daccd069fd9ba249ce80"},
+    "controller": {"path": "kino_vla/sim/realistic_route_controller_v3.py", "sha256": "7e0f8281cd394cf6faa57bfc49aedc29444c1928358a8a7bf033b5499f12bf8d"},
+    "runtime_gate": {"path": "kino_vla/eval/realistic_route_runtime_gate.py", "sha256": "9148478366022e4ae3db4a0bfe45218a272d5b57ceede1cce8593db41c146bb5"},
+    "scene_contract": {"path": "kino_vla/eval/realistic_route_scene_contract.py", "sha256": "c466a8a6aa5b29d70cbe426e5c092a5cbac1e7792bcdf51812d3f5e7125e0022"},
+    "route_protocol": {"path": "kino_vla/sim/realistic_route_protocol_v2.py", "sha256": "10256042d810456526a6ab5b93f291a612ff4ebd642adda7fd9d0de3d750572e"},
+    "o2_operator": {"path": "kino_vla/sim/operators/o2_compliance.py", "sha256": "63abd0dbde8b38d90597e3a6daf7997d3936e9dedfeb72d1ddf715a5de13517e"},
+    "material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"}
+  },
+  "execution_policy": {
+    "fresh_isaac_process_per_scene": true,
+    "one_attempt_per_scene": true,
+    "failed_attempts_retained": true,
+    "nominal_only": true,
+    "both_scenes_must_pass_before_any_o2_anomaly": true,
+    "no_controller_or_threshold_change_after_preflight": true
+  },
+  "runtime": {
+    "operator": "o2",
+    "lane": "nominal",
+    "camera_profile": "go2_front_calib_b",
+    "steps": 650,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": 0.0,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.6,
+    "start_lateral_offset_m": 0.0,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": -0.25,
+    "forward_speed_mps": 0.18,
+    "maximum_route_deviation_m": 0.3,
+    "minimum_nominal_region_samples": 40,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.2,
+    "yaw_rate_limit_radps": 0.6
+  },
+  "scenes": [
+    {
+      "scene_id": "indoor_office_27",
+      "scene_family": "Office",
+      "material_id": "test_tiles140",
+      "seed": 20261101,
+      "route_surface_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260853/route_surface_v7_confirmation/test_tiles140/route_surface_v7_admission_audit.json", "sha256": "496d94c6ba42d9f0ca34da0feeded53e4acb648b9e0bc5b6d0ad8b27737662d1"},
+      "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260853/route_surface_v7_confirmation/test_tiles140/terrain_route_v2/compiled_scene_audit.json", "sha256": "a872b3ce3df2378b87af061b52e56816e0aa459c8743c3c9551f834ea5c3dd96"},
+      "terrain_episode": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260853/route_surface_v7_confirmation/test_tiles140/terrain_route_v2/episode_terrain_v2.usda", "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"},
+      "offline_usd_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260853/route_surface_v7_confirmation/test_tiles140/terrain_route_v2/offline_usd_audit.json", "sha256": "430ff0c3cb87c075119b689f1464005d6d37dc85a048d953dc9bd9999f71e8bd"},
+      "planned_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_o2_v11_unseen_nominal_confirmation_v1/office27/o2_nominal"
+    },
+    {
+      "scene_id": "indoor_bedroom_28",
+      "scene_family": "Bedroom",
+      "material_id": "test_concrete039",
+      "seed": 20261102,
+      "route_surface_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/route_surface_v7_admission_audit.json", "sha256": "a8909eed4208ee480b65a89d2a4d508f5105d073e4e2c16b515614a46785a563"},
+      "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/terrain_route_v2/compiled_scene_audit.json", "sha256": "3d086926fe790303a19b3ad97b79f9db011682dd5672c4bb9c93bbda298fb833"},
+      "terrain_episode": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/terrain_route_v2/episode_terrain_v2.usda", "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"},
+      "offline_usd_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/terrain_route_v2/offline_usd_audit.json", "sha256": "78e49770cd17304f47dd98db6fef4eae2444b40f6e2370c624cd9e11d8eea5ea"},
+      "planned_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_o2_v11_unseen_nominal_confirmation_v1/bedroom28/o2_nominal"
+    }
+  ]
+}

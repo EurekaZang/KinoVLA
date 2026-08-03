@@ -16,10 +16,11 @@ Pure-logic reduction of the interventional label-swap matrix ``M(s, ℓ)``. Cons
      catastrophic ≫ benign ⇒ the conservative recovery (Backstep) is the expected-cost-minimizing
      action whenever adhesion is non-negligible. This is the decision-theoretic content of "Safe"
      that replaces the cut CBF chapter (experiments_design.md §0.3).
-  3. **ERS / Regret composition.** ``ERS(agent) = E_s[Σ_ℓ P̂_agent(ℓ|s)·cost(s,ℓ)]`` and
-     ``Regret(agent) = E_s[cost(s,ℓ*) − cost(s,ℓ̂_agent)]`` link the A2/A3 agent predictions to
-     physical cost — attribution error measured in units of falls. (A4.4 validates that the composed
-     ERS matches a true closed-loop agent within CI.)
+  3. **Action / attribution composition.** ``ERS(agent) = E_s[Σ_ℓ
+     P̂_agent(ℓ|s)·cost(s,ℓ)]`` and true empirical regret relative to the best measured matrix
+     action link A2/A3 predictions to physical cost.  The emitted action and the action implied by
+     the predicted attribution are reported separately; conflating them can manufacture a causal
+     bridge when a model emits an attribution/action-inconsistent response.
 
 No Isaac here — tested with synthetic outcomes (``tests/test_a4_consequence.py``). Wilson CIs follow
 the §7 statistics protocol; the matrix runner stamps every cell with (config hash, seeds, commit) +
@@ -226,16 +227,82 @@ def safe_default_crossover(
     }
 
 
-def primitive_to_label(primitive: str, params: dict | None = None) -> str:
+def primitive_to_label(
+    primitive: str, params: dict | None = None, *, strict_params: bool = False
+) -> str:
     """Map an A2/A3 agent's emitted primitive (+ its params) onto a forced-label column of M."""
     if primitive in _PRIM_TO_LABEL:
         return _PRIM_TO_LABEL[primitive]
     if primitive == "Switch_Gait":
         mode = (params or {}).get("mode", "")
+        if strict_params and mode not in {"high_step", "crawl"}:
+            raise ValueError("Switch_Gait requires an observed mode for A4 action composition")
         return "crawl" if mode == "crawl" else "high_step"
     if primitive == "Adjust_Posture":
         return "slow_low"
     return "continue"
+
+
+_ATTR_TO_PRIMITIVE: dict[str, tuple[str, dict]] = {
+    "nominal": ("continue", {}),
+    "low_friction": ("Set_Constraint", {}),
+    "compliant_terrain": ("Switch_Gait", {"mode": "high_step"}),
+    "region_collapse": ("Update_Topology", {}),
+    "adhesion": ("Backstep", {}),
+    "overload": ("Hold_and_Request", {}),
+    "effort_decay": ("Switch_Gait", {"mode": "crawl"}),
+    "external_push": ("Set_Constraint", {}),
+    "invisible_obstacle": ("Update_Topology", {}),
+    "high_centering": ("Adjust_Posture", {}),
+    "obs_bias": ("Set_Constraint", {}),
+}
+
+
+def attribution_to_label(attribution: str | None) -> str:
+    """Map a predicted cause through the frozen recovery taxonomy to an A4 matrix label.
+
+    This is a mechanism diagnostic, not the action the robot necessarily executed.  The actual
+    action must be obtained from ``primitive`` + the observed ``primitive_params``.
+    """
+    prim, params = _ATTR_TO_PRIMITIVE.get(str(attribution), ("continue", {}))
+    return primitive_to_label(prim, params, strict_params=True)
+
+
+def a3_row_to_a4_scenario(row: dict) -> str | None:
+    """Map one frozen A3 evaluation row onto the corresponding A4 intervention scenario.
+
+    T5 rows are decision-labelled ``nominal`` even though the simulator retains a weak physical
+    operator category.  Their mapping must therefore use frozen operator/sample identity.  Keeping
+    this bridge in the eval core prevents A4 and A5 from silently using different mappings.
+    """
+    cell, truth, sub = row.get("cell"), row.get("truth"), row.get("t3_sub", "")
+    operator = str(row.get("operator", ""))
+    sid = str(row.get("sid", ""))
+    if cell == "T2" and truth == "adhesion":
+        return "matched_O4_twophase"
+    if cell == "T1" and truth == "compliant_terrain":
+        return "matched_O2"
+    if cell == "T1" and truth == "low_friction":
+        return "O1_ice"
+    if cell == "T3" and sub == "looks_safe":
+        return "O7_looks_safe"
+    if cell == "T3" and sub == "reverse":
+        return "O7_reverse"
+    if cell == "T3" and truth == "invisible_obstacle":
+        return "O8_invisible"
+    if cell == "T4" and truth == "overload":
+        return "O5_payload_B"
+    if cell == "T4" and truth == "effort_decay":
+        return "O10_decay_B"
+    if cell == "T5" and (operator == "O2_compliance" or "_O2_A_nominal_" in sid):
+        return "O2_A_nominal"
+    if cell == "T5" and (operator == "O1_mu_field" or "_O1_A_nominal_" in sid):
+        return "O1_A_nominal"
+    if cell == "T5" and (operator == "O10_effort_decay" or "_O10_A_nominal_" in sid):
+        return "O10_A_nominal"
+    if cell == "T5" and (operator == "O6_push" or "_O6_push_A_" in sid):
+        return "O6_push_A"
+    return None
 
 
 def agent_label_distribution(per_item: list[dict], scenario: str) -> dict[str, float]:
@@ -270,12 +337,20 @@ def expected_outcome(
     spec ERS (higher better); ``metric='mean_cost'`` ⇒ expected physical cost (lower better)."""
     out: dict[str, float] = {}
     for s in scenarios:
-        dist = agent_dist.get(s, {})
+        if s not in agent_dist:
+            raise ValueError(f"agent distribution is missing matrix scenario {s!r}")
+        dist = agent_dist[s]
+        mass = sum(float(dist.get(lab, 0.0)) for lab in LABELS)
+        if not math.isclose(mass, 1.0, abs_tol=1e-3):
+            raise ValueError(f"agent distribution for {s!r} has probability mass {mass:.6f}, not 1")
         cells = m.get(s, {})
         total = 0.0
         for lab in LABELS:
             p = dist.get(lab, 0.0)
-            v = cells.get(lab, {}).get(metric, 0.0)
+            cell = cells.get(lab, {})
+            if p > 0.0 and int(cell.get("n", 0)) == 0:
+                raise ValueError(f"M has no measured cell for scenario={s!r}, label={lab!r}")
+            v = cell.get(metric, 0.0)
             total += p * v
         out[s] = round(total, 4)
     return out
@@ -283,13 +358,22 @@ def expected_outcome(
 
 @dataclass
 class CompositionResult:
-    """ERS + Regret for one agent over the matrix scenarios."""
+    """Expected physical outcome for one empirical policy over the matrix scenarios."""
 
     ers_per_scenario: dict[str, float]  # expected metric per scenario
     ers_mean: float  # E_s[ERS]
-    regret_per_scenario: dict[str, float]  # cost(s,ℓ*) − cost(s,ℓ̂_agent); 0 ⇒ optimal
+    success_per_scenario: dict[str, float]
+    success_mean: float
+    regret_per_scenario: dict[str, float]  # E[cost] - min measured cost; 0 ⇒ empirically optimal
     regret_mean: float
-    argmin_label_per_scenario: dict[str, str]  # the agent's effectively-chosen label (argmax P̂)
+    canonical_gap_per_scenario: dict[str, float]  # signed E[cost] - canonical cost
+    canonical_gap_mean: float
+    mode_label_per_scenario: dict[str, str]  # most frequent emitted label (descriptive only)
+
+    @property
+    def argmin_label_per_scenario(self) -> dict[str, str]:
+        """Backward-compatible alias; historical name was incorrect (this is an argmax mode)."""
+        return self.mode_label_per_scenario
 
 
 def compose_agent(
@@ -298,34 +382,38 @@ def compose_agent(
     scenarios: list[str],
     canonical: dict[str, str],
 ) -> CompositionResult:
-    """Compose an A2/A3 agent's label distribution with the cost matrix → ERS + Regret.
+    """Compose an empirical label distribution with the measured intervention matrix.
 
-    ``canonical[s]`` is the registry's canonical (diagonal) label for scenario s (``ℓ*``). Regret is
-    in COST units: ``cost(s,ℓ*) − cost(s,ℓ̂_agent)`` where ``ℓ̂_agent = argmax_ℓ P̂_agent(ℓ|s)`` (the
-    label the agent commits to). Regret ≥ 0; a perfect attributor has 0 regret. ERS uses mean_cost
-    (expected physical cost) — the safety-grounded metric.
+    ERS and regret both integrate the full empirical distribution.  The old implementation used
+    the distribution for ERS but its argmax for regret, which made the two estimands incomparable.
+    ``regret`` is now relative to the lowest measured cost in each scenario.  The signed gap to the
+    pre-registered canonical action is retained separately because weak matrix rows can contain a
+    non-canonical action that empirically ties or beats the canonical controller.
     """
     ers = expected_outcome(agent_dist, m, scenarios, metric="mean_cost")
+    success = expected_outcome(agent_dist, m, scenarios, metric="success_rate")
     regret: dict[str, float] = {}
-    argmin: dict[str, str] = {}
+    canonical_gap: dict[str, float] = {}
+    mode: dict[str, str] = {}
     for s in scenarios:
-        dist = agent_dist.get(s, {})
-        cells = m.get(s, {})
-        l_hat = (
-            max(LABELS, key=lambda lab: dist.get(lab, 0.0))
-            if dist
-            else canonical.get(s, "continue")
-        )
-        argmin[s] = l_hat
-        c_star = cells.get(canonical.get(s, "continue"), {}).get("mean_cost", 0.0)
-        c_hat = cells.get(l_hat, {}).get("mean_cost", 0.0)
-        regret[s] = round(
-            max(0.0, c_hat - c_star), 4
-        )  # cost the agent pays over the optimal action
+        dist = agent_dist[s]
+        cells = m[s]
+        mode[s] = max(LABELS, key=lambda lab: dist.get(lab, 0.0))
+        measured = [float(cells[lab]["mean_cost"]) for lab in LABELS if cells[lab].get("n", 0)]
+        if not measured:
+            raise ValueError(f"M has no measured labels for scenario {s!r}")
+        best_cost = min(measured)
+        c_canon = float(cells[canonical[s]]["mean_cost"])
+        regret[s] = round(max(0.0, ers[s] - best_cost), 4)
+        canonical_gap[s] = round(ers[s] - c_canon, 4)
     return CompositionResult(
         ers_per_scenario=ers,
         ers_mean=round(sum(ers.values()) / max(1, len(ers)), 4),
+        success_per_scenario=success,
+        success_mean=round(sum(success.values()) / max(1, len(success)), 4),
         regret_per_scenario=regret,
         regret_mean=round(sum(regret.values()) / max(1, len(regret)), 4),
-        argmin_label_per_scenario=argmin,
+        canonical_gap_per_scenario=canonical_gap,
+        canonical_gap_mean=round(sum(canonical_gap.values()) / max(1, len(canonical_gap)), 4),
+        mode_label_per_scenario=mode,
     )

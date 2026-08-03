@@ -50,6 +50,12 @@ def test_mcnemar_exact_pairing():
         mcnemar([True], [True, False])
 
 
+def test_mcnemar_preserves_tiny_exact_probability():
+    result = mcnemar([True] * 24, [False] * 24)
+    assert result["p_exact_two_sided"] == 2.0**-23
+    assert result["p_exact_two_sided"] > 0.0
+
+
 def test_auroc_ties_and_degenerate_classes():
     assert math.isnan(auroc([0.1, 0.2], [1, 1]))
     assert auroc([0.1, 0.2, 0.3, 0.4], [0, 0, 1, 1]) == 1.0
@@ -94,14 +100,73 @@ def test_heldout_threshold_selection_selects_on_calibration_only():
         {"sample_id": "b", "score": 0.2, "cost_agent": 0.0, "cost_safe": 1.0, "cost_continue": 4.0},
         {"sample_id": "c", "score": 0.8, "cost_agent": 4.0, "cost_safe": 1.0, "cost_continue": 4.0},
         {"sample_id": "d", "score": 0.9, "cost_agent": 4.0, "cost_safe": 1.0, "cost_continue": 4.0},
-        {"sample_id": "e", "score": 0.15, "cost_agent": 0.0, "cost_safe": 1.0, "cost_continue": 4.0},
-        {"sample_id": "f", "score": 0.85, "cost_agent": 4.0, "cost_safe": 1.0, "cost_continue": 4.0},
+        {
+            "sample_id": "e",
+            "score": 0.15,
+            "cost_agent": 0.0,
+            "cost_safe": 1.0,
+            "cost_continue": 4.0,
+        },
+        {
+            "sample_id": "f",
+            "score": 0.85,
+            "cost_agent": 4.0,
+            "cost_safe": 1.0,
+            "cost_continue": 4.0,
+        },
     ]
     out = heldout_threshold_selection(rows, score_field="score", split_seed=0, calibration_frac=0.5)
     assert set(out) >= {"tau", "calibration", "test", "splits"}
     assert 0.0 <= out["test"]["coverage"] <= 1.0
-    assert out["test"]["expected_cost_ci"][0] <= out["test"]["expected_cost"] <= out["test"]["expected_cost_ci"][1]
+    assert (
+        out["test"]["expected_cost_ci"][0]
+        <= out["test"]["expected_cost"]
+        <= out["test"]["expected_cost_ci"][1]
+    )
     assert set(out["splits"]["calibration_ids"]).isdisjoint(out["splits"]["test_ids"])
+
+
+def test_heldout_threshold_selection_uses_frozen_split_field():
+    rows = [
+        {
+            "sample_id": "train-a",
+            "appearance_split": "train",
+            "score": 0.1,
+            "cost_agent": 0.0,
+            "cost_safe": 1.0,
+        },
+        {
+            "sample_id": "train-b",
+            "appearance_split": "train",
+            "score": 0.9,
+            "cost_agent": 4.0,
+            "cost_safe": 1.0,
+        },
+        {
+            "sample_id": "test-a",
+            "appearance_split": "test",
+            "score": 0.2,
+            "cost_agent": 0.0,
+            "cost_safe": 1.0,
+        },
+        {
+            "sample_id": "test-b",
+            "appearance_split": "test",
+            "score": 0.8,
+            "cost_agent": 4.0,
+            "cost_safe": 1.0,
+        },
+    ]
+
+    out = heldout_threshold_selection(
+        rows,
+        score_field="score",
+        split_field="appearance_split",
+    )
+
+    assert out["splits"]["protocol"] == "frozen_field"
+    assert out["splits"]["calibration_ids"] == ["train-a", "train-b"]
+    assert out["splits"]["test_ids"] == ["test-a", "test-b"]
 
 
 def test_conformal_risk_control_returns_threshold_below_risk_budget():

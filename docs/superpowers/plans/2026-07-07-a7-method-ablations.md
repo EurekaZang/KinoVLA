@@ -728,7 +728,7 @@ Replace the final pending-experiments line with:
 
 ```text
 A7 SCOPE — no surrogate substitution. Real artifact-backed A7 rows are reportable; raw unfiltered ApiOracle CoT and full contrastive/from-scratch/window/gate encoder grid remain requires-run before those specific ablation claims. See A实验/A7.md.
-Pending experiments — A8 optional real-world snapshots.
+No post-A7 external benchmark is part of the current paper scope.
 ```
 
 If the raw CoT or encoder grid was completed during Task 4, remove that part of the A7 scope sentence.

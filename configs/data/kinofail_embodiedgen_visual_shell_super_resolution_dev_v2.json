@@ -1,0 +1,65 @@
+{
+  "schema_version": "kinofail.embodiedgen-visual-shell-super-resolution.v2-development",
+  "plan_id": "forest-native-pano-official-super-resolution-20260722-v2",
+  "status": "development_only_not_formal_corpus",
+  "objective": "Improve body-fixed Go2 rendering clarity without changing the accepted native-resolution forest composition or pretending that super-resolution creates an independent scene sample.",
+  "failed_predecessor": {
+    "config_path": "configs/data/kinofail_embodiedgen_visual_shell_super_resolution_dev_v1.json",
+    "config_sha256": "57cb5ddd955c1442b1a9e77052887f7e7c7724bdedfdfd2ddcaff7576b55811b",
+    "failure_path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_sr_v1/forest_trail_shell_sr_dev05/generation_failure.json",
+    "failure_class": "unrelated_optional_kaolin_transitive_import"
+  },
+  "source": {
+    "scene_id": "forest_trail_shell_dev01",
+    "panorama": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/pano_image.png",
+      "sha256": "ddd9f5690838e00e90bd96cad864795036a18abde0f100a8454081ca336e50b5"
+    },
+    "generation_request": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/generation_request.json",
+      "sha256": "113abd3daedacf8e9e1027c333ca14de6ac41a0277518b429277decdd13e3033"
+    },
+    "preflight": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/panorama_preflight.json",
+      "sha256": "769f6b3d9e7fbe29144b217656cc67276f641a510a44c78236c9a1986512f50c"
+    },
+    "expected_resolution": [1024, 512]
+  },
+  "embodiedgen": {
+    "repository": "https://github.com/HorizonRobotics/EmbodiedGen",
+    "release": "v2.0.0",
+    "commit": "cc3015ca5ccdacf94df3428d9e65f79375982216",
+    "wrapper_source": "embodied_gen/models/sr_model.py:ImageRealESRGAN",
+    "implementation": "faithful_local_extraction_of_ImageRealESRGAN_RRDBNet_and_RealESRGANer_parameters_to_avoid_unrelated_kaolin_import",
+    "model_repository": "xinjjj/RoboAssetGen",
+    "model_allow_pattern": "super_resolution/*",
+    "weight_relative_path": "super_resolution/RealESRGAN_x4plus.pth"
+  },
+  "super_resolution": {
+    "model_native_scale": 4,
+    "requested_output_scale": 2,
+    "expected_resolution": [2048, 1024],
+    "method": "RealESRGAN_x4plus_with_outscale_2",
+    "not_interpolation_only": true
+  },
+  "visual_preflight": {
+    "minimum_luminance_std": 18.0,
+    "minimum_5bit_colors": 1024,
+    "maximum_black_fraction": 0.25,
+    "maximum_white_fraction": 0.25,
+    "maximum_horizontal_seam_mae": 35.0,
+    "minimum_residual_mae_vs_bicubic": 0.5
+  },
+  "output": {
+    "directory": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_sr_v1/forest_trail_shell_sr_dev05_attempt2",
+    "panorama_filename": "pano_image_sr2x.png",
+    "audit_filename": "super_resolution_audit.json"
+  },
+  "interpretation_policy": {
+    "same_scene_identity_as_source": true,
+    "counts_as_additional_scene_diversity": false,
+    "counts_as_a0_a7_evidence": false,
+    "go2_rtx_and_human_review_still_required": true,
+    "super_resolution_must_not_hide_geometry_or_operator_artifacts": true
+  }
+}

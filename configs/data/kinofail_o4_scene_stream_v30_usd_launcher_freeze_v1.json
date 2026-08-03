@@ -1,0 +1,90 @@
+{
+  "schema_version": "kinofail.o4-scene-stream-v30-freeze.v1",
+  "created_utc": "2026-07-23T04:36:39Z",
+  "freeze_status": "frozen_before_any_v30_candidate_generation_or_o4_execution",
+  "purpose": "Acquire the v27 held-out scene cohort with the validated USD launcher: source Isaac Sim's environment and explicitly restore the locked Isaac Kit site-packages path for non-SimulationApp pxr stages. v28 candidate88 remains excluded; v29 wrote no candidate artifacts.",
+  "evidence_policy": {
+    "development_only": true,
+    "counts_as_a0_a7_evidence": false,
+    "counts_as_realistic_corpus_evidence": false,
+    "counts_as_o4_confirmation": false,
+    "a8_in_scope": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "candidate88_rerun_forbidden": true,
+    "successful_acquisition_authorizes_only_frozen_v27_heldout_confirmation": true
+  },
+  "base_config": {
+    "path": "configs/data/kinofail_o4_scene_stream_v28_prefix_freeze_v1.json",
+    "sha256": "5a8e9a3afdbe0276906ae8c523f54a7826fe3e0febb5df16877e7c6905ceb307"
+  },
+  "candidate_ids": [
+    "indoor_diningroom_89",
+    "indoor_office_90",
+    "indoor_livingroom_91",
+    "indoor_kitchen_92",
+    "indoor_house_93",
+    "indoor_bedroom_94",
+    "indoor_diningroom_95",
+    "indoor_office_96",
+    "indoor_livingroom_97",
+    "indoor_kitchen_98",
+    "indoor_house_99",
+    "indoor_bedroom_100",
+    "indoor_diningroom_101",
+    "indoor_office_102",
+    "indoor_livingroom_103",
+    "indoor_kitchen_104",
+    "indoor_house_105",
+    "indoor_bedroom_106",
+    "indoor_diningroom_107",
+    "indoor_office_108",
+    "indoor_livingroom_109",
+    "indoor_kitchen_110",
+    "indoor_house_111",
+    "indoor_bedroom_112"
+  ],
+  "new_candidates": [
+    {
+      "scene_id": "indoor_bedroom_112",
+      "room_type": "Bedroom",
+      "source_seed": 20261381,
+      "runtime_seed": 20261382,
+      "material_id": "val_concrete045",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "Bedroom_seed20261381"
+    }
+  ],
+  "selection_policy_overrides": {
+    "processing_order": "strict_candidate_stream_order",
+    "stop_at_first_prefix_meeting_quota": true,
+    "maximum_candidates": 24,
+    "minimum_admitted_scenes": 5,
+    "minimum_admitted_families": 4,
+    "one_generation_attempt_per_candidate": true,
+    "replacement_seed_allowed": false,
+    "source_repair_allowed": false,
+    "continue_after_terminal_rejection_until_quota_or_budget": true,
+    "all_processed_candidates_count_in_denominator": true,
+    "unprocessed_suffix_must_remain_untouched": true,
+    "o4_withheld_until_cohort_frozen": true,
+    "all_admitted_scenes_must_enter_v27_confirmation": true,
+    "fresh_process_per_stage_and_scene": true
+  },
+  "pipeline_overrides": {
+    "candidate_runner": "scripts/run_o4_scene_candidate_v30.py",
+    "route_output_name": "route_surface_o4_v30_heldout_stream"
+  },
+  "operator_output_root": "outputs/kinofail_realistic/operator_confirmation/o4_action_v31_heldout_confirmation",
+  "additional_locked_files": [
+    {"path": "scripts/run_o4_scene_candidate_v30.py", "sha256": "491db543bc0a5178c1e12bcff36d9648c41f69e08335f962435a4fce4e0f1784"},
+    {"path": "scripts/audit_o4_scene_stream_v30.py", "sha256": "3dc616244718a3d950296996b8a578a9205e7db2256bdf976fbba27968e69266"},
+    {"path": "tests/test_o4_scene_stream_v30.py", "sha256": "e276a1de7208d55215efc126fce1acae1217ac119e0853da75be78d321d3c645"},
+    {"path": "outputs/kinofail_realistic/operator_confirmation/o4_action_v28_scene_stream/invalidation_audit.json", "sha256": "908f12f7a4e65648f81ecf3c48c4af411dc7cf76e1175e799fac10c784292739", "json_passed": false, "json_sealed": true},
+    {"path": "outputs/kinofail_realistic/operator_confirmation/o4_action_v29_scene_stream/invalidation_audit.json", "sha256": "b01841a13a59f09ada3b484352875c34be9336507e1ccbe0cd9aafc869a847ad", "json_passed": false, "json_sealed": true},
+    {"path": "/home/eureka/nvidia/isaacsim/kit/python/lib/python3.11/site-packages/pxr/__init__.py", "sha256": "b562c0316021f102951b9976572119f65f816ff5790f0c9b4ac0be7e4acc1ee5"},
+    {"path": "/home/eureka/nvidia/isaacsim/kit/python/lib/python3.11/site-packages/pxr/Usd/_usd.so", "sha256": "e3468b0eeb405359ac4f148f40fe19e7ffe7adecff9a8a45c6967564d1931d68"},
+    {"path": "/home/eureka/nvidia/isaacsim/kit/python/lib/python3.11/site-packages/pxr/UsdGeom/_usdGeom.so", "sha256": "eb4ab5e5e9a4f40caf507fe81244232fb80898354532d1044c21b56f8c029339"}
+  ]
+}

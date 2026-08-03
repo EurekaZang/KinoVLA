@@ -117,7 +117,7 @@ Limitations must remain honest:
 - Operators are constructed to isolate phenomena and simplify terrain physics.
 - Forced-label matrix uses scripted primitives, not optimized end-to-end autonomy.
 - Detector is infrastructure; oracle triggering is primary.
-- A8 real-world snapshots remain optional.
+- Paper evidence and future hardening remain confined to A0–A7.
 - O8 is an active-probing/contact-mode boundary, not fully solved.
 
 ### Conclusion

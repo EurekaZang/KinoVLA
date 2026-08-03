@@ -1,0 +1,43 @@
+{
+  "schema_version": "kinofail.embodiedgen-o4-route-surface-v7-audit-amendment.v1",
+  "created_date": "2026-07-22",
+  "status": "frozen_before_corridor_refinement_or_heldout_render",
+  "batch": {
+    "path": "configs/data/kinofail_embodiedgen_o4_route_surface_v7_confirmation_batch_v1.json",
+    "sha256": "1629744a521df99e81726cdfc7c5400d51b5e25bd88fda1e8b1a850efc9e9e46"
+  },
+  "trigger": {
+    "stage": "base_v1_compile",
+    "affected_requests": [
+      "indoor_bathroom_23",
+      "indoor_diningroom_32"
+    ],
+    "observation": "The frozen base compiler raised deterministic route-planning exceptions before its native compiled_scene_audit.json writer was reached.",
+    "observed_exceptions": [
+      "no collision-free route endpoint",
+      "no Go2-width route meets the minimum usable length: longest_component_path=1.813m required=4.000m"
+    ]
+  },
+  "administrative_change": "Add a generic frozen-stage execution recorder and batch-auditor v2 so a nonzero pre-audit compiler exit is preserved as a terminal, hash-bound denominator failure.",
+  "scientific_contract_changed": false,
+  "retry_or_replacement_authorized": false,
+  "unchanged": [
+    "all twelve scene IDs and source/formal seeds",
+    "all room types and complexity assignments",
+    "all held-out material assignments",
+    "all physical, visual, causal, and statistical thresholds",
+    "no source repair, seed replacement, or route relaxation",
+    "full twelve-request denominator"
+  ],
+  "timing_statement": "Frozen after source generation, source preflight, and base compile attempts; before corridor refinement, held-out terrain authoring, RTX inspection, Go2 QA, or O4 collection for every request.",
+  "frozen_additions": {
+    "stage_execution_recorder": {
+      "path": "scripts/run_frozen_stage_with_audit_v1.py",
+      "sha256": "5487aafbd08a54ab1c6a1736b5c123b8606e15200bcad4f97776358ebad7bc83"
+    },
+    "batch_auditor_v2": {
+      "path": "scripts/audit_embodiedgen_o4_route_surface_v7_batch_v2.py",
+      "sha256": "3dbce762001c7a951c6eace1a02521ce7d7ba4c57cf21e83627e649abe8e16c5"
+    }
+  }
+}

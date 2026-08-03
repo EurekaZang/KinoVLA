@@ -1,0 +1,61 @@
+{
+  "schema_version": "kinofail.forest-metric-geometry-confirmation.v1-development",
+  "created_utc": "2026-07-22T18:23:00Z",
+  "status": "frozen_before_o2_g03_runtime_not_scene_registry_not_a0_a7_evidence",
+  "operator_id": "O2_compliance",
+  "expected_pair_schema": "kinofail.realistic-forest-o2-pair-audit.v2-development",
+  "purpose": "Held-out replication of corrected O2 on a distinct metric route, collision layout, gait entry phase, and controller trajectory.",
+  "evidence_boundary": {
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "does_not_complete_realistic_a0_a7": true
+  },
+  "frozen_sources": {
+    "collector": {"path": "scripts/isaac_collect_visual_shell_o2_lane.py", "sha256": "418e7e13e23bbeb074916503bf40482a22d760c1e892d215558ff0ea2e3e60f0"},
+    "route_protocol": {"path": "kino_vla/sim/realistic_route_protocol.py", "sha256": "c75806f8c51922c1a942333d6d554ca720de258bc5273a2f105b5538b1d9f94c"},
+    "pair_auditor": {"path": "scripts/audit_forest_o2_pair.py", "sha256": "f4e4c2946741d601e599d0964bba1a654c408777ae4c9739b70a0427bcb1bc34"}
+  },
+  "reference_geometry": {
+    "realization_id": "g01",
+    "config": {"path": "configs/data/kinofail_forest_hybrid_composition_dev_v14.json", "sha256": "f1b60ae56f6a8e35ff7a2c977af6d7ea79dda4220c85b2be9e4f6b8f7fada824"},
+    "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v14/compiled_scene_audit.json", "sha256": "f59d2020b97fe8793fe90c0c921166d533bce7ba23c56245e555ee28edc7cfc8"}
+  },
+  "development_calibration": {
+    "realization_id": "g02",
+    "config": {"path": "configs/data/kinofail_forest_hybrid_composition_dev_v19.json", "sha256": "29f4afb3742de13263385e0d43b4acee678b5092067d7d665a0f8aa429d76929"},
+    "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g02_dev01/isaac_hybrid_composition_dev_v19/compiled_scene_audit.json", "sha256": "8b52bbee97f9092d2661786716a214ecca94c3b5593a9eb8e2ac90f706e6bea4"},
+    "disclosure": "G02 identified that a lowered support can diverge when nominal first contacts even while the anomaly foot is descending; G02 is calibration-only."
+  },
+  "heldout_confirmation": {
+    "realization_id": "g03",
+    "single_runtime_attempt": true,
+    "output_directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g03_dev01/isaac_hybrid_composition_dev_v20/g03_o2_heldout_confirmation_attempt1",
+    "config": {"path": "configs/data/kinofail_forest_hybrid_composition_dev_v20.json", "sha256": "a85aaf1bffbab9fd6c9ec15818b2f2865fd5d2abb6e30ad2ddcd1a38b5743b8d"},
+    "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g03_dev01/isaac_hybrid_composition_dev_v20/compiled_scene_audit.json", "sha256": "9ae21d4197c7f37332fce41bdbf5e2050393972c198e160892fd731de57220d3"},
+    "runtime": {
+      "seed": 20260804,
+      "steps": 560,
+      "material_id": "train_ground037",
+      "region_progress_m": 1.75,
+      "region_lateral_offset_m": -0.06,
+      "region_half_length_m": 0.65,
+      "region_half_width_m": 0.60,
+      "start_lateral_offset_m": 0.10,
+      "start_heading_offset_rad": 0.04,
+      "target_lateral_offset_m": -0.01,
+      "forward_speed_mps": 0.31
+    }
+  },
+  "frozen_primary_endpoints": {
+    "preinteraction_rows_exactly_equal": true,
+    "first_divergence_not_before_either_lane_surface_interaction": true,
+    "max_foot_sinkage_m_min": 0.07,
+    "shear_work_j_min_exclusive": 0.02,
+    "median_base_height_delta_m_min": 0.07,
+    "route_progress_deficit_m_min": 0.75,
+    "nominal_completes_without_fall": true,
+    "anomaly_falls": true
+  },
+  "execution_order": ["verify frozen hashes", "run G03 nominal once", "stop if nominal fails", "run G03 anomaly once", "run frozen v2 pair auditor"]
+}

@@ -1,0 +1,142 @@
+{
+  "schema_version": "kinofail.embodiedgen-o4-v6-native-confirmation-batch.v1",
+  "batch_id": "embodiedgen-o4-v6-native-confirmation-20260721-v1",
+  "status": "frozen_before_any_requested_scene_generation",
+  "objective": "Test the unchanged 35 N O4 consequence with fully v6-native pair and independence adjudication on six entirely new scene instances while explicitly measuring whether lower-clutter generation improves scene-admission yield.",
+  "new_scene_requests": [
+    {"scene_id": "indoor_livingroom_15", "scene_instance_family": "EmbodiedGen-v2-LivingRoom-seed20260827", "room_type": "LivingRoom", "complexity": "simple", "source_scene_seed": 20260827, "formal_episode_seed": 20260828, "planned_role": "confirmation_1_of_6"},
+    {"scene_id": "indoor_livingroom_16", "scene_instance_family": "EmbodiedGen-v2-LivingRoom-seed20260829", "room_type": "LivingRoom", "complexity": "simple", "source_scene_seed": 20260829, "formal_episode_seed": 20260830, "planned_role": "confirmation_2_of_6"},
+    {"scene_id": "indoor_livingroom_17", "scene_instance_family": "EmbodiedGen-v2-LivingRoom-seed20260831", "room_type": "LivingRoom", "complexity": "simple", "source_scene_seed": 20260831, "formal_episode_seed": 20260832, "planned_role": "confirmation_3_of_6"},
+    {"scene_id": "indoor_house_18", "scene_instance_family": "EmbodiedGen-v2-House-seed20260833", "room_type": "House", "complexity": "minimalist", "source_scene_seed": 20260833, "formal_episode_seed": 20260834, "planned_role": "confirmation_4_of_6"},
+    {"scene_id": "indoor_diningroom_19", "scene_instance_family": "EmbodiedGen-v2-DiningRoom-seed20260835", "room_type": "DiningRoom", "complexity": "minimalist", "source_scene_seed": 20260835, "formal_episode_seed": 20260836, "planned_role": "confirmation_5_of_6"},
+    {"scene_id": "indoor_kitchen_20", "scene_instance_family": "EmbodiedGen-v2-Kitchen-seed20260837", "room_type": "Kitchen", "complexity": "minimalist", "source_scene_seed": 20260837, "formal_episode_seed": 20260838, "planned_role": "confirmation_6_of_6"}
+  ],
+  "generation_design": {
+    "livingroom_simple_instances": 3,
+    "lower_clutter_minimalist_instances": 3,
+    "lower_clutter_families": ["House", "DiningRoom", "Kitchen"],
+    "rationale": "The invalidated v6 batch showed 3/5 source/base admission failures and successful admission for LivingRoom. The new batch tests, rather than assumes, that minimalist generation improves traversability in clutter-sensitive families. Every requested scene remains in the denominator.",
+    "claim_limit": "Complexity allocation is development-informed; results estimate this frozen allocation only, not unbiased RoomGen-wide yield."
+  },
+  "selection_policy": {
+    "generation_attempts_per_request": 1,
+    "replacement_seed_allowed": false,
+    "post_generation_source_repair_allowed": false,
+    "post_generation_route_or_lighting_tuning_allowed": false,
+    "post_generation_threshold_change_allowed": false,
+    "formal_runs_per_admitted_scene": 1,
+    "all_rejections_count_in_denominator": true,
+    "downstream_execution_after_failed_gate": false,
+    "stage_order": [
+      "source_integrity",
+      "base_v1_compile",
+      "corridor_v2_refinement",
+      "isaac_rtx_qa",
+      "articulated_go2_qa",
+      "corridor_v2_admission",
+      "formal_o4_pair",
+      "phase_aware_v6_formal_adjudication",
+      "v6_native_independent_formal_admission"
+    ]
+  },
+  "corridor_contract": {
+    "robot_radius_m": 0.34,
+    "physical_safety_margin_m": 0.1,
+    "maximum_tracking_error_m": 0.3,
+    "required_centerline_clearance_m": 0.74,
+    "corridor_length_m": 2.45,
+    "collector_start_waypoint_index": 2,
+    "lighting": "frozen corridor-v2 five route-aware ceiling panels plus neutral dome"
+  },
+  "run_contract": {
+    "forward_s": 2.4,
+    "peel_pulse_s": 0.1,
+    "recovery_s": 1.0,
+    "reverse_s": 3.0,
+    "stop_s": 1.0,
+    "rgb_fps": 5.0,
+    "camera": "actual body-fixed Go2 front RTX RGB"
+  },
+  "operator_contract": {
+    "id": "O4",
+    "contact_scope": "named Go2 feet only",
+    "maximum_active_feet": 1,
+    "force_cap_n": 35.0,
+    "parameters_unchanged_from_v5": true
+  },
+  "consequence_contract": {
+    "minimum_effect_window_s": 1.0,
+    "minimum_progress_gain_lag_m": 0.1,
+    "minimum_relative_speed_suppression": 0.08,
+    "minimum_tilt_increase_rad": 0.12,
+    "minimum_base_height_drop_m": 0.04
+  },
+  "phase_aware_visual_contract": {
+    "thresholds": {
+      "context_min_std_luminance": 0.025,
+      "context_max_black_fraction": 0.9,
+      "context_min_quantized_colors_5bit": 32,
+      "sensor_min_mean_luminance": 0.005,
+      "sensor_min_std_luminance": 0.005,
+      "sensor_max_black_fraction": 0.995,
+      "sensor_min_quantized_colors_5bit": 8
+    }
+  },
+  "inference_scope": {
+    "requested_scene_instances": 6,
+    "minimum_formal_passes_for_primary_target": 3,
+    "claim_if_primary_target_met": "The unchanged 35 N O4 consequence replicated under fully v6-native audit on at least three of six new, preregistered scene instances under the frozen complexity allocation.",
+    "always_report": [
+      "all six requests and every failed gate",
+      "source/base/corridor/RTX/Go2/formal yield",
+      "simple versus minimalist admission counts without causal overinterpretation",
+      "the preceding invalidated 0/5 v6 batch",
+      "all per-scene causal and visual-integrity metrics"
+    ],
+    "not_authorized": [
+      "recover any prior batch result as confirmation",
+      "claim all 11 operators are benchmark-ready",
+      "claim real-Go2 sim-to-real validity",
+      "claim Kino-Fail is ICRA-ready from O4 alone"
+    ]
+  },
+  "permanently_excluded_scene_ids": [
+    "indoor_office_02", "indoor_bedroom_01", "indoor_livingroom_01", "indoor_kitchen_01",
+    "indoor_diningroom_02", "indoor_house_03", "indoor_bathroom_04", "indoor_office_05",
+    "indoor_bedroom_06", "indoor_kitchen_07", "indoor_livingroom_08", "indoor_diningroom_09",
+    "indoor_house_10", "indoor_bathroom_11", "indoor_kitchen_12", "indoor_livingroom_13",
+    "indoor_diningroom_14"
+  ],
+  "calibration_exclusions": [
+    {"scene_id": "indoor_office_05", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260805/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260809_v5/pair_manifest.json", "sha256": "bcdab1e131f4934c0b4babd162f6a828295158eabdc321b6cbc872c10cd4c5a8"},
+    {"scene_id": "indoor_bedroom_06", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260807/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260810_v5/pair_manifest.json", "sha256": "dfe021e86a2d74b3162ab48fc3625a77f20eecc9392f759d49e0081d92d4e47f"},
+    {"scene_id": "prior_v6_batch_all_five", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_phase_aware_v6_confirmation_batch_v1_invalidation_audit.json", "sha256": "2feb4865e76cb169c0d83095826559996ea6163e2e68d49fe93f48b3a866217f"},
+    {"scene_id": "all_pre_v6_batches", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_forward_window_v5_confirmation_batch_v1_audit.json", "sha256": "be7b96851d0fcf37f4657da5e46518da61b7d70d549628507636625106c83f11"}
+  ],
+  "development_evidence": {
+    "phase_aware_v6_development": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_phase_aware_v6_development_audit.json", "sha256": "6a343d3b4760746bf09e3a708a9b80eacef0793ebfecf118697a7aa480ee4ea9"},
+    "invalidated_v6_batch": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_phase_aware_v6_confirmation_batch_v1_invalidation_audit.json", "sha256": "2feb4865e76cb169c0d83095826559996ea6163e2e68d49fe93f48b3a866217f"},
+    "v6_native_independence_plan": {"path": "configs/data/kinofail_o4_independence_v6_development_plan.json", "sha256": "18816eac78cefd53e9abf16b81ba956e53ca5627f4049b974a25e7ebbf9105e1"},
+    "v6_native_independence_replay": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/protocol_failures/LivingRoom_seed20260823_o4_independence_v6_development_replay.json", "sha256": "ddd6763e9903c392c8b23e4e074039dab9851f606c7eb269e3acff06d6c91176"}
+  },
+  "frozen_code": {
+    "room_generator": {"path": "scripts/generate_embodiedgen_room_source.py", "sha256": "eee7a8deca19805793b26c2600364688ea52e94fb481affd87e7b7fc8c803140"},
+    "base_scene_compiler": {"path": "scripts/compile_embodiedgen_kinofail_scene.py", "sha256": "a39ce1138cbdef9bb2ba9b0b52abd5ef8cb72e2e73633fadad2a2bdca3c61564"},
+    "corridor_v2_refiner": {"path": "scripts/refine_embodiedgen_kinofail_scene_v2.py", "sha256": "b0cba713dde48c61b98e8a4610687f172e33ac2deb53976d18224131816a8304"},
+    "rtx_qa": {"path": "scripts/isaac_render_embodiedgen_scene_qa.py", "sha256": "6f1dd81a642250b651866bc4299d96cabea0d253d5b28208ed1db4bdd930971a"},
+    "go2_qa": {"path": "scripts/isaac_embodiedgen_go2_scene_qa.py", "sha256": "bf50c1d32584e87abdb2acf42dbefa850f1cb1049279e472034ef5de7ee8c593"},
+    "corridor_v2_admission": {"path": "scripts/audit_embodiedgen_corridor_v2_admission.py", "sha256": "893a098bb4b8aaeba251e65419d927029b181647dd634ecf6f6df03596bbf9df"},
+    "protocol_freezer": {"path": "scripts/freeze_embodiedgen_o4_protocol.py", "sha256": "4749e326d4a868fd9b29be9019321b826e5a58a30e8914eb19ef4db55b98fb4c"},
+    "pair_collector": {"path": "scripts/isaac_collect_embodiedgen_o4_pair.py", "sha256": "8fe8ab7e3b81ac640a7ca168742b74cfb23c98a3108775dbd222d66f1f4d7830"},
+    "phase_aware_pair_adjudicator": {"path": "scripts/audit_embodiedgen_o4_pair_v6.py", "sha256": "bfc169815daac2d910c4e8da56375f99f52f632f6c73502d3149d43ee485b63a"},
+    "v6_native_independence_auditor": {"path": "scripts/audit_embodiedgen_o4_independence_v6.py", "sha256": "da96dcea7bc1d876c1822420e765ee882ea7045210aa51c2cd9ac3c6117a19c9"},
+    "phase_aware_batch_auditor": {"path": "scripts/audit_embodiedgen_o4_v6_batch.py", "sha256": "97f865c87319e6216e41e00d0f9a9e1fa0121e0927603362dd073229d99e103e"},
+    "corridor_v2_batch_audit_base": {"path": "scripts/audit_embodiedgen_o4_corridor_v2_batch.py", "sha256": "63fd2ca339c9614cf4ba4f9bb6ec66472d8c3718fd98e0e02c48975e5b6c07e6"},
+    "source_contract": {"path": "kino_vla/sim/embodiedgen_asset.py", "sha256": "78666c1b441a40ac9d1d93ea2da2c47df1266da1ea166913a14304ee5feafd88"},
+    "base_scene_contract": {"path": "kino_vla/sim/embodiedgen_scene.py", "sha256": "eb49fc1b261faacd8552fa3493acdb1ddbecea415b77512483f22ec950f8a719"},
+    "corridor_v2_contract": {"path": "kino_vla/sim/embodiedgen_scene_v2.py", "sha256": "a8f02462540d7143f8703309d950a46ea49b81ffc5f17a88177fb9bfc9c482ae"},
+    "phase_aware_module": {"path": "kino_vla/eval/o4_phase_aware.py", "sha256": "6026fc72244240a1a290fbe255058a129e778628e64a6cbbf5e876d9d6b5827b"},
+    "backend": {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "cb3a51fa1ef935388d184b609dc1b956c63f331851615ac26b895f5b5df2ed5b"},
+    "adhesion_model": {"path": "kino_vla/sim/adhesion.py", "sha256": "3a6d7232c2186087bde15b72b39907b0b32197ad141ac06816f19a2e148e636e"}
+  }
+}

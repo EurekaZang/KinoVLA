@@ -1,0 +1,408 @@
+# Kino-Fail realistic benchmark design.  This file compiles schedules only; an episode remains
+# artifact_state=planned until Isaac runtime outputs and QA evidence are attached.
+benchmark_id: kinofail_realistic_v1
+
+corpus:
+  # The 396-episode pilot spends its three scene replicates on three genuinely distinct scene
+  # families per domain, rather than three deterministic seeds of one family.  The full corpus
+  # then supplies five stochastic seeds inside every scene family.
+  pilot_scene_families_per_domain: 3
+  pilot_seeds: 1
+  pilot_severities: 2
+  full_seeds: 5
+  full_severities: 3
+  full_realizations: 2
+  expected_pilot_records: 396
+  expected_full_records: 5940
+
+quality_gates:
+  min_material_families_per_operator: 6
+  # Every physical episode is rendered with three synchronized appearance views.  Full-split
+  # cells currently contain two independent PBR families, so the third view revisits one family
+  # with a different state/UV/photometric realization.
+  min_material_families_per_texture_swap_group: 2
+  min_operator_labels_per_material: 3
+  min_scene_families_per_domain: 3
+  max_operator_material_nmi: 0.02
+  max_condition_material_nmi: 0.001
+
+# Runtime promotion gates.  These are evaluated from the collected files themselves; a collector
+# cannot declare an episode evaluation-eligible.  The 40 ms synchronization limit is below one
+# 20 Hz RGB interval and is checked against the higher-rate proprioception clock.
+runtime_quality_gates:
+  min_rgb_frames: 5
+  min_distinct_rgb_frames: 3
+  # Mean |RGB_primary-RGB_swap| / 255 over synchronized frames.  This rejects a renderer cache
+  # bug or an appearance intervention that changes metadata without visibly changing the image.
+  min_mean_appearance_pair_rgb_l1: 0.015
+  min_rgb_width: 320
+  min_rgb_height: 180
+  min_proprio_samples: 25
+  min_proprio_features: 11
+  max_rgb_proprio_skew_s: 0.04
+  max_mean_highlight_fraction: 0.45
+  max_frame_highlight_fraction: 0.90
+  min_mean_luminance_std: 12.0
+  min_scheduled_appearance_pixel_fraction: 0.10
+  min_scene_context_pixel_fraction: 0.08
+  parameter_abs_tolerance: 0.00001
+  parameter_rel_tolerance: 0.01
+
+# 70/20/10 follows the approved terrain recommendation.  The final tier is a LucidSim-style,
+# geometry-conditioned sequence renderer; it must not be generated frame-by-frame.
+render_tiers:
+  structured_pbr_percent: 70
+  pbr_decal_percent: 20
+  generated_sequence_percent: 10
+
+visual_randomization:
+  uv_scale_range: [0.78, 1.32]
+  rotation_deg: [0, 90, 180, 270]
+  triplanar: true
+
+# Rendering-only interventions.  They never change collision geometry, operator parameters,
+# proprioception or telemetry.  All views are captured at the same simulated state/timestamp so
+# the corpus can enforce prediction consistency under terrain texture swaps.
+texture_swap_randomization:
+  views_per_physical_episode: 3
+  uv_offset_range: [0.0, 1.0]
+  albedo_brightness_multiplier_range: [0.88, 1.12]
+  normal_strength_range: [0.75, 1.25]
+  roughness_multiplier_range: [0.82, 1.18]
+
+# This gate is deliberately separate from attribution accuracy: a model can be consistently
+# wrong.  A0-A7 still carry the task-performance claim; these thresholds only reject models whose
+# decision changes when an appearance-only intervention is applied to the same physical evidence.
+texture_swap_evaluation_gates:
+  min_group_hard_prediction_consistency: 0.95
+  min_pairwise_prediction_agreement: 0.95
+  max_mean_pairwise_probability_jsd: 0.05
+
+camera_profiles:
+  - go2_front_calib_a
+  - go2_front_calib_b
+  - go2_front_calib_c
+
+# Frozen engineering camera profiles used by the runtime collector.  These are deliberately kept
+# separate from the schedule's profile IDs so the validator can compare the actual mount readback.
+# They are not claimed as real-Go2 calibration; the release still requires a physical fixture
+# calibration and will replace these values while invalidating all dependent runtime manifests.
+camera_profile_specs:
+  go2_front_calib_a:
+    mount_xyz_m: [0.330, -0.004, 0.061]
+    pitch_down_rad: 0.140
+    focal_length_mm: 17.8
+    width: 640
+    height: 360
+  go2_front_calib_b:
+    mount_xyz_m: [0.335, 0.000, 0.065]
+    pitch_down_rad: 0.180
+    focal_length_mm: 18.0
+    width: 640
+    height: 360
+  go2_front_calib_c:
+    mount_xyz_m: [0.340, 0.004, 0.069]
+    # The collector's first vertical slice showed that 0.220 rad pointed a low-mounted Go2
+    # camera mostly at the floor.  Keep this engineering profile near-forward so both the
+    # traversed surface and the room context remain observable; a physical fixture calibration
+    # must still replace all three engineering profiles before release.
+    pitch_down_rad: 0.100
+    focal_length_mm: 18.2
+    width: 640
+    height: 360
+
+appearance_states:
+  life: [clean, dusty, scuffed, damp]
+  production: [clean, dusty, oil_stained, wet]
+  wild: [dry, damp, leaf_litter, muddy]
+
+domains:
+  life:
+    scenes:
+      - {id: indoor_workstudio_01, split: train, source: kino_authored_embodiedgen_interface}
+      - {id: indoor_office_02, split: val, source: embodiedgen_v2_roomgen}
+      - {id: indoor_garage_03, split: test, source: embodiedgen_v2_roomgen}
+  production:
+    scenes:
+      - {id: warehouse_loading_01, split: train, source: embodiedgen_v2_assetgen}
+      - {id: maintenance_bay_02, split: val, source: embodiedgen_v2_assetgen}
+      - {id: assembly_corridor_03, split: test, source: embodiedgen_v2_assetgen}
+  wild:
+    scenes:
+      - {id: forest_trail_01, split: train, source: audited_heightfield_plus_embodiedgen_shell}
+      - {id: gravel_slope_02, split: val, source: audited_heightfield_plus_embodiedgen_shell}
+      - {id: muddy_track_03, split: test, source: audited_heightfield_plus_embodiedgen_shell}
+
+# Curated 1K pilot subset from ambientCG, one of MatSynth's CC0 source ecosystems.  The listed
+# physical_size_m comes from ambientCG's metric dimensions.  Formal release should retain the
+# downloaded archive hash and per-map hashes in terrain_assets.lock.json.
+materials:
+  # train families
+  - id: train_tiles141
+    source_asset_id: Tiles141
+    semantic_family: worn_stone_tile
+    source: https://ambientcg.com/a/Tiles141
+    archive_url: https://ambientcg.com/get?file=Tiles141_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.0, 2.0]
+    split: train
+    domains: [life]
+  - id: train_concrete034
+    source_asset_id: Concrete034
+    semantic_family: smooth_concrete
+    source: https://ambientcg.com/a/Concrete034
+    archive_url: https://ambientcg.com/get?file=Concrete034_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.1, 0.55]
+    split: train
+    domains: [life]
+  - id: train_road007
+    source_asset_id: Road007
+    semantic_family: marked_asphalt
+    source: https://ambientcg.com/a/Road007
+    archive_url: https://ambientcg.com/get?file=Road007_1K-JPG.zip
+    license: CC0
+    physical_size_m: [7.5, 7.5]
+    split: train
+    domains: [production]
+  - id: train_concrete046
+    source_asset_id: Concrete046
+    semantic_family: industrial_concrete
+    source: https://ambientcg.com/a/Concrete046
+    archive_url: https://ambientcg.com/get?file=Concrete046_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.4, 2.4]
+    split: train
+    domains: [production]
+  - id: train_ground054
+    source_asset_id: Ground054
+    semantic_family: compact_mud
+    source: https://ambientcg.com/a/Ground054
+    archive_url: https://ambientcg.com/get?file=Ground054_1K-JPG.zip
+    license: CC0
+    physical_size_m: [3.5, 3.5]
+    split: train
+    domains: [wild]
+  - id: train_ground037
+    source_asset_id: Ground037
+    semantic_family: forest_ground
+    source: https://ambientcg.com/a/Ground037
+    archive_url: https://ambientcg.com/get?file=Ground037_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.1, 2.1]
+    split: train
+    domains: [wild]
+
+  # validation families
+  - id: val_tiles139
+    source_asset_id: Tiles139
+    semantic_family: limestone_tile
+    source: https://ambientcg.com/a/Tiles139
+    archive_url: https://ambientcg.com/get?file=Tiles139_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.0, 2.0]
+    split: val
+    domains: [life]
+  - id: val_concrete045
+    source_asset_id: Concrete045
+    semantic_family: indoor_concrete
+    source: https://ambientcg.com/a/Concrete045
+    archive_url: https://ambientcg.com/get?file=Concrete045_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.0, 2.0]
+    split: val
+    domains: [life]
+  - id: val_asphalt023s
+    source_asset_id: Asphalt023S
+    semantic_family: fine_asphalt
+    source: https://ambientcg.com/a/Asphalt023S
+    archive_url: https://ambientcg.com/get?file=Asphalt023S_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.25, 1.25]
+    split: val
+    domains: [production]
+  - id: val_concrete040
+    source_asset_id: Concrete040
+    semantic_family: rough_concrete
+    source: https://ambientcg.com/a/Concrete040
+    archive_url: https://ambientcg.com/get?file=Concrete040_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.4, 1.4]
+    split: val
+    domains: [production]
+  - id: val_ground071
+    source_asset_id: Ground071
+    semantic_family: forest_mud_sticks
+    source: https://ambientcg.com/a/Ground071
+    archive_url: https://ambientcg.com/get?file=Ground071_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.75, 1.75]
+    split: val
+    domains: [wild]
+  - id: val_gravel023
+    source_asset_id: Gravel023
+    semantic_family: light_gravel
+    source: https://ambientcg.com/a/Gravel023
+    archive_url: https://ambientcg.com/get?file=Gravel023_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.5, 1.5]
+    split: val
+    domains: [wild]
+
+  # test families: never used for training or model selection
+  - id: test_tiles140
+    source_asset_id: Tiles140
+    semantic_family: industrial_stone_tile
+    source: https://ambientcg.com/a/Tiles140
+    archive_url: https://ambientcg.com/get?file=Tiles140_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.0, 2.0]
+    split: test
+    domains: [life]
+  - id: test_concrete039
+    source_asset_id: Concrete039
+    semantic_family: lived_in_concrete
+    source: https://ambientcg.com/a/Concrete039
+    archive_url: https://ambientcg.com/get?file=Concrete039_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.9, 1.9]
+    split: test
+    domains: [life]
+  - id: test_pathway002
+    source_asset_id: Pathway002
+    semantic_family: industrial_pathway
+    source: https://ambientcg.com/a/Pathway002
+    archive_url: https://ambientcg.com/get?file=Pathway002_1K-JPG.zip
+    license: CC0
+    physical_size_m: [3.0, 1.5]
+    split: test
+    domains: [production]
+  - id: test_asphalt031
+    source_asset_id: Asphalt031
+    semantic_family: worn_asphalt
+    source: https://ambientcg.com/a/Asphalt031
+    archive_url: https://ambientcg.com/get?file=Asphalt031_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.0, 2.0]
+    split: test
+    domains: [production]
+  - id: test_ground073
+    source_asset_id: Ground073
+    semantic_family: woodland_soil
+    source: https://ambientcg.com/a/Ground073
+    archive_url: https://ambientcg.com/get?file=Ground073_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.0, 2.0]
+    split: test
+    domains: [wild]
+  - id: test_gravel022
+    source_asset_id: Gravel022
+    semantic_family: coarse_gravel
+    source: https://ambientcg.com/a/Gravel022
+    archive_url: https://ambientcg.com/get?file=Gravel022_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.5, 1.5]
+    split: test
+    domains: [wild]
+
+operators:
+  - id: O1_mu_field
+    category: low_friction
+    physical_realizations: [physx_region_material, calibrated_surface_coupon]
+    geometry_profiles: [irregular_material_region, irregular_material_region_alt]
+    nominal: {mu_s: 0.80, mu_d: 0.60, restitution: 0.0}
+    severities:
+      - {id: mild, rank: 1, parameters: {mu_s: 0.38, mu_d: 0.32, restitution: 0.0}}
+      - {id: moderate, rank: 2, parameters: {mu_s: 0.20, mu_d: 0.15, restitution: 0.0}}
+      - {id: severe, rank: 3, parameters: {mu_s: 0.10, mu_d: 0.07, restitution: 0.0}}
+  - id: O2_compliance
+    category: compliant_terrain
+    physical_realizations: [foot_terramechanics, calibrated_deformable_patch]
+    geometry_profiles: [pressure_sinkage_field, deformable_mesh_patch]
+    nominal: {sink_depth_m: 0.0, shear_gain: 1.0, stiffness_n_per_m: 0.0}
+    severities:
+      - {id: mild, rank: 1, parameters: {sink_depth_m: 0.025, shear_gain: 0.80, stiffness_n_per_m: 80.0}}
+      - {id: moderate, rank: 2, parameters: {sink_depth_m: 0.060, shear_gain: 0.55, stiffness_n_per_m: 150.0}}
+      - {id: severe, rank: 3, parameters: {sink_depth_m: 0.110, shear_gain: 0.32, stiffness_n_per_m: 240.0}}
+  - id: O3_collapse
+    category: region_collapse
+    physical_realizations: [impulse_triggered_support_tile, damage_state_mesh_swap]
+    geometry_profiles: [hidden_support_cells, breakable_surface_cells]
+    nominal: {damage_threshold_ns: 1000000.0, drop_m: 0.0, residual_support: 1.0}
+    severities:
+      - {id: mild, rank: 1, parameters: {damage_threshold_ns: 75.0, drop_m: 0.025, residual_support: 0.72}}
+      - {id: moderate, rank: 2, parameters: {damage_threshold_ns: 45.0, drop_m: 0.060, residual_support: 0.45}}
+      - {id: severe, rank: 3, parameters: {damage_threshold_ns: 25.0, drop_m: 0.120, residual_support: 0.18}}
+  - id: O4_tether
+    category: adhesion
+    physical_realizations: [adhesive_foot_contact, tether_entanglement]
+    geometry_profiles: [irregular_protective_film, sparse_cable_loop]
+    nominal: {attachment_enabled: 0.0, force_cap_n: 0.0, break_force_n: 0.0}
+    severities:
+      - {id: mild, rank: 1, parameters: {attachment_enabled: 1.0, force_cap_n: 28.0, break_force_n: 55.0}}
+      - {id: moderate, rank: 2, parameters: {attachment_enabled: 1.0, force_cap_n: 48.0, break_force_n: 85.0}}
+      - {id: severe, rank: 3, parameters: {attachment_enabled: 1.0, force_cap_n: 72.0, break_force_n: 120.0}}
+  - id: O5_payload
+    category: overload
+    physical_realizations: [rigid_top_payload, asymmetric_side_payload]
+    geometry_profiles: [visible_top_case, visible_side_case]
+    nominal: {mass_kg: 0.0, com_offset_x_m: 0.0, com_offset_y_m: 0.0}
+    severities:
+      - {id: mild, rank: 1, parameters: {mass_kg: 3.0, com_offset_x_m: 0.00, com_offset_y_m: 0.00}}
+      - {id: moderate, rank: 2, parameters: {mass_kg: 8.0, com_offset_x_m: 0.08, com_offset_y_m: 0.00}}
+      - {id: severe, rank: 3, parameters: {mass_kg: 14.0, com_offset_x_m: 0.12, com_offset_y_m: 0.06}}
+  - id: O6_push
+    category: external_push
+    physical_realizations: [finite_duration_wrench, padded_dynamic_collision]
+    geometry_profiles: [clear_corridor, moving_soft_object]
+    nominal: {impulse_ns: 0.0, duration_s: 0.12, application_point_body_m: [0.0, -0.085, 0.075]}
+    severities:
+      - {id: mild, rank: 1, parameters: {impulse_ns: 2.0, duration_s: 0.12, application_point_body_m: [0.0, -0.085, 0.075]}}
+      - {id: moderate, rank: 2, parameters: {impulse_ns: 6.0, duration_s: 0.12, application_point_body_m: [0.0, -0.085, 0.075]}}
+      - {id: severe, rank: 3, parameters: {impulse_ns: 12.0, duration_s: 0.12, application_point_body_m: [0.0, -0.085, 0.075]}}
+  - id: O7_visual_remap
+    category: low_friction
+    physical_realizations: [appearance_physics_swap, timestamped_depth_bias]
+    geometry_profiles: [same_surface_counterfactual, same_surface_counterfactual_alt]
+    nominal: {mu_s: 0.80, mu_d: 0.60, depth_bias_m: 0.0}
+    severities:
+      - {id: mild, rank: 1, parameters: {mu_s: 0.36, mu_d: 0.30, depth_bias_m: 0.08}}
+      - {id: moderate, rank: 2, parameters: {mu_s: 0.18, mu_d: 0.13, depth_bias_m: 0.18}}
+      - {id: severe, rank: 3, parameters: {mu_s: 0.09, mu_d: 0.06, depth_bias_m: 0.32}}
+  - id: O8_invisible_collider
+    category: invisible_obstacle
+    physical_realizations: [transparent_acrylic, occluded_low_bar]
+    geometry_profiles: [transparent_panel, low_contrast_bar]
+    counterfactual_inherit: [obstacle_height_m, optical_transmission]
+    nominal: {collision_enabled: 0.0, obstacle_height_m: 0.38, optical_transmission: 0.88}
+    severities:
+      - {id: mild, rank: 1, parameters: {collision_enabled: 1.0, obstacle_height_m: 0.38, optical_transmission: 0.88}}
+      - {id: moderate, rank: 2, parameters: {collision_enabled: 1.0, obstacle_height_m: 0.38, optical_transmission: 0.94}}
+      - {id: severe, rank: 3, parameters: {collision_enabled: 1.0, obstacle_height_m: 0.38, optical_transmission: 0.98}}
+  - id: O9_high_centering
+    category: high_centering
+    physical_realizations: [rounded_ridge, pallet_edge]
+    geometry_profiles: [cross_path_log_or_pipe, cross_path_pallet_edge]
+    nominal: {ridge_height_m: 0.0, ridge_width_m: 0.0, residual_support: 1.0}
+    severities:
+      - {id: mild, rank: 1, parameters: {ridge_height_m: 0.13, ridge_width_m: 0.20, residual_support: 0.72}}
+      - {id: moderate, rank: 2, parameters: {ridge_height_m: 0.18, ridge_width_m: 0.24, residual_support: 0.46}}
+      - {id: severe, rank: 3, parameters: {ridge_height_m: 0.23, ridge_width_m: 0.28, residual_support: 0.22}}
+  - id: O10_effort_decay
+    category: effort_decay
+    physical_realizations: [whole_body_torque_derate, single_leg_torque_derate]
+    geometry_profiles: [clear_corridor, clear_corridor_alt]
+    nominal: {effort_floor: 1.0, decay_rate_per_s: 0.0, onset_s: 1000000.0}
+    severities:
+      - {id: mild, rank: 1, parameters: {effort_floor: 0.62, decay_rate_per_s: 0.35, onset_s: 2.0}}
+      - {id: moderate, rank: 2, parameters: {effort_floor: 0.40, decay_rate_per_s: 0.60, onset_s: 1.5}}
+      - {id: severe, rank: 3, parameters: {effort_floor: 0.20, decay_rate_per_s: 0.90, onset_s: 1.0}}
+  - id: O11_obs_bias
+    category: obs_bias
+    physical_realizations: [imu_bias_random_walk, odometry_latency_dropout]
+    geometry_profiles: [clear_corridor, clear_corridor_alt]
+    nominal: {tilt_bias_rad: 0.0, random_walk_rad_sqrt_s: 0.0, latency_s: 0.0}
+    severities:
+      - {id: mild, rank: 1, parameters: {tilt_bias_rad: 0.08, random_walk_rad_sqrt_s: 0.004, latency_s: 0.04}}
+      - {id: moderate, rank: 2, parameters: {tilt_bias_rad: 0.18, random_walk_rad_sqrt_s: 0.010, latency_s: 0.10}}
+      - {id: severe, rank: 3, parameters: {tilt_bias_rad: 0.35, random_walk_rad_sqrt_s: 0.020, latency_s: 0.20}}

@@ -1,0 +1,33 @@
+{
+  "schema_version": "kinofail.forest-prop-source.v1",
+  "status": "development_assets_pending_scene_and_license_audit",
+  "provider": {
+    "name": "Poly Haven",
+    "api_base": "https://api.polyhaven.com",
+    "asset_license": "CC0",
+    "license_url": "https://polyhaven.com/license",
+    "api_terms_url": "https://polyhaven.com/our-api",
+    "user_agent": "KinoFailResearch/1.0 contact-local-research"
+  },
+  "format": "usd",
+  "resolution": "1k",
+  "assets": [
+    {"id": "pine_roots", "role": "near_field_root_detail"},
+    {"id": "rock_moss_set_01", "role": "route_edge_rock_scatter"},
+    {"id": "fir_sapling", "role": "mid_field_vertical_vegetation"},
+    {"id": "fern_02", "role": "route_edge_understory"},
+    {"id": "shrub_03", "role": "route_edge_understory"},
+    {"id": "tree_stump_01", "role": "mid_field_landmark"}
+  ],
+  "output": {
+    "directory": "outputs/assets/forest_props_polyhaven_v1",
+    "lock_file": "forest_props.lock.json"
+  },
+  "admission_policy": {
+    "visual_only_by_default": true,
+    "no_asset_collision_without_kino_proxy_audit": true,
+    "source_hashes_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

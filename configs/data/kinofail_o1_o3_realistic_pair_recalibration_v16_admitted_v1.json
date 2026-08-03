@@ -1,0 +1,191 @@
+{
+  "schema_version": "kinofail.o1-o3-realistic-pair-recalibration-freeze.v1",
+  "created_utc": "2026-07-22T23:28:00Z",
+  "freeze_status": "frozen_before_first_anomaly_execution",
+  "purpose": "Paired nominal/anomaly recalibration of O1 friction loss and O3 support collapse on the three unseen realistic scenes admitted by v16.",
+  "evidence_policy": {
+    "development_recalibration_only": true,
+    "counts_as_a0_a7_evidence": false,
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "a8_in_scope": false,
+    "no_replacement_scenes": true,
+    "one_attempt_per_lane": true,
+    "no_threshold_or_parameter_change_after_first_case": true
+  },
+  "locked_files": [
+    {
+      "path": "scripts/isaac_collect_realistic_route_operator_lane_v16.py",
+      "sha256": "89388f69995d81b87c197235053a08bb9b5d4a5b0163fd566a45e75d74764a76"
+    },
+    {
+      "path": "scripts/isaac_collect_realistic_route_operator_lane_v6.py",
+      "sha256": "8500bbfa88cc83bf5b609a9eb4e9c5107574cba4fd918e37c641dc22edbc3a35"
+    },
+    {
+      "path": "kino_vla/sim/isaac_policy_backend.py",
+      "sha256": "95d43c4afcf2963e5defbd18c6a4663177cae83cb2f2bc2241faff46a7c79502"
+    },
+    {
+      "path": "kino_vla/sim/operators/o1_mu_field.py",
+      "sha256": "226d1b71d8ebe69b9cccca3cee389aa286e8ebc64ea3eca398198251156bd9e5"
+    },
+    {
+      "path": "kino_vla/sim/operators/o3_collapse.py",
+      "sha256": "4331e659b907a07f5e6d6b602bab14d82adf202023a7f6c982376d6ddf9ab4c9"
+    },
+    {
+      "path": "outputs/locomotion/policy.pt",
+      "sha256": "167633df29b6c29db8864869338dc829249be60665d598bb206354bd1daca3f3"
+    },
+    {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    },
+    {
+      "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_realistic_route_policy_v16_unseen_batch_v1/postrun_audit.json",
+      "sha256": "3da7c1f674d29888dae492ed621fe07dcd1262c65aa26e1225d8c1571144e53b",
+      "json_passed": true
+    }
+  ],
+  "runtime": {
+    "camera_profile": "go2_front_calib_b",
+    "steps": 650,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": 0.0,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.6,
+    "start_lateral_offset_m": 0.0,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": 0.0,
+    "forward_speed_mps": 0.32,
+    "maximum_route_deviation_m": 0.3,
+    "minimum_region_samples": 40,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.2,
+    "yaw_rate_limit_radps": 0.6
+  },
+  "operator_parameters": {
+    "o1": {
+      "anomaly_static_friction": 0.04,
+      "anomaly_dynamic_friction": 0.03
+    },
+    "o3": {
+      "damage_threshold_ns": 25.0,
+      "drop_m": 0.12,
+      "residual_support": 0.18
+    }
+  },
+  "cases": [
+    {
+      "scene_id": "indoor_livingroom_45",
+      "room_family": "LivingRoom",
+      "operator": "o1",
+      "material_id": "val_concrete045",
+      "runtime_seed": 20261238,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/compiled_scene_audit.json", "sha256": "e58e35533b31f62d9ed04970c8ffc7e548f7ff201614103ce29bb8c6998b837c", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "cf7cd6434011902dfddaa110baa2544e82bec2688db9370cd32e1ea9b5259138", "json_passed": true}
+      },
+      "outputs": {
+        "nominal": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_livingroom_45/o1/nominal",
+        "anomaly": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_livingroom_45/o1/anomaly"
+      }
+    },
+    {
+      "scene_id": "indoor_livingroom_45",
+      "room_family": "LivingRoom",
+      "operator": "o3",
+      "material_id": "val_concrete045",
+      "runtime_seed": 20261238,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/compiled_scene_audit.json", "sha256": "e58e35533b31f62d9ed04970c8ffc7e548f7ff201614103ce29bb8c6998b837c", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "cf7cd6434011902dfddaa110baa2544e82bec2688db9370cd32e1ea9b5259138", "json_passed": true}
+      },
+      "outputs": {
+        "nominal": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_livingroom_45/o3/nominal",
+        "anomaly": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_livingroom_45/o3/anomaly"
+      }
+    },
+    {
+      "scene_id": "indoor_kitchen_46",
+      "room_family": "Kitchen",
+      "operator": "o1",
+      "material_id": "test_asphalt031",
+      "runtime_seed": 20261240,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261239/route_surface_v16_unseen_confirmation/test_asphalt031/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261239/route_surface_v16_unseen_confirmation/test_asphalt031/terrain_route_v2/compiled_scene_audit.json", "sha256": "ed8e806529baa279d856e3bbdcf15da27a54377bd607d447ca078554f3c55e99", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261239/route_surface_v16_unseen_confirmation/test_asphalt031/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "b21470171651aa13c867db2e7bf7c37411c1d6dea9b3c9dd988a8c8d86cb600d", "json_passed": true}
+      },
+      "outputs": {
+        "nominal": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_kitchen_46/o1/nominal",
+        "anomaly": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_kitchen_46/o1/anomaly"
+      }
+    },
+    {
+      "scene_id": "indoor_kitchen_46",
+      "room_family": "Kitchen",
+      "operator": "o3",
+      "material_id": "test_asphalt031",
+      "runtime_seed": 20261240,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261239/route_surface_v16_unseen_confirmation/test_asphalt031/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261239/route_surface_v16_unseen_confirmation/test_asphalt031/terrain_route_v2/compiled_scene_audit.json", "sha256": "ed8e806529baa279d856e3bbdcf15da27a54377bd607d447ca078554f3c55e99", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261239/route_surface_v16_unseen_confirmation/test_asphalt031/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "b21470171651aa13c867db2e7bf7c37411c1d6dea9b3c9dd988a8c8d86cb600d", "json_passed": true}
+      },
+      "outputs": {
+        "nominal": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_kitchen_46/o3/nominal",
+        "anomaly": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_kitchen_46/o3/anomaly"
+      }
+    },
+    {
+      "scene_id": "indoor_bathroom_49",
+      "room_family": "Bathroom",
+      "operator": "o1",
+      "material_id": "test_gravel022",
+      "runtime_seed": 20261246,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261245/route_surface_v16_unseen_confirmation/test_gravel022/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261245/route_surface_v16_unseen_confirmation/test_gravel022/terrain_route_v2/compiled_scene_audit.json", "sha256": "4f273b3156d8928cca1275532c228733672ac08c7018d02a9c6f807219c990cb", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261245/route_surface_v16_unseen_confirmation/test_gravel022/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "d8071091226ccb73c649a10a33f3588089b0ebcfecdd473082281b05ae1872b5", "json_passed": true}
+      },
+      "outputs": {
+        "nominal": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_bathroom_49/o1/nominal",
+        "anomaly": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_bathroom_49/o1/anomaly"
+      }
+    },
+    {
+      "scene_id": "indoor_bathroom_49",
+      "room_family": "Bathroom",
+      "operator": "o3",
+      "material_id": "test_gravel022",
+      "runtime_seed": 20261246,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261245/route_surface_v16_unseen_confirmation/test_gravel022/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261245/route_surface_v16_unseen_confirmation/test_gravel022/terrain_route_v2/compiled_scene_audit.json", "sha256": "4f273b3156d8928cca1275532c228733672ac08c7018d02a9c6f807219c990cb", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261245/route_surface_v16_unseen_confirmation/test_gravel022/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "d8071091226ccb73c649a10a33f3588089b0ebcfecdd473082281b05ae1872b5", "json_passed": true}
+      },
+      "outputs": {
+        "nominal": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_bathroom_49/o3/nominal",
+        "anomaly": "outputs/kinofail_realistic/operator_recalibration/o1_o3_v16_admitted_v1/indoor_bathroom_49/o3/anomaly"
+      }
+    }
+  ],
+  "acceptance": {
+    "all_six_pairs_must_pass": true,
+    "maximum_route_deviation_m": 0.3,
+    "o1": {
+      "nominal_required_checks": ["compiled_scene_hash_verified", "three_event_aligned_frames", "front_frames_non_degenerate", "front_camera_position_rigid_mount", "front_camera_orientation_rigid_mount", "operator_region_reached", "full_lane_tracking_within_admitted_budget", "lane_appropriate_operator_region_coverage", "nominal_scene_floor_disabled_for_matched_topology", "nominal_route_surface_visible", "o1_matched_control_topology_enabled", "o1_matched_control_uses_scene_nominal_friction", "o1_matched_control_readback_preserved", "o1_matched_control_collision_segments_complete", "o1_matched_control_geometry_hidden", "nominal_route_completed", "nominal_robot_not_fallen"],
+      "anomaly_required_checks": ["compiled_scene_hash_verified", "three_event_aligned_frames", "front_frames_non_degenerate", "front_camera_position_rigid_mount", "front_camera_orientation_rigid_mount", "operator_region_reached", "full_lane_tracking_within_admitted_budget", "lane_appropriate_operator_region_coverage", "nominal_scene_floor_disabled", "nominal_route_surface_visible", "o1_coplanar_topology_enabled", "o1_coplanar_topology_mode", "o1_friction_readback_matches_request", "o1_nominal_surrounding_friction_preserved", "o1_collision_segments_complete", "o1_collision_geometry_hidden", "continuous_pbr_surface_preserved", "measured_contact_slip"]
+    },
+    "o3": {
+      "nominal_required_checks": ["compiled_scene_hash_verified", "three_event_aligned_frames", "front_frames_non_degenerate", "front_camera_position_rigid_mount", "front_camera_orientation_rigid_mount", "operator_region_reached", "full_lane_tracking_within_admitted_budget", "lane_appropriate_operator_region_coverage", "nominal_scene_floor_disabled_for_matched_topology", "nominal_route_surface_visible", "o3_matched_control_topology_enabled", "o3_matched_control_never_triggered", "o3_matched_control_has_no_geometric_seams", "o3_matched_control_friction_preserved", "o3_matched_control_surface_not_predeformed", "nominal_route_completed", "nominal_robot_not_fallen"],
+      "anomaly_required_checks": ["compiled_scene_hash_verified", "three_event_aligned_frames", "front_frames_non_degenerate", "front_camera_position_rigid_mount", "front_camera_orientation_rigid_mount", "operator_region_reached", "full_lane_tracking_within_admitted_budget", "lane_appropriate_operator_region_coverage", "nominal_scene_floor_disabled", "nominal_route_surface_visible", "o3_impulse_topology_enabled", "o3_measured_impulse_triggered", "o3_support_colliders_removed", "o3_pretrigger_support_has_no_geometric_seams", "o3_nominal_pretrigger_friction_preserved", "o3_visual_and_physics_trigger_synchronized", "o3_collision_geometry_hidden", "o3_continuous_pbr_triggered_deformation"]
+    }
+  },
+  "next_gate_if_passed": "Extend realistic paired recalibration to O4-O11, then freeze randomized corpus generation for new A0 training and A1-A7 reruns."
+}

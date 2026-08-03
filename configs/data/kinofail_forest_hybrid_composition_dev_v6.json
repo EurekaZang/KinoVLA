@@ -1,0 +1,41 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v5-development",
+  "iteration_id": "forest-photographic-hdri-aligned-split-ground-v6",
+  "status": "development_visual_alignment_iteration_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v5.json",
+    "sha256": "3287a70158fd720466dc7a785785096a46a32cb0a1ab1948638bbc8a0a859209"
+  },
+  "overrides": {
+    "background": {
+      "intensity": 600.0,
+      "rotation_xyz_deg": [0.0, 0.0, 180.0]
+    },
+    "near_field": {
+      "naturalized_route_visual": {
+        "enabled": true,
+        "appearance_only": true,
+        "segment_length_m": 0.25,
+        "minimum_bank_overlap_m": 0.05,
+        "maximum_bank_overlap_m": 0.18,
+        "phase_rad": 0.61
+      }
+    },
+    "appearance": {
+      "route_material_id": "train_ground054",
+      "surrounding_material_id": "train_ground037",
+      "distant_light_intensity": 35.0
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v6"
+    }
+  },
+  "quality_policy": {
+    "hdri_path_aligned_before_model_evaluation": true,
+    "route_and_bank_materials_are_operator_independent": true,
+    "naturalized_route_edge_is_visual_only": true,
+    "machine_pass_requires_manual_go2_rtx_review": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

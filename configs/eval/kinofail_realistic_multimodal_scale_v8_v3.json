@@ -1,0 +1,95 @@
+{
+  "a3_cells": {
+    "T1": [
+      "O1_mu_field",
+      "O3_collapse",
+      "O9_high_centering"
+    ],
+    "T2": [
+      "O2_compliance",
+      "O4_tether"
+    ],
+    "T3": [
+      "O7_visual_remap",
+      "O8_invisible_collider"
+    ],
+    "T4": [
+      "O5_payload",
+      "O6_push",
+      "O10_effort_decay",
+      "O11_obs_bias"
+    ],
+    "T5": "all nominal_counterfactual episodes"
+  },
+  "a3_missing_design_guard": {
+    "may_not_relabel_ordinary_O7_nominal_counterfactual_as_reverse": true,
+    "reverse_conflict": "must be closed only by the separately frozen O7 hazard-looking/nominal realization"
+  },
+  "a8_in_scope": false,
+  "bootstrap": {
+    "repetitions": 10000,
+    "seed": 20260723
+  },
+  "fixed_model": {
+    "base_estimator": "ExtraTreesClassifier",
+    "class_weight": "balanced",
+    "max_features": "sqrt",
+    "min_samples_leaf": 2,
+    "n_estimators": 192,
+    "structured_gate_threshold": 0.5,
+    "structured_meta": "three-fold StratifiedGroupKFold expert probabilities -> class-balanced logistic regression"
+  },
+  "freeze_context": "The v2 architecture, thresholds, splits and statistics are unchanged. This amendment binds the complete-design-cell O3 temporal repair overlay before any scale-v8 model training or predictions.",
+  "freeze_provenance": {
+    "base_multimodal_protocol": "configs/eval/kinofail_realistic_multimodal_scale_v8_v2.json",
+    "base_multimodal_protocol_sha256": "d5d6c26e0720ef0b6178267768f4d56d3849b9e70c64f1604c416504aaf062d6",
+    "model_outcomes_available_at_freeze": false,
+    "snapshot_protocol": "configs/eval/kinofail_realistic_snapshot_scale_v8_v3.json",
+    "snapshot_protocol_sha256": "74db1fd75ff6140e19aefc04deaa5f155b8361979770e6adb1a30be5d7b52eec"
+  },
+  "heldout_axes": {
+    "camera_profile": {
+      "fit": "Go2-front calibration profiles A/B; primary views only",
+      "test": "Go2-front calibration profile C; primary views only"
+    },
+    "material": {
+      "fit": "primary material prefix in {train,val}; primary views only",
+      "test": "primary material prefix test; primary views only"
+    },
+    "scene": {
+      "fit": "registry split in {train,val}; all appearance views; physical-episode weights sum to one",
+      "test": "registry split test; primary views for headline; all views only for texture consistency"
+    },
+    "scene_and_material": {
+      "fit": "registry and primary material splits both in {train,val}; primary views only",
+      "test": "registry and primary material splits both test; primary views only"
+    }
+  },
+  "leakage_guards": [
+    "no appearance view from a test physical episode enters the scene-heldout fit",
+    "material-heldout axes use primary views only so identical proprioception cannot cross the split",
+    "scene/operator/severity/appearance IDs and privileged telemetry are forbidden model inputs",
+    "appearance swaps are not independent physical samples",
+    "all nine O3 severe/profile-1 pairs use the same pre-outcome temporal amendment"
+  ],
+  "methods": [
+    "vision_only",
+    "proprio_only",
+    "early_fusion",
+    "structured_bidirectional"
+  ],
+  "output_root": "outputs/eval/realistic_a0_a7_v6",
+  "protocol_id": "kinofail_realistic_multimodal_scale_v8_o3_temporal_overlay_v3",
+  "scene_registry": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "schema_version": "kinofail.realistic-multimodal-protocol.v1",
+  "source_feature_manifest": "outputs/eval/realistic_a0_a7_v6/features/feature_manifest.json",
+  "source_snapshot_protocol": "configs/eval/kinofail_realistic_snapshot_scale_v8_v3.json",
+  "status": "frozen_after_runtime_qa_before_model_training",
+  "training_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ]
+}

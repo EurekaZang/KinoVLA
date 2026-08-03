@@ -1,0 +1,86 @@
+{
+  "schema_version": "kinofail.o4-dual-endpoint-train-only-calibration.v1",
+  "created_utc": "2026-07-23T00:05:00Z",
+  "freeze_status": "frozen_before_first_anomaly_execution",
+  "purpose": "Select a moderate/recoverable O4 force cap on one explicitly train-only realistic scene before generating any v17 held-out confirmation scenes.",
+  "evidence_policy": {
+    "development_recalibration_only": true,
+    "counts_as_a0_a7_evidence": false,
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "a8_in_scope": false,
+    "train_only_scene": true,
+    "one_attempt_per_dose": true,
+    "all_planned_doses_retained": true,
+    "future_heldout_scene_reuse_forbidden": true
+  },
+  "locked_files": [
+    {"path": "scripts/isaac_calibrate_realistic_route_o4_pair_v17.py", "sha256": "38f90e491d428e28238da4b9368efb6908c937a8f31e3ccb9d3d72c7c47aa920"},
+    {"path": "scripts/isaac_collect_realistic_route_o4_pair_v16.py", "sha256": "c61272780c00a798a559f443eda565fcd856428048292b00bbbb49feeaf2fbcc"},
+    {"path": "scripts/isaac_collect_embodiedgen_o4_pair.py", "sha256": "8fe8ab7e3b81ac640a7ca168742b74cfb23c98a3108775dbd222d66f1f4d7830"},
+    {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "95d43c4afcf2963e5defbd18c6a4663177cae83cb2f2bc2241faff46a7c79502"},
+    {"path": "kino_vla/sim/adhesion.py", "sha256": "3a6d7232c2186087bde15b72b39907b0b32197ad141ac06816f19a2e148e636e"},
+    {"path": "outputs/locomotion/policy.pt", "sha256": "167633df29b6c29db8864869338dc829249be60665d598bb206354bd1daca3f3"},
+    {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+    {"path": "outputs/kinofail_realistic/operator_recalibration/o4_v16_admitted_v1/postrun_audit.json", "sha256": "43b442e42487a5567e304fcbfee69aaee4e3f0855b8d2426aabd3d18db3bf02a", "json_passed": false}
+  ],
+  "runtime": {
+    "endpoint_class": "moderate_recoverable",
+    "dose_grid_n": [8.0, 12.0, 16.0],
+    "camera_profile": "go2_front_calib_b",
+    "forward_s": 5.0,
+    "peel_pulse_s": 0.1,
+    "recovery_s": 1.0,
+    "reverse_s": 2.0,
+    "stop_s": 0.5,
+    "forward_speed_mps": 0.32,
+    "reverse_speed_mps": 0.24,
+    "rgb_fps": 5.0,
+    "maximum_route_deviation_m": 0.3,
+    "seed": 20261238
+  },
+  "selection_rule": {
+    "order": "ascending_force_cap",
+    "selected_dose": "lowest dose that is recoverable, attaches, releases, stays inside the route budget, and produces both a measurable locomotion and posture consequence",
+    "locomotion_gate": "progress_gain_lag_m >= 0.08 over at least 1.0 s after attachment",
+    "posture_gate": "max_tilt_increase_rad >= 0.10 or min_base_height_drop_m >= 0.03",
+    "if_no_dose_passes": "do not select a dose; redesign the event-triggered recovery state machine in a versioned development phase",
+    "severe_terminal_dose_n": 35.0,
+    "severe_terminal_source": "sealed v16 0/3 batch; not rerun or reclassified"
+  },
+  "cases": [
+    {
+      "scene_id": "indoor_livingroom_45_train_only",
+      "operator": "o4_calibration_8n",
+      "force_cap_n": 8.0,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/compiled_scene_audit.json", "sha256": "e58e35533b31f62d9ed04970c8ffc7e548f7ff201614103ce29bb8c6998b837c", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "cf7cd6434011902dfddaa110baa2544e82bec2688db9370cd32e1ea9b5259138", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_recalibration/o4_v17_train_only/force_08n"
+    },
+    {
+      "scene_id": "indoor_livingroom_45_train_only",
+      "operator": "o4_calibration_12n",
+      "force_cap_n": 12.0,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/compiled_scene_audit.json", "sha256": "e58e35533b31f62d9ed04970c8ffc7e548f7ff201614103ce29bb8c6998b837c", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "cf7cd6434011902dfddaa110baa2544e82bec2688db9370cd32e1ea9b5259138", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_recalibration/o4_v17_train_only/force_12n"
+    },
+    {
+      "scene_id": "indoor_livingroom_45_train_only",
+      "operator": "o4_calibration_16n",
+      "force_cap_n": 16.0,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/compiled_scene_audit.json", "sha256": "e58e35533b31f62d9ed04970c8ffc7e548f7ff201614103ce29bb8c6998b837c", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "cf7cd6434011902dfddaa110baa2544e82bec2688db9370cd32e1ea9b5259138", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_recalibration/o4_v17_train_only/force_16n"
+    }
+  ],
+  "next_gate_if_selected": "Freeze the selected moderate/recoverable dose and the existing 35 N severe/terminal dose before generating fresh held-out scene requests."
+}

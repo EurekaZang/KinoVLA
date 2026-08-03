@@ -34,8 +34,7 @@
 1. **Frozen failure snapshots（冻结故障快照）**——异常触发时刻的固定观测，多 agent 可重复打分；  
 2. **Interventional consequence（干预性后果）**——只改 attributed label（归因标签），测物理代价。
 
-**Evidence stack（证据栈）：** 在 **real Unitree Go2 + Isaac Sim + RTX** 上，**A0–A7 已完成**；  
-**A8** 真机快照可选，不 load-bearing（不支撑主 claim）。
+**Evidence stack（证据栈）：** 在 **Isaac Sim 的 Unitree Go2 资产 + RTX** 上，A0–A7 已有实验产物；其中 A4 agent-cost、A5 非零覆盖、A6 learned boundary 仍需补强。当前没有物理机器人证据。
 
 接下来我会按：问题 → C1–C5 → 各实验 design / why / results / claim bridge 汇报。
 
@@ -108,13 +107,15 @@ Paper-A 有五条主 claim，记作 **C1–C5**。每条后面都有独立实验
 
 ### C4 — Generalization + abstention + boundary（泛化 + 弃权 + 边界）
 
-在 held-out 外观/组合上能泛化；不确定时 **abstain / Hold（弃权 / 停住）**；  
-并测量 **when to intervene（何时干预）** vs continue——尤其 O10 的 **θ\*** 与 O2 的模态依赖边界。
+现在有一个**严格限定的正面方法 claim**：冻结的 See–Feel–Act 门控在校准材质支持域内，仅当动作、归因、RGB 支持和本体异常四者一致时放行，否则采取 A4 的 safe default。两套 post-freeze 数据都严格击败 always-safe。全面 OOD、未见算子、单分数 abstention 和 learned O10 boundary 仍是明确的 failure boundaries。
 
 ### C5 — Fair opponent（公平对手）
 
-纯身体 baseline **B1** 在普通算子上很强（fidelity ≈ **0.76**），  
-所以它在 matched conflict 上的失败是 **by construction（构造性失败）**，不是没训好。
+纯身体 baseline **B1** 在新版 realistic benchmark 上仍然很强：A2 留出
+balanced accuracy 为 **0.970–0.986**，A3 macro 为 **0.981–0.982**。因此多模态方法的
+优势必须通过对 B1 的配对置信区间证明，不能依赖弱 baseline。旧 E1 的 matched
+构造仍可作为 controlled characterization，但 scale-v8 的 A1 equivalence gate 未通过，
+所以新版结果不得再写“B1 的 matched failure 必然 by construction”。
 
 ---
 
@@ -244,9 +245,11 @@ realistic monitor 只做 robustness（稳健性），不是主 protocol。
 
 ### C5 bridge / Falsifier（同页）
 
-**Bridge：** B1 在 **unshaped（非冲突）** 算子上 fidelity ≈ **0.76**，是强对手；  
-它在 matched conflict 上的失败是 **by construction**，不是 under-training。  
-**Falsifier：** B1 在普通算子上本来就很弱。
+**Bridge：** B1 在 realistic A2/A3 上保持约 **0.97–0.98** 的 balanced/macro
+performance，是强对手；任何 multimodal gain 都必须在相同 pair 上给出严格正的
+cluster-level CI。
+**Falsifier：** B1 整体表现很弱，或所谓多模态优势只来自未配对比较。当前 falsifier
+没有触发，但“matched failure 必然由构造造成”的更强解释也没有被 realistic A1 证实。
 
 ---
 
@@ -272,7 +275,7 @@ Closed-loop “谁导航更好” 混进太多因素。
 - Canonical success：**1.00** [0.72, 1.00] Wilson  
 - Off-diagonal crux：**0.00** [0.00, 0.28]  
 - T2 cost **antisymmetry（代价反对称）≈ 4×**  
-- Conflict-agent regret **0.11** vs baselines **0.44**  
+- Actual-action composition：B5-conflict 相对自己的 unshaped 前身 ΔERS=**−0.510**，两阶段 95% CI **[−0.813,−0.175]**；但与 B1/B-T 的差异 CI 跨 0，所以不是所有 baseline 中最好；
 - Safe-default crossover：**p\*(adhesion) ≈ 0.25**
 
 ### Claim bridge / Falsifier
@@ -300,12 +303,14 @@ Closed-loop “谁导航更好” 混进太多因素。
 
 **Results：**
 
-- OOD 跌幅：B-V **−0.21** 最差，B1 **−0.03** 最小；  
-- LOO-O5：residual **16.09** → Hold → **100% safe**；  
-- Abstention AUROC **0.87**；  
-- 最优期望代价 **1.63**，**小于** always-intervene **2.80** **和** never-intervene **1.71**  
-  （注意：不是 “2.80 &lt; 1.71”——永远干预最贵）。  
+- 外观留出总体变化：B-V **−0.175** 最差，B1 **+0.007**；但每个 taxonomy cell 的变化不同；
+- LOO-O5：模型命名仍为 0/48，residual **16.09** → Hold → 48/48 safe；见过 O5 的 control 同样命名失败，因此这是 detectable-physics fallback，不是 novel semantics；
+- residual 错误排序 AUROC：B-F **0.897**，B5-conflict-bi **0.869**；但 692 个样本中没有一个 θ 超出训练范围；
+- 冻结外观 test 上 always-safe cost **1.52**；最低非零覆盖点 coverage **0.0533**、cost **1.84**，相对 safe 的两阶段 CI 为 **[+0.32,+0.32]**；
+- T2 的 residual 完全常数，只能选择 coverage 0 或 1，不能做 selective prediction；
 - Composition：**16/16**。
+
+**A5.6 正向闭合：** 不改 VLA/Projector，只增加四信号后置门控。final-v2 的 coverage **0.2083**、cost **1.5417 vs safe 1.75**、paired CI **[−0.2083,−0.2083]**；同一冻结 gate 的六新外观簇复现为 coverage **0.20**、cost **1.52 vs 1.72**、CI **[−0.20,−0.20]**。两套放行归因精度均为 **1.00**，每个外观簇均无伤害。
 
 ### A6 — Intervention boundary
 
@@ -317,14 +322,14 @@ Closed-loop “谁导航更好” 混进太多因素。
 | **θ\*** | base policy 无干预时“还能成功”的边界严重度 |
 | **O10** | effort / actuator decay 类故障 |
 
-**Results：** O10 **θ\* = 0.2754**；OOD-θ residual 随 θ\* 上升（0.629→0.949）。  
-**O2：** proprio detector 可能 fire，但 cross-modal agent 可判 mild compliant → continue / 轻量 gait。  
-**Honest：** 字面 snapshot continue/intervene 翻转较弱；可报告的是 **residual tracks θ\***。
+**Results：** O10 base 在 floor 0.25 与 0.30 之间翻转；论文主估计是 bracket **[0.25,0.30]**，`0.2754` 只作描述性插值。
+**O2：** 严格 O2_A nominal 上，B5-unshaped/B5-conflict-bi 实际干预率均为 1.0，zero-shot 为 0.5。
+**Honest：** 三个 snapshot agent 在所有 floor 上都实际干预；residual 已落入 schema-v2 结果卡，但只有 5 个 floor，failure AUROC=1.0 的 exact permutation p=0.10，因此 learned boundary 未建立。
 
 ### C4 bridge / Falsifier
 
-**Bridge：** attribution 必须 OOD 仍可用，且知道何时弃权/干预。  
-**Falsifier：** 所有 agent OOD 一样垮；residual 与 θ\* 无关；risk–coverage 打不过 always/never。
+**Bridge：** A4 的 consequence asymmetry 给出 safe fallback，A5.6 用可观测 See–Feel–Act 共识决定何时释放更高效动作，并在两个独立冻结语料上验证。
+**Falsifier 判决：** C4 只在 calibrated material support 内成立；A5.5 单分数 risk–coverage 和 A6 learned boundary 仍失败，禁止扩写成全面 OOD 或连续 severity policy。
 
 ---
 
@@ -347,7 +352,7 @@ A7 服务 **C2 的方法章节**：**哪些 ingredient load-bearing**。
 
 Unique samples ∈ {0,5,10,20,40} × 3 seeds，**同一 SFT 配方**。
 
-- 主结论：**dose 10** mean O4 attr **0.733**；A4-projected regret **0.40** 最好  
+- 主结论：**dose 10** mean O4 attr **0.733**；attribution-implied A4 regret **0.40** 最好（缓存行缺动作参数，不能称 actual-action ERS）
 - Protocol 下 **dose 5 不稳定**（mean 0.333，含 seed 崩塌）——**如实报告**  
 - 不等价 upsample “修好 dose5” 只作 **sensitivity**，**不进主曲线**
 
@@ -365,8 +370,8 @@ Unique samples ∈ {0,5,10,20,40} × 3 seeds，**同一 SFT 配方**。
 ### 4) Encoder grid + A7.1
 
 - 18/18 cells；privileged θ MAE **0.0279**  
-- **A7.1** 后验不确定性：entropy held-out cost **1.469** &lt; safe-default **1.633**  
-- ECE 是 diagnostic，**不**宣称 “校准很好”
+- **A7.1** 全数据 oracle curve 最佳点为 cost 1.48/coverage 0.247；真正的外观留出 test 为 cost **1.42**、coverage **0.133**，相对 safe CI **[−0.20,0]**；
+- ECE=**0.522**，四项 conformal screen 均失败；**不**宣称“校准很好”或严格优于 safe
 
 ---
 
@@ -381,11 +386,11 @@ Unique samples ∈ {0,5,10,20,40} × 3 seeds，**同一 SFT 配方**。
 | C1 | **A1** 核心，**A3** T3 侧 |
 | C2 | **A2** 三行 + **A3** 双向 + **A7** 方法 |
 | C3 | **A4** 核心 |
-| C4 | **A5** + **A6** |
+| C4 | **A5.6** 两套 frozen final（positive）+ **A5.1–5.5/A6/A7** falsifier boundaries |
 | C5 | **A1/A2** 上 B1 的 fair-opponent 角色 |
 
 **●** = core，**○** = support。  
-A0 是所有实验的底座；**A8** 可选、不 load-bearing。
+A0 是所有实验的底座；当前证据范围止于 A7。
 
 ---
 
@@ -405,16 +410,16 @@ A0 是所有实验的底座；**A8** 可选、不 load-bearing。
 
 1. A7 dose knee 是 **protocol dose 10**；dose5 的“配方外修复”只 sensitivity。  
 2. Latent vs text：**greedy 持平**，卖 θ + tokens，不硬吹精度。  
-3. A6：residual tracks θ\*；字面 continue/intervene 翻转较弱。  
+3. A6：只闭合了 privileged base 的翻转区间；learned decision flip 未成立。
 4. Sim 物理（spring-damper adhesion 等）是近似。  
-5. A8 真机快照视时间可选。  
+5. 当前没有物理机器人验证；论文全程按 simulation scope 表述。
 6. 待 human sign-off：deep_reset 作标准采集；#49/#52 论文措辞。
 
 ### 请老师关注的讨论点〔可略〕
 
 - 主文图是否以 **C2 三行 + A3 双向 + A4 矩阵** 为中心？  
 - A6 放主文还是附录？  
-- A8 是否投入时间？
+- A4/A5/A6 的 P0 缺口如何排入补实验优先级？
 
 ---
 
@@ -516,7 +521,6 @@ A0 是所有实验的底座；**A8** 可选、不 load-bearing。
 | **A5** | 泛化与弃权（C4） |
 | **A6** | 干预边界 θ\* 与 O2 模态依赖（C4） |
 | **A7** | 方法消融（C2 方法） |
-| **A8** | 可选真机快照 |
 | **B1** | 最强纯 proprio 归因器 |
 | **B-V** | 视觉-only VLA（mask proprio） |
 | **B-T** | 文本摘要注入身体信息的 VLA |
@@ -576,9 +580,9 @@ A0 是所有实验的底座；**A8** 可选、不 load-bearing。
 2. **3 页（1′）** C1–C5 各一句。  
 3. **5 页（2′）** C1：byte-identical + C2ST 0.5 + CLIP 1.0；T3 mirror。  
 4. **6 页（2′）** C2：0.50 / 0.80 / 0.90；bi 0.92；C5 fair B1。  
-5. **7 页（2′）** C3：对角 1.00 / 非对角 0.00；regret 0.11。  
-6. **8 页（2′）** C4：OOD、AUROC 0.87、1.63 vs 2.80 & 1.71；θ\*=0.2754。  
-7. **9+11 页（2′）** A7 dose10；诚实边界；请老师定主文图与 A8。
+5. **7 页（2′）** C3：630-episode matrix；conflict 相对 unshaped ΔERS CI<0，但不是所有 baseline 中最好。
+6. **8 页（2′）** C4：A5.6 两套 final 均 Δsafe<0，六外观簇复现、放行精度 1.00；同时 residual 单分数与 learned boundary 仍失败。
+7. **9+11 页（2′）** A7 dose10；entropy/MSP Δsafe CI 触零；强调 C4 正结论仅限 supported structured recovery。
 
 ---
 
@@ -588,13 +592,15 @@ A0 是所有实验的底座；**A8** 可选、不 load-bearing。
 A：我们不 claim 系统导航 SOTA；claim 的是 **归因操作** 本身 + 其对安全后果的因果。
 
 **Q：为什么 B1 在 conflict 上只有 0.5 还叫 fair？**  
-A：C5 看的是它在 **unshaped** 上 ≈0.76；matched 上失败是信息论构造，不是弱 baseline。
+A：C5 看的是它在新版 A2/A3 的整体表现仍约为 **0.97–0.98**，所以它不是弱 baseline。
+旧 controlled matched 构造可单独报告；新版不能在 A1 equivalence gate 未通过时把
+matched 差异直接解释成信息论必然。
 
 **Q：dose 5 很差会不会打脸 “small data”？**  
 A：主结论是 **protocol dose 10** 的 knee；dose 5 不稳定是诚实范围，不混配方刷 5。
 
 **Q：sim 到 real？**  
-A：主证据在 Isaac 真 Go2 资产上；A8 真机快照可选，不做 closed-loop 硬件导航 claim。
+A：当前主证据全部来自 Isaac Sim 的 Go2 资产，没有物理机器人验证，也不做 closed-loop 硬件导航 claim。
 
 **Q：monitor 是不是贡献？**  
 A：Detection 不作贡献；oracle-primary。monitor_abaware 是基础设施 + 少量稳健性。

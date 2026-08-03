@@ -1,0 +1,115 @@
+{
+  "schema_version": "kinofail.embodiedgen-route-surface-material-v6-development-matrix.v1",
+  "matrix_id": "route-surface-material-v6-cross-scene-20260722",
+  "status": "frozen_before_any_requested_v6_matrix_render",
+  "objective": "Validate two train-split wild-domain PBR candidates under the unchanged render-only route surface, lighting, clipping, and phase-aware visual contract on six scenes not used for candidate selection.",
+  "inference_scope": "development only; no cell is formal benchmark evidence",
+  "candidate_selection_scene_excluded": {
+    "scene_id": "indoor_kitchen_07",
+    "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/kinofail_corridor_v2_tracking030/compiled_scene_audit.json",
+    "sha256": "f8c23ff135f521dc19fb80cd3b1985a74cfe30be6438a951c246667e53757d13"
+  },
+  "selection_evidence": {
+    "train_static_preflight": {
+      "path": "outputs/kinofail_realistic/terrain_material_visual_preflight_v1/train_audit.json",
+      "sha256": "9496aa028d85f9fae4deda6ddc2983a8bbacb7e802c0ebc82bff5643beb1249d"
+    },
+    "v5_sealed_matrix": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/route_surface_lighting_v5_development_matrix_v1_audit.json",
+      "sha256": "57560d53a5fda79dede1a662928383d275417852f6a81d3493d987ec11e66706"
+    },
+    "pilot_concrete046_compiled": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/route_surface_material_v6_candidate_pilot/train_concrete046/compiled_scene_audit.json",
+      "sha256": "8c6866c385e6fefe25108526826e34470fbe2b98b961541e206c51b5f1eab03f"
+    },
+    "pilot_concrete046_rtx_failed": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/route_surface_material_v6_candidate_pilot/train_concrete046/rtx_qa/rtx_scene_audit.json",
+      "sha256": "c87cffdf0f70b350974fa64c2c67c38c64fb31f7b79aa09e8029af0c89a276e5"
+    },
+    "pilot_ground054_compiled": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/route_surface_material_v6_candidate_pilot/train_ground054/compiled_scene_audit.json",
+      "sha256": "fd4a766e57cd2edc8951a7e8656bed5633e01e2d84b03f55c03df975a1e4d53f"
+    },
+    "pilot_ground054_rtx_passed": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/route_surface_material_v6_candidate_pilot/train_ground054/rtx_qa/rtx_scene_audit.json",
+      "sha256": "dd4c5cdc18606c4c2d162990424b0458b53affed7a772aad20232b0fa8a61521"
+    },
+    "pilot_ground037_compiled": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/route_surface_material_v6_candidate_pilot/train_ground037/compiled_scene_audit.json",
+      "sha256": "1867cbb67800fe8810108ca1878f8501d219adadfe0a66d3d32ccb3d25dcf823"
+    },
+    "pilot_ground037_rtx_passed": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/route_surface_material_v6_candidate_pilot/train_ground037/rtx_qa/rtx_scene_audit.json",
+      "sha256": "a77cada35e7652ad56b314f0df007db61c5e78261bbbe5b8deaf1508c28ec2ad"
+    }
+  },
+  "development_scenes": [
+    {"scene_id": "indoor_livingroom_08", "role": "legacy balanced-light guard", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260813/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "eececf7f3f5a1fb74565291bdd023c2ad39752d29dbb16bb3691aa047adf3904"},
+    {"scene_id": "indoor_diningroom_09", "role": "legacy bright-floor overexposure guard", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260815/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "b0b9cca26f22cc746087d79f8fc1f2cde085b36d2a0e4ec7052073c257d36262"},
+    {"scene_id": "indoor_livingroom_15", "role": "v6-native passed-scene guard", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260827/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "0194330e8f83d3a17159c8b3467e21abc527420a294a38183788bc55af7b2fd8"},
+    {"scene_id": "indoor_livingroom_16", "role": "legacy entry-oblique near-black failure", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260829/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "f7b7d133571ea13924347a53ddbb7b7fada42c7d9d4501cfbb8e2658e1baba11"},
+    {"scene_id": "indoor_livingroom_17", "role": "legacy reverse-view all-black failure", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260831/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "a34b8935bb84473fa71f848c5ea2b1d7991210734a923f7a05ca8362013e1e2d"},
+    {"scene_id": "indoor_kitchen_20", "role": "v6-native bright passed-scene guard", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260837/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "aba8da94ff3d4f8ba357414241ca3e0f43f436302f1f692c5795640e427d3887"}
+  ],
+  "materials": [
+    {"material_id": "train_ground054", "role": "compact-mud moderate-contrast wild surface"},
+    {"material_id": "train_ground037", "role": "forest-ground high-contrast wild surface"}
+  ],
+  "material_policy": {
+    "material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+    "development_split_only": "train",
+    "reserved_for_future_confirmation": ["val", "test"],
+    "same_visual_surface_for_nominal_and_anomaly": true,
+    "operator_condition_independent": true,
+    "excluded_candidates": {
+      "train_concrete034": "failed 7/7 v5 RTX cells and all four static content checks",
+      "train_concrete046": "passed static screen but failed frozen RTX pitch-sensor contract in the excluded pilot scene",
+      "train_tiles141": "passed 6/7 v5 cells but is not admitted to the robust default pool because the all-cell rule failed"
+    },
+    "positive_reference_not_rerun": "train_road007 passed 7/7 in the sealed v5 matrix under identical authoring and view-contract code"
+  },
+  "frozen_architecture": {
+    "route_surface_width_m": 1.2,
+    "route_surface_endpoint_margin_m": 0.45,
+    "route_surface_lift_m": 0.003,
+    "route_surface_collision": false,
+    "route_surface_purpose": "render",
+    "dome_intensity": 350.0,
+    "panel_count": 7,
+    "panel_intensity": 450.0,
+    "panel_exposure": 7.0,
+    "endpoint_extension_m": 0.45
+  },
+  "view_contract": {
+    "near_clip_m": 0.01,
+    "far_clip_m": 1000.0,
+    "canonical_context": {"min_std_luminance": 0.035, "min_dynamic_range": 0.12, "max_black_fraction": 0.9, "max_white_fraction": 0.9, "min_quantized_colors_5bit": 64},
+    "pitch_sensor": {"min_mean_luminance": 0.005, "min_std_luminance": 0.005, "max_black_fraction": 0.995, "max_white_fraction": 0.995, "min_quantized_colors_5bit": 8},
+    "minimum_canonical_pairwise_rgb_l1": 0.01
+  },
+  "execution_contract": {
+    "scene_count": 6,
+    "material_count": 2,
+    "exact_render_count": 12,
+    "one_render_per_scene_material_cell": true,
+    "no_replacements": true,
+    "all_cells_in_denominator": true,
+    "additional_candidate_forbidden": true,
+    "threshold_change_after_render_forbidden": true,
+    "renderer_resolution": [960, 540],
+    "warmup_frames_per_view": 36,
+    "view_count_per_render": 7
+  },
+  "success_rule": "all eight structural checks and all eight phase-aware visual checks pass in all 12 cells",
+  "frozen_code": {
+    "scene_v4": {"path": "kino_vla/sim/embodiedgen_scene_v4.py", "sha256": "2e4541d6cc6dcf07adf6c2e441e15c63c43490703b305728a9282827f9881dd3"},
+    "refiner_v4": {"path": "scripts/refine_embodiedgen_kinofail_scene_v4.py", "sha256": "4ece78e871242723b5bf4a83d1cf4b91ef56effec750def884593c0a2a6d99b9"},
+    "visual_contract_v5": {"path": "kino_vla/eval/embodiedgen_visual_contract_v5.py", "sha256": "be383b861a17ec7c27f12ffa690e28a054811aac8bdd270fb8491d538ace70ef"},
+    "rtx_qa_v5": {"path": "scripts/isaac_render_embodiedgen_scene_qa_v5.py", "sha256": "bd6db19ec7772ab0b7b28d63e909468777fc6189104784e7587e8badac15191f"},
+    "matrix_auditor_v6": {"path": "scripts/audit_embodiedgen_route_surface_material_v6_matrix.py", "sha256": "fdad40b7ee21f3c22668632441541f78b8f9eb47a6d031f479f7dee35c259990"},
+    "geometry_tests": {"path": "tests/test_embodiedgen_scene_v4.py", "sha256": "0ed2157c02e66ca8ab5ace98e6749e6991e8cddcfc118ba7f5e6472f93a1303d"},
+    "view_contract_tests": {"path": "tests/test_embodiedgen_visual_contract_v5.py", "sha256": "1ca39776e250c4460eda33722706494857058349e3ca827422d8056c962fd8a6"}
+  },
+  "output_convention": "<scene_root>/route_surface_material_v6_development/<material_id>/",
+  "future_confirmation_exclusion": ["indoor_kitchen_07", "indoor_livingroom_08", "indoor_diningroom_09", "indoor_livingroom_15", "indoor_livingroom_16", "indoor_livingroom_17", "indoor_kitchen_20"]
+}

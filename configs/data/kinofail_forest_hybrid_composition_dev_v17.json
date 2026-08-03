@@ -1,0 +1,38 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v7-development",
+  "iteration_id": "forest-hochsal-autumn-heldout-lighting-v17",
+  "status": "development_replacement_for_low_information_v16_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v16.json",
+    "sha256": "03864e9dd175103d2d8a5958b6b898ffd24332f4a9c3eda0b6d5694697ae579f"
+  },
+  "overrides": {
+    "appearance": {
+      "distant_light_intensity": 70.0
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_hochsal_dev01/isaac_hybrid_composition_dev_v17"
+    }
+  },
+  "predecessor_result": {
+    "config": "configs/data/kinofail_forest_hybrid_composition_dev_v16.json",
+    "nominal_lane": "passed",
+    "anomaly_physics": "passed",
+    "anomaly_visual_sequence": "failed_matched_consequence_std_luminance_0.02167_below_0.035",
+    "remedy": "Increase only operator-independent distant illumination from 35 to 70 while preserving HDRI, materials, geometry, camera, operator, policy, seed, and capture timing."
+  },
+  "appearance_family_contract": {
+    "family_id": "forest_hochsal_autumn_validation",
+    "family_role": "heldout_validation_randomization",
+    "replaces_development_attempt": "v16",
+    "physical_operator_parameters_unchanged": true,
+    "camera_and_capture_protocol_unchanged": true,
+    "lighting_adjustment_uses_image_quality_gate_not_model_results": true
+  },
+  "quality_policy": {
+    "both_nominal_and_anomaly_must_be_recollected_after_lighting_change": true,
+    "body_fixed_go2_rtx_review_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

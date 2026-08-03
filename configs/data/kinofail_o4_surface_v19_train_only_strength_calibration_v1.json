@@ -1,0 +1,82 @@
+{
+  "schema_version": "kinofail.o4-surface-v19-train-only-strength-calibration.v1",
+  "created_utc": "2026-07-23T00:30:00Z",
+  "freeze_status": "frozen_before_first_anomaly_execution",
+  "purpose": "Two-point train-only strength calibration after v18 established safe stance-cycle attachment and peel but missed the frozen causal-effect gates.",
+  "evidence_policy": {
+    "development_recalibration_only": true,
+    "counts_as_a0_a7_evidence": false,
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "a8_in_scope": false,
+    "train_only_scene": true,
+    "one_attempt_per_dose": true,
+    "all_planned_doses_retained": true,
+    "future_heldout_scene_reuse_forbidden": true
+  },
+  "locked_files": [
+    {"path": "scripts/isaac_calibrate_realistic_route_o4_surface_v18.py", "sha256": "e0aa8e09fb135a159dd5407c9e2db06db41ed29c1ddcdfddf010edbbdd8dc9a5"},
+    {"path": "kino_vla/sim/adhesion_v2.py", "sha256": "a634078b425a336be6a0fca67e3df6434ea1fa3d24e43187ec9c559447984fea"},
+    {"path": "kino_vla/sim/isaac_o4_v2_backend.py", "sha256": "954a27cc79ae42c32f2ab13dee1f3aff5d383b8f44ecff572fb09ff352a172a1"},
+    {"path": "scripts/isaac_collect_realistic_route_o4_pair_v16.py", "sha256": "c61272780c00a798a559f443eda565fcd856428048292b00bbbb49feeaf2fbcc"},
+    {"path": "scripts/isaac_collect_embodiedgen_o4_pair.py", "sha256": "8fe8ab7e3b81ac640a7ca168742b74cfb23c98a3108775dbd222d66f1f4d7830"},
+    {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "95d43c4afcf2963e5defbd18c6a4663177cae83cb2f2bc2241faff46a7c79502"},
+    {"path": "kino_vla/sim/adhesion.py", "sha256": "3a6d7232c2186087bde15b72b39907b0b32197ad141ac06816f19a2e148e636e"},
+    {"path": "outputs/locomotion/policy.pt", "sha256": "167633df29b6c29db8864869338dc829249be60665d598bb206354bd1daca3f3"},
+    {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+    {"path": "outputs/kinofail_realistic/operator_recalibration/o4_surface_v18_train_only/attempt1/pair_manifest.json", "sha256": "a0a48e96fe76c736a8943fe3ec7e909480ac7e6e6ea8732fa4b9a188c826fd7d", "json_passed": false}
+  ],
+  "runtime": {
+    "camera_profile": "go2_front_calib_b",
+    "forward_s": 5.0,
+    "peel_pulse_s": 0.1,
+    "recovery_s": 1.0,
+    "reverse_s": 2.0,
+    "stop_s": 0.5,
+    "forward_speed_mps": 0.32,
+    "reverse_speed_mps": 0.24,
+    "rgb_fps": 5.0,
+    "maximum_route_deviation_m": 0.3,
+    "seed": 20261238
+  },
+  "fixed_operator_parameters": {
+    "normal_force_cap_n": 8.0,
+    "peel_height_m": 0.025,
+    "unload_steps_to_peel": 3,
+    "reattach_cooldown_steps": 2,
+    "max_active_feet": 2
+  },
+  "selection_rule": {
+    "dose_order_n": [18.0, 24.0],
+    "selected_dose": "lowest dose passing every v18 surface calibration check",
+    "minimum_effect_window_s": 1.0,
+    "minimum_progress_gain_lag_m": 0.08,
+    "minimum_tilt_increase_rad_or_height_drop_m": [0.10, 0.03],
+    "anomaly_must_complete_without_fall": true,
+    "maximum_route_deviation_m": 0.3,
+    "if_none_passes": "stop force-cap tuning and design an action-conditioned A4 recovery protocol"
+  },
+  "cases": [
+    {
+      "scene_id": "indoor_livingroom_45_train_only",
+      "operator": "o4_surface_v19_18n",
+      "tangential_force_cap_n": 18.0,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/compiled_scene_audit.json", "sha256": "e58e35533b31f62d9ed04970c8ffc7e548f7ff201614103ce29bb8c6998b837c", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "cf7cd6434011902dfddaa110baa2544e82bec2688db9370cd32e1ea9b5259138", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_recalibration/o4_surface_v19_train_only/force_18n"
+    },
+    {
+      "scene_id": "indoor_livingroom_45_train_only",
+      "operator": "o4_surface_v19_24n",
+      "tangential_force_cap_n": 24.0,
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/compiled_scene_audit.json", "sha256": "e58e35533b31f62d9ed04970c8ffc7e548f7ff201614103ce29bb8c6998b837c", "json_passed": true},
+        "stack_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/realistic_stack_v16_admission.json", "sha256": "cf7cd6434011902dfddaa110baa2544e82bec2688db9370cd32e1ea9b5259138", "json_passed": true}
+      },
+      "output": "outputs/kinofail_realistic/operator_recalibration/o4_surface_v19_train_only/force_24n"
+    }
+  ]
+}

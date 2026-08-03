@@ -1,0 +1,122 @@
+{
+  "schema_version": "kinofail.embodiedgen-native-v3-independent-scene-preflight.v1",
+  "purpose": "Freeze two independent EmbodiedGen scene families before any native-v3 operator anomaly run.",
+  "evidence_boundary": {
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "old_a0_a7_role": "protocol_and_target_conclusions_only",
+    "completion_requires_new_realistic_corpus_a0_a7_replication": true,
+    "realistic_a0_a7_readiness_expected_before_corpus": "0/8"
+  },
+  "source_freeze": {
+    "native_collector": {
+      "path": "scripts/isaac_collect_realistic_route_operator_lane_v3.py",
+      "sha256": "0018370029b6afac9e7b12121aabce2b64b666f7d342fe6ce58e2c1a13b99db3"
+    },
+    "route_protocol": {
+      "path": "kino_vla/sim/realistic_route_protocol_v2.py",
+      "sha256": "10256042d810456526a6ab5b93f291a612ff4ebd642adda7fd9d0de3d750572e"
+    },
+    "backend": {
+      "path": "kino_vla/sim/isaac_policy_backend.py",
+      "sha256": "4f602d4f178c08e685ba9bd4a69bab6dbf111f7d175142471c3a0e821e7b2bb1"
+    },
+    "o1_operator": {
+      "path": "kino_vla/sim/operators/o1_mu_field.py",
+      "sha256": "226d1b71d8ebe69b9cccca3cee389aa286e8ebc64ea3eca398198251156bd9e5"
+    },
+    "terrain_compiler": {
+      "path": "kino_vla/sim/embodiedgen_terrain_route_v2.py",
+      "sha256": "50066309bf4fc632459d51697407d60778efff7648d1429763789f6dd8440a3b"
+    },
+    "offline_auditor": {
+      "path": "scripts/audit_embodiedgen_terrain_route_v2.py",
+      "sha256": "d6249ac7ccee874956ac7c73b321ef918d090ca081a5163391aec71331a2ec9d"
+    },
+    "material_lock": {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    }
+  },
+  "execution_policy": {
+    "nominal_preflight_before_any_anomaly": true,
+    "one_attempt_per_scene": true,
+    "no_retry_or_scene_replacement": true,
+    "fresh_isaac_process_per_lane": true,
+    "failed_attempts_are_retained": true
+  },
+  "frozen_nominal_contract": {
+    "operator": "o1",
+    "lane": "nominal",
+    "camera_profile": "go2_front_calib_b",
+    "steps": 500,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": 0.0,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.5,
+    "start_lateral_offset_m": 0.0,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": 0.0,
+    "forward_speed_mps": 0.28,
+    "nominal_static_friction": 0.8,
+    "nominal_dynamic_friction": 0.6
+  },
+  "scenes": [
+    {
+      "scene_id": "indoor_diningroom_26",
+      "scene_family": "DiningRoom",
+      "scene_role": "independent_operator_confirmation_candidate",
+      "material_id": "val_gravel023",
+      "seed": 20260911,
+      "route_surface_admission": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260851/route_surface_v7_confirmation/val_gravel023/route_surface_v7_admission_audit.json",
+        "sha256": "27d53859ff82338118b65ef14eaf56b7e1f3af685b44576c893a5dede094f7c8"
+      },
+      "terrain_compiled_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260851/route_surface_v7_confirmation/val_gravel023/terrain_route_v2/compiled_scene_audit.json",
+        "sha256": "0cfb6739037b07dc7c75845aaecc462bea1d7452aad5ebe92f69dea32890a515"
+      },
+      "terrain_episode": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260851/route_surface_v7_confirmation/val_gravel023/terrain_route_v2/episode_terrain_v2.usda",
+        "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"
+      },
+      "offline_usd_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260851/route_surface_v7_confirmation/val_gravel023/terrain_route_v2/offline_usd_audit.json",
+        "sha256": "bea9bb52ee3f86c9ff0c8b28ce8586307a2d2ab6437af0b6eaaeaaeb1b862a4d"
+      },
+      "planned_nominal_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_native_v3_preflight_v1/diningroom26/o1_nominal"
+    },
+    {
+      "scene_id": "indoor_livingroom_30",
+      "scene_family": "LivingRoom",
+      "scene_role": "independent_operator_confirmation_candidate",
+      "material_id": "test_asphalt031",
+      "seed": 20260912,
+      "route_surface_admission": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260859/route_surface_v7_confirmation/test_asphalt031/route_surface_v7_admission_audit.json",
+        "sha256": "25e208391bf2061acc3baea3b42c2d062ef2ff4afa2b95b1adaeffb2ff3afa48"
+      },
+      "terrain_compiled_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260859/route_surface_v7_confirmation/test_asphalt031/terrain_route_v2/compiled_scene_audit.json",
+        "sha256": "3ad076e0ebe398e6039da8417e83ce75f0b3b8c8597288a83bf275acff1f4bc6"
+      },
+      "terrain_episode": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260859/route_surface_v7_confirmation/test_asphalt031/terrain_route_v2/episode_terrain_v2.usda",
+        "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"
+      },
+      "offline_usd_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260859/route_surface_v7_confirmation/test_asphalt031/terrain_route_v2/offline_usd_audit.json",
+        "sha256": "15548470b911a81d3ef90b6c88e37e13d7f1ab471be733365648b65fa7474682"
+      },
+      "planned_nominal_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_native_v3_preflight_v1/livingroom30/o1_nominal"
+    }
+  ],
+  "post_confirmation_sequence": [
+    "bind admitted scenes into a new scene registry",
+    "collect the full realistic Kino-Fail corpus under a frozen schedule",
+    "train and infer only on that new corpus",
+    "rerun A0 through A7 with publication-grade statistics",
+    "compare new conclusions against old protocol targets without reusing old result artifacts"
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "schema_version": "kinofail.o4-scene-stream-v30-freeze.v1",
+  "created_utc": "2026-07-23T10:00:00Z",
+  "freeze_status": "frozen_before_any_v38_development_candidate_generation_or_o4_execution",
+  "purpose": "Acquire a new operator-blind candidate185+ realistic cohort solely to develop and falsify v37 emergency lateral-velocity damping. This cohort can never serve as held-out confirmation or A0-A7 evidence.",
+  "evidence_policy": {
+    "development_only": true,
+    "counts_as_a0_a7_evidence": false,
+    "counts_as_realistic_corpus_evidence": false,
+    "counts_as_o4_confirmation": false,
+    "a8_in_scope": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "all_prior_o4_scene_reruns_forbidden": true,
+    "v36_unprocessed_suffix_169_184_must_remain_untouched": true,
+    "successful_acquisition_authorizes_only_v37_architecture_development": true,
+    "successful_v37_development_requires_a_later_fresh_heldout_cohort": true,
+    "all_outcomes_must_be_retained": true
+  },
+  "base_config": {
+    "path": "configs/data/kinofail_o4_scene_stream_v28_prefix_freeze_v1.json",
+    "sha256": "5a8e9a3afdbe0276906ae8c523f54a7826fe3e0febb5df16877e7c6905ceb307"
+  },
+  "candidate_ids": [
+    "indoor_diningroom_185", "indoor_office_186", "indoor_livingroom_187", "indoor_kitchen_188", "indoor_house_189", "indoor_bedroom_190",
+    "indoor_diningroom_191", "indoor_office_192", "indoor_livingroom_193", "indoor_kitchen_194", "indoor_house_195", "indoor_bedroom_196",
+    "indoor_diningroom_197", "indoor_office_198", "indoor_livingroom_199", "indoor_kitchen_200", "indoor_house_201", "indoor_bedroom_202",
+    "indoor_diningroom_203", "indoor_office_204", "indoor_livingroom_205", "indoor_kitchen_206", "indoor_house_207", "indoor_bedroom_208"
+  ],
+  "new_candidates": [
+    {"scene_id": "indoor_diningroom_185", "room_type": "DiningRoom", "source_seed": 20261527, "runtime_seed": 20261528, "material_id": "test_gravel022", "material_split": "test", "complexity": "simple", "output_directory": "DiningRoom_seed20261527"},
+    {"scene_id": "indoor_office_186", "room_type": "Office", "source_seed": 20261529, "runtime_seed": 20261530, "material_id": "train_tiles141", "material_split": "train", "complexity": "simple", "output_directory": "Office_seed20261529"},
+    {"scene_id": "indoor_livingroom_187", "room_type": "LivingRoom", "source_seed": 20261531, "runtime_seed": 20261532, "material_id": "val_tiles139", "material_split": "val", "complexity": "simple", "output_directory": "LivingRoom_seed20261531"},
+    {"scene_id": "indoor_kitchen_188", "room_type": "Kitchen", "source_seed": 20261533, "runtime_seed": 20261534, "material_id": "test_tiles140", "material_split": "test", "complexity": "simple", "output_directory": "Kitchen_seed20261533"},
+    {"scene_id": "indoor_house_189", "room_type": "House", "source_seed": 20261535, "runtime_seed": 20261536, "material_id": "train_concrete034", "material_split": "train", "complexity": "simple", "output_directory": "House_seed20261535"},
+    {"scene_id": "indoor_bedroom_190", "room_type": "Bedroom", "source_seed": 20261537, "runtime_seed": 20261538, "material_id": "val_concrete045", "material_split": "val", "complexity": "simple", "output_directory": "Bedroom_seed20261537"},
+    {"scene_id": "indoor_diningroom_191", "room_type": "DiningRoom", "source_seed": 20261539, "runtime_seed": 20261540, "material_id": "test_concrete039", "material_split": "test", "complexity": "simple", "output_directory": "DiningRoom_seed20261539"},
+    {"scene_id": "indoor_office_192", "room_type": "Office", "source_seed": 20261541, "runtime_seed": 20261542, "material_id": "train_road007", "material_split": "train", "complexity": "simple", "output_directory": "Office_seed20261541"},
+    {"scene_id": "indoor_livingroom_193", "room_type": "LivingRoom", "source_seed": 20261543, "runtime_seed": 20261544, "material_id": "val_asphalt023s", "material_split": "val", "complexity": "simple", "output_directory": "LivingRoom_seed20261543"},
+    {"scene_id": "indoor_kitchen_194", "room_type": "Kitchen", "source_seed": 20261545, "runtime_seed": 20261546, "material_id": "test_pathway002", "material_split": "test", "complexity": "simple", "output_directory": "Kitchen_seed20261545"},
+    {"scene_id": "indoor_house_195", "room_type": "House", "source_seed": 20261547, "runtime_seed": 20261548, "material_id": "train_concrete046", "material_split": "train", "complexity": "simple", "output_directory": "House_seed20261547"},
+    {"scene_id": "indoor_bedroom_196", "room_type": "Bedroom", "source_seed": 20261549, "runtime_seed": 20261550, "material_id": "val_concrete040", "material_split": "val", "complexity": "simple", "output_directory": "Bedroom_seed20261549"},
+    {"scene_id": "indoor_diningroom_197", "room_type": "DiningRoom", "source_seed": 20261551, "runtime_seed": 20261552, "material_id": "test_asphalt031", "material_split": "test", "complexity": "simple", "output_directory": "DiningRoom_seed20261551"},
+    {"scene_id": "indoor_office_198", "room_type": "Office", "source_seed": 20261553, "runtime_seed": 20261554, "material_id": "train_ground054", "material_split": "train", "complexity": "simple", "output_directory": "Office_seed20261553"},
+    {"scene_id": "indoor_livingroom_199", "room_type": "LivingRoom", "source_seed": 20261555, "runtime_seed": 20261556, "material_id": "val_ground071", "material_split": "val", "complexity": "simple", "output_directory": "LivingRoom_seed20261555"},
+    {"scene_id": "indoor_kitchen_200", "room_type": "Kitchen", "source_seed": 20261557, "runtime_seed": 20261558, "material_id": "test_ground073", "material_split": "test", "complexity": "simple", "output_directory": "Kitchen_seed20261557"},
+    {"scene_id": "indoor_house_201", "room_type": "House", "source_seed": 20261559, "runtime_seed": 20261560, "material_id": "train_ground037", "material_split": "train", "complexity": "simple", "output_directory": "House_seed20261559"},
+    {"scene_id": "indoor_bedroom_202", "room_type": "Bedroom", "source_seed": 20261561, "runtime_seed": 20261562, "material_id": "val_gravel023", "material_split": "val", "complexity": "simple", "output_directory": "Bedroom_seed20261561"},
+    {"scene_id": "indoor_diningroom_203", "room_type": "DiningRoom", "source_seed": 20261563, "runtime_seed": 20261564, "material_id": "test_gravel022", "material_split": "test", "complexity": "simple", "output_directory": "DiningRoom_seed20261563"},
+    {"scene_id": "indoor_office_204", "room_type": "Office", "source_seed": 20261565, "runtime_seed": 20261566, "material_id": "train_tiles141", "material_split": "train", "complexity": "simple", "output_directory": "Office_seed20261565"},
+    {"scene_id": "indoor_livingroom_205", "room_type": "LivingRoom", "source_seed": 20261567, "runtime_seed": 20261568, "material_id": "val_tiles139", "material_split": "val", "complexity": "simple", "output_directory": "LivingRoom_seed20261567"},
+    {"scene_id": "indoor_kitchen_206", "room_type": "Kitchen", "source_seed": 20261569, "runtime_seed": 20261570, "material_id": "test_tiles140", "material_split": "test", "complexity": "simple", "output_directory": "Kitchen_seed20261569"},
+    {"scene_id": "indoor_house_207", "room_type": "House", "source_seed": 20261571, "runtime_seed": 20261572, "material_id": "train_concrete034", "material_split": "train", "complexity": "simple", "output_directory": "House_seed20261571"},
+    {"scene_id": "indoor_bedroom_208", "room_type": "Bedroom", "source_seed": 20261573, "runtime_seed": 20261574, "material_id": "val_concrete045", "material_split": "val", "complexity": "simple", "output_directory": "Bedroom_seed20261573"}
+  ],
+  "selection_policy_overrides": {
+    "processing_order": "strict_candidate_stream_order",
+    "stop_at_first_prefix_meeting_quota": true,
+    "maximum_candidates": 24,
+    "minimum_admitted_scenes": 6,
+    "minimum_admitted_families": 4,
+    "one_generation_attempt_per_candidate": true,
+    "replacement_seed_allowed": false,
+    "source_repair_allowed": false,
+    "continue_after_terminal_rejection_until_quota_or_budget": true,
+    "all_processed_candidates_count_in_denominator": true,
+    "unprocessed_suffix_must_remain_untouched": true,
+    "o4_withheld_until_cohort_frozen": true,
+    "all_admitted_scenes_must_enter_v37_development": true,
+    "fresh_process_per_stage_and_scene": true
+  },
+  "pipeline_overrides": {
+    "candidate_runner": "scripts/run_o4_scene_candidate_v30.py",
+    "route_output_name": "route_surface_o4_v38_development_stream"
+  },
+  "operator_output_root": "outputs/kinofail_realistic/operator_development/o4_action_v37_velocity_damped",
+  "additional_locked_files": [
+    {"path": "scripts/run_o4_scene_candidate_v30.py", "sha256": "491db543bc0a5178c1e12bcff36d9648c41f69e08335f962435a4fce4e0f1784"},
+    {"path": "scripts/audit_o4_scene_stream_v30.py", "sha256": "3dc616244718a3d950296996b8a578a9205e7db2256bdf976fbba27968e69266"},
+    {"path": "tests/test_o4_scene_stream_v30.py", "sha256": "e276a1de7208d55215efc126fce1acae1217ac119e0853da75be78d321d3c645"},
+    {"path": "scripts/audit_o4_scene_stream_v38.py", "sha256": "59e14131b78d5de8470c17e90001f303fb162caa9ce53980eb9929757e6231bb"},
+    {"path": "tests/test_o4_scene_stream_v38.py", "sha256": "6b7b2063a3476e3bc9d7105c4c2c6fbbd8de839b03284224885bc722b9fa516f"},
+    {"path": "scripts/isaac_collect_o4_action_consequence_v37.py", "sha256": "993c4c4d84c0ae339fca764624a28944dd8eba1c4d543c36ce0d8c6884978a25"},
+    {"path": "tests/test_o4_action_consequence_v37.py", "sha256": "edba18f1f10cffc50a09f61246b997632054ef72b37ed20f458ac886b4c318da"},
+    {"path": "configs/data/kinofail_o4_action_consequence_v35_development_audit_correction_v2_freeze_v1.json", "sha256": "74d72d471a76cea90f8bbf1d2c5e771b35796b0e1311d0611aa64ca7fb0630af"},
+    {"path": "outputs/kinofail_realistic/operator_development/o4_action_v35_adaptive_backstep/postrun_audit_v2.json", "sha256": "25caf8e3a1fe12d4cdcfc5dc45109c530988081dc88ed6435d6e6513fcbc7fb5", "json_passed": false, "json_sealed": true},
+    {"path": "/home/eureka/nvidia/isaacsim/kit/python/lib/python3.11/site-packages/pxr/__init__.py", "sha256": "b562c0316021f102951b9976572119f65f816ff5790f0c9b4ac0be7e4acc1ee5"},
+    {"path": "/home/eureka/nvidia/isaacsim/kit/python/lib/python3.11/site-packages/pxr/Usd/_usd.so", "sha256": "e3468b0eeb405359ac4f148f40fe19e7ffe7adecff9a8a45c6967564d1931d68"},
+    {"path": "/home/eureka/nvidia/isaacsim/kit/python/lib/python3.11/site-packages/pxr/UsdGeom/_usdGeom.so", "sha256": "eb4ab5e5e9a4f40caf507fe81244232fb80898354532d1044c21b56f8c029339"}
+  ]
+}

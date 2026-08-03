@@ -1,0 +1,189 @@
+{
+  "benchmark": {
+    "appearance_view_sequences": 5940,
+    "appearance_views_per_episode": 3,
+    "camera_profiles": 3,
+    "counterfactual_groups": 990,
+    "domains": 3,
+    "operators": 11,
+    "physical_episodes": 1980,
+    "physical_seeds_per_scene_operator_severity": 5,
+    "scene_families": 9,
+    "scene_families_per_domain": 3,
+    "severity_levels": 2
+  },
+  "claim_policy": {
+    "a8_in_scope": false,
+    "completion_requires_hash_bound_realistic_corpus_training_inference_and_predictions": true,
+    "controlled_core_may_be_reported_separately": true,
+    "corpus_protocol_id": "kinofail_realistic_scale_1980_v8_replication_v2",
+    "current_allowed_term_before_real_anchor": "sim2real-oriented synthetic causal benchmark",
+    "model_based_experiments": [
+      "A2",
+      "A3",
+      "A5",
+      "A7"
+    ],
+    "realistic_a0_a7_complete_requires_all_eight_experiments": true,
+    "realistic_result_may_not_be_inherited_from_controlled_core": true,
+    "sim2real_validated_requires_real_go2_anchor": true
+  },
+  "contract_id": "kinofail-realistic-a0-a7-scale-v8-five-seed-20260723",
+  "evidence_roots": {
+    "inference_manifest": "outputs/eval/realistic_a0_a7_v5/inference_manifest.json",
+    "predictions": "outputs/eval/realistic_a0_a7_v5/predictions.jsonl",
+    "runtime_audit": "outputs/kinofail_realistic/runtime_audit/formal_scale_v8/runtime_audit.json",
+    "runtime_coverage": "outputs/kinofail_realistic/runtime_audit/formal_scale_v8/coverage.json",
+    "scene_registry": "outputs/kinofail_realistic/runtime_audit/formal_scale_v8/scene_registry_audit.json",
+    "snapshot_development_audit": "outputs/eval/realistic_a0_a7_v5/snapshots/extraction_audit.json",
+    "training_manifest": "outputs/eval/realistic_a0_a7_v5/training_manifest.json"
+  },
+  "experiments": {
+    "A0": {
+      "acceptance": {
+        "camera_profiles": 3,
+        "complete_counterfactual_pairs": 990,
+        "domains": 3,
+        "evaluation_eligible_records": 1980,
+        "operators": 11,
+        "publication_freeze_ready": true,
+        "registered_scene_families": 9,
+        "scene_registry_fully_bound": true,
+        "texture_swap_runtime_pass": true
+      },
+      "output": "outputs/eval/realistic_a0_a7_v5/a0_certificate.json",
+      "role": "corpus, provenance, synchronization, determinism and leakage certificate"
+    },
+    "A1": {
+      "acceptance": {
+        "all_three_domains_required": true,
+        "c2st_auc_equivalence_margin_from_chance": 0.1,
+        "c2st_cluster_ci_must_lie_inside_equivalence_band": true,
+        "fresh_app_and_deep_reset_required": true,
+        "minimum_scene_clusters": 9,
+        "vision_auc_cluster_ci_lower": 0.8
+      },
+      "output": "outputs/eval/realistic_a0_a7_v5/a1_construct_validity.json",
+      "role": "fresh-app matched O2/O4 construct validity on body-fixed multimodal sequences"
+    },
+    "A2": {
+      "acceptance": {
+        "ours_minimum_combined_balanced_accuracy": 0.8,
+        "ours_minus_unshaped_cluster_ci_lower": 0.0,
+        "report_all_baselines_without_champion_claim_if_ci_overlaps": true,
+        "required_heldout_axes": [
+          "scene",
+          "material",
+          "scene_and_material"
+        ],
+        "training_seeds": 5
+      },
+      "output": "outputs/eval/realistic_a0_a7_v5/a2_headline.json",
+      "role": "multimodal conflict learning with scene/material/combined heldout evaluation"
+    },
+    "A3": {
+      "acceptance": {
+        "T1": 0.9,
+        "T2": 1.0,
+        "T3_strictly_greater_than": 0.917,
+        "T3_subcells": {
+          "looks_safe": 0.9,
+          "reverse_conflict": 0.9,
+          "transparent_or_thin_obstacle": 0.9
+        },
+        "T4": 1.0,
+        "T5": 0.9,
+        "domains": 3,
+        "macro": 0.95,
+        "minimum_independent_scene_physics_clusters": 33,
+        "require_every_seed": true,
+        "training_seeds": 5,
+        "worst_cell": 0.9
+      },
+      "output": "outputs/eval/realistic_a0_a7_v5/a3_publication_report.json",
+      "role": "three-domain T1-T5 bidirectional conflict battery"
+    },
+    "A4": {
+      "acceptance": {
+        "actual_action_required": true,
+        "minimum_episode_seeds_per_action_cell": 10,
+        "required_headline_operators": [
+          "O2",
+          "O4",
+          "O5",
+          "O8",
+          "O9"
+        ],
+        "scene_clustered_paired_bootstrap_required": true,
+        "weak_or_non_identifiable_cells_must_remain_in_report": true
+      },
+      "output": "outputs/eval/realistic_a0_a7_v5/a4_consequence.json",
+      "role": "actual-action recovery consequence on corrected realistic physics"
+    },
+    "A5": {
+      "acceptance": {
+        "negative_ood_or_abstention_results_must_be_retained": true,
+        "released_attribution_precision": 0.95,
+        "required_heldout_axes": [
+          "scene",
+          "material",
+          "lighting",
+          "camera_profile",
+          "physical_realization"
+        ],
+        "selective_minus_always_safe_cluster_ci_upper": 0.0,
+        "texture_swap_hard_consistency": 0.95,
+        "texture_swap_mean_probability_jsd_max": 0.05,
+        "texture_swap_pairwise_agreement": 0.95
+      },
+      "output": "outputs/eval/realistic_a0_a7_v5/a5_selective.json",
+      "role": "heldout-scene/material/lighting/camera/realization generalization and selective recovery"
+    },
+    "A6": {
+      "acceptance": {
+        "interval_estimates_required": true,
+        "minimum_independent_seeds_per_level": 5,
+        "minimum_levels_per_parameter": 4,
+        "minimum_operator_parameter_families": 5,
+        "no_interpolated_point_claim_without_identified_bracket": true
+      },
+      "output": "outputs/eval/realistic_a0_a7_v5/a6_boundary.json",
+      "role": "measured-parameter severity and intervention-boundary analysis"
+    },
+    "A7": {
+      "acceptance": {
+        "paired_scene_cluster_statistics_required": true,
+        "required_ablations": [
+          "default_grid_vs_realistic_scene",
+          "procedural_texture_vs_scanned_pbr",
+          "world_follow_vs_body_fixed_camera",
+          "surrogate_trunk_effect_vs_local_physics",
+          "texture_vs_geometry_vs_physics_intervention",
+          "without_texture_swap_consistency"
+        ],
+        "training_seeds": 3
+      },
+      "output": "outputs/eval/realistic_a0_a7_v5/a7_ablation.json",
+      "role": "realism, camera, physics and texture-intervention ablations"
+    }
+  },
+  "freeze_provenance": {
+    "a8_in_scope": false,
+    "base_contract": "configs/eval/kinofail_realistic_a0_a7_v4.json",
+    "base_contract_sha256": "aa74a16cc622eb893e701a6d009d5ecf15412417030f956de76aebe63a183d57",
+    "collection_protocol": "configs/data/kinofail_realistic_scale_v8_replication_formal_v2.json",
+    "collection_protocol_sha256": "94ae9d6c5866ac689e653163646f600eabda4a963be3fd13fdd52f41bc2cc253",
+    "collector": "scripts/isaac_collect_kinofail_realistic_pair_v7.py",
+    "collector_sha256": "e153da60fb3e31e0755a640051deb881a06127425423b24f30bbeff2579a6f3d",
+    "created_utc": "2026-07-23T17:22:09.804476+00:00",
+    "model_outcomes_available_at_freeze": false,
+    "physical_collection_started_at_freeze": false,
+    "schedule": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+    "schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+    "static_design_audit": "outputs/kinofail_realistic/design_scale_v8_replication_v1/scale_v8_replication_audit.json",
+    "static_design_audit_sha256": "431f4c19629f757c1af83d5fe9befbd1c82cffc557bbc76d2aaa8715ddde1391"
+  },
+  "schema_version": "kinofail.realistic-a0-a7-replication-contract.v5",
+  "scope": "A0-A7 on the hash-frozen five-seed realistic scale-v8 corpus; independently frozen A1/A4/A6 side experiments are re-reduced and rebound, never replaced by A8.",
+  "status": "frozen_before_scale_v8_outcomes"
+}

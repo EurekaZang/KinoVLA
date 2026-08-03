@@ -44,12 +44,32 @@ def _items(n_each: int = 10) -> list[A2Item]:
     out: list[A2Item] = []
     for i in range(n_each):
         split = "train" if i < n_each // 2 else "test"
-        out.append(A2Item(f"o4_{i}", _snap("O4_tether"), "O4_tether", "adhesion", "B",
-                          "yellow_board" if split == "train" else "gray_tape", split,
-                          frozenset({"Backstep", "Update_Topology"}), "O4|O2"))
-        out.append(A2Item(f"o2_{i}", _snap("O2_compliance"), "O2_compliance", "compliant_terrain",
-                          "A", "brown_mud" if split == "train" else "reddish_mud", split,
-                          frozenset({"Set_Constraint", "Switch_Gait"}), "O4|O2"))
+        out.append(
+            A2Item(
+                f"o4_{i}",
+                _snap("O4_tether"),
+                "O4_tether",
+                "adhesion",
+                "B",
+                "yellow_board" if split == "train" else "gray_tape",
+                split,
+                frozenset({"Backstep", "Update_Topology"}),
+                "O4|O2",
+            )
+        )
+        out.append(
+            A2Item(
+                f"o2_{i}",
+                _snap("O2_compliance"),
+                "O2_compliance",
+                "compliant_terrain",
+                "A",
+                "brown_mud" if split == "train" else "reddish_mud",
+                split,
+                frozenset({"Set_Constraint", "Switch_Gait"}),
+                "O4|O2",
+            )
+        )
     return out
 
 
@@ -61,8 +81,9 @@ class _Constant:
 
     def decide(self, snapshot: Snapshot, map_note: str = "") -> ParsedDecision:  # noqa: ARG002
         prim = RecoveryPrimitive(self._p, _default_params(self._p))
-        ann = CoTAnnotation(thought="", attribution=self._c, primitive=prim,
-                            attribution_raw=self._c, raw_text="")
+        ann = CoTAnnotation(
+            thought="", attribution=self._c, primitive=prim, attribution_raw=self._c, raw_text=""
+        )
         return ParsedDecision(ok=True, raw_text="", annotation=ann)
 
 
@@ -74,8 +95,9 @@ class _Perfect:
     def decide(self, snapshot: Snapshot, map_note: str = "") -> ParsedDecision:  # noqa: ARG002
         cat = "adhesion" if snapshot.operator_name == "O4_tether" else "compliant_terrain"
         prim = RecoveryPrimitive(self._CANON[cat], _default_params(self._CANON[cat]))
-        ann = CoTAnnotation(thought="", attribution=cat, primitive=prim,
-                            attribution_raw=cat, raw_text="")
+        ann = CoTAnnotation(
+            thought="", attribution=cat, primitive=prim, attribution_raw=cat, raw_text=""
+        )
         return ParsedDecision(ok=True, raw_text="", annotation=ann)
 
 
@@ -110,8 +132,8 @@ def test_wilson_interval() -> None:
 
 def test_mcnemar_exact() -> None:
     # lower row right where higher wrong: b; higher right where lower wrong: c.
-    a = [True] * 2 + [False] * 10 + [True] * 8   # a correct on 10
-    b = [False] * 2 + [True] * 10 + [True] * 8   # b correct on 18; discordant b=2, c=10
+    a = [True] * 2 + [False] * 10 + [True] * 8  # a correct on 10
+    b = [False] * 2 + [True] * 10 + [True] * 8  # b correct on 18; discordant b=2, c=10
     m = mcnemar(a, b)
     assert m["b_lo_right_hi_wrong"] == 2
     assert m["c_lo_wrong_hi_right"] == 10
@@ -119,3 +141,5 @@ def test_mcnemar_exact() -> None:
     assert m["p_exact_two_sided"] < 0.05  # 2 vs 10 discordant ⇒ significant
     # fully concordant ⇒ p = 1.0
     assert mcnemar([True] * 5, [True] * 5)["p_exact_two_sided"] == 1.0
+    # A fully discordant comparison must retain its non-zero exact p-value.
+    assert mcnemar([True] * 24, [False] * 24)["p_exact_two_sided"] == 2.0**-23

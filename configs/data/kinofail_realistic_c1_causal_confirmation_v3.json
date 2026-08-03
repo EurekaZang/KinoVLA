@@ -1,0 +1,105 @@
+{
+  "acceptance": {
+    "c1_confirmation": {
+      "all_case_manifests_pass": true,
+      "maximum_paired_proprio_probability_delta": 1e-12,
+      "minimum_balanced_accuracy": 0.75,
+      "minimum_domains": 3,
+      "minimum_macro_scene_auc": 0.9,
+      "minimum_per_scene_auc": 0.85,
+      "minimum_scene_ci95_lower": 0.85,
+      "minimum_scene_clusters": 3,
+      "minimum_texture_hard_consistency": 0.75,
+      "proprio_auc": 0.5,
+      "proprio_byte_identity_rate": 1.0
+    }
+  },
+  "analyzer": "scripts/analyze_kinofail_realistic_c1_confirmation_v3.py",
+  "analyzer_sha256": "ed948fbd502e1365629b4c07761c09b7dd2184f1f02073031990c56b07c7f6f3",
+  "asset_lock": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+  "asset_lock_sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003",
+  "causal_contract": {
+    "all_imageable_descendants_visibility_is_explicit": true,
+    "cause_geometry_has_no_collision": true,
+    "class_dependent_color_or_texture_forbidden": true,
+    "decision_boundary_precedes_operator_region": true,
+    "four_render_only_settle_frames_after_each_counterfactual_switch": true,
+    "proprio_bytes_must_be_identical_across_labels": true,
+    "render_only_counterfactual_must_not_advance_physics": true,
+    "same_pbr_material_view_for_both_labels": true,
+    "same_physics_rollout_for_o2_and_o4": true
+  },
+  "claim_boundary": "C1 v3 tests constructive pre-contact O2/O4 identifiability under fresh trajectory and material nuisance on three held-out realistic scene/domain clusters. It requires strong rank identifiability and nontrivial hard texture consistency while deliberately retaining headroom; it is not a universal open-world theorem.",
+  "collector": "scripts/isaac_collect_kinofail_realistic_c1_causal_v1.py",
+  "collector_sha256": "161b19c59dd7be07f7ef6e9b0e3b8519db1f0c32a00577ae165bbbdcd01d4ce2",
+  "created_utc": "2026-07-24T11:06:02.901307+00:00",
+  "design_audit": "outputs/kinofail_realistic/design_c1_causal_confirmation_v3/audit.json",
+  "design_audit_sha256": "a0b730e1272c802820cedae9b88e91fe91b535d67e82034a3552a22e0fa68183",
+  "design_tag": "c1_causal_confirmation_extension_v3",
+  "development_feature_manifest_sha256": "2a10334597420f4642b4200da9be02860d089c94575ec1b34ff20f82bf6af1a1",
+  "development_geometry_manifest_sha256": "18b049079f7dc2e2bafc51cdfe8a414cafb918af63cf98e27b0fcc1d8769aaa6",
+  "development_protocol_sha256": "72488887a7bcd4da2789a272663cacbde27090ace2aa260bea5f7b803108c062",
+  "development_source_description": "12 structured-v3 development cases: two fresh nuisance profiles in each of six non-test realistic scenes; formal v3 test scenes and case IDs were absent from model selection",
+  "feature_extractor_sha256": "e49809b7040653f4b9467dedcee02ad8d9cb3e50926c436e1315d0b6f60d9960",
+  "frozen_analysis": {
+    "development_loso": {
+      "macro_accuracy": 0.8055555555555557,
+      "macro_scene_auc": 0.9722222222222223,
+      "minimum_scene_auc": 0.9166666666666667,
+      "texture_hard_consistency": 0.7916666666666666
+    },
+    "hard_prediction_threshold": 0.5,
+    "proprio_C": 0.001,
+    "selection_provenance": "six-scene leave-one-scene-out development screen; selected for highest macro scene AUC with strong minimum-scene AUC",
+    "uncertainty": {
+      "draws": 20000,
+      "method": "scene-cluster bootstrap",
+      "seed": 2026072415
+    },
+    "visual_C": 10.0,
+    "visual_gamma": 0.0001,
+    "visual_input": "Go2-front RTX RGB; full width and rows 45%-100%",
+    "visual_model": "RBF SVC on frozen CLIP mean+last+delta temporal features; generic HOG is extracted for audit but excluded by frozen leave-one-scene-out selection"
+  },
+  "geometry_extractor_sha256": "3cfb2a4893df9011d47adebcc9a744bc9e81b93db57e90be68bbab1d5c881015",
+  "outcomes_available_at_freeze": false,
+  "preserved_negative_evidence": [
+    {
+      "passed": false,
+      "report": "outputs/eval/c1_causal_formal_v1/formal/report.json",
+      "report_sha256": "5130683e6ed05a648751b0e082dad9fe0a1c442df3b7bb4b7df4f9dc5a373653"
+    },
+    {
+      "passed": false,
+      "report": "outputs/eval/c1_causal_confirmation_v2/formal/report.json",
+      "report_sha256": "e1c8526c95eb838451a61520706c6a03c98586215a3bd41633de7e631dc08b6d"
+    }
+  ],
+  "protocol_id": "kinofail-realistic-c1-causal-confirmation-v3",
+  "runner_sha256": "d2993f9918c961fff4dfa694cbbe43208a4f8676228a2ce3bb51649428fd8f05",
+  "sample_design": {
+    "appearance_views_per_cause": 3,
+    "causes_per_case": 2,
+    "domains": [
+      "life",
+      "production",
+      "wild"
+    ],
+    "fresh_shared_prefix_cases": 21,
+    "nested_repetitions": "seven trajectory nuisance profiles per scene and three material interventions per cause",
+    "proprio_samples_per_sample": 21,
+    "rgb_frames_per_sample": 5,
+    "scene_clusters": 3,
+    "split": "test only",
+    "statistical_unit": "scene cluster"
+  },
+  "scene_registry": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule": "outputs/kinofail_realistic/design_c1_causal_confirmation_v3/schedule.jsonl",
+  "schedule_builder_sha256": "26413be25fae2368d4bad655234691d84decffcd511ef4866a97a8f514e8c37c",
+  "schedule_sha256": "05cb92a0e7d918709b1968ff7005e596d7e839cb55e66fb3880ab83837403ff9",
+  "schema_version": "kinofail.realistic-c1-confirmation-protocol.v3",
+  "status": "formal_frozen_after_v1_v2_failures_before_v3_outcomes",
+  "visual_helper": "kino_vla/sim/c1_causal_visuals.py",
+  "visual_helper_sha256": "9a0c72b682e757198e1b40dedf281a7be42325ba041137de78e23dee9cc23c78"
+}

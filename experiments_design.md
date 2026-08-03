@@ -1,9 +1,32 @@
-# Experiment Design — Paper A (v1.1)
+# Experiment Design — Paper A (v1.4, reconciled with final A0–A7 artifacts)
 ## "Feel It, See It, Recover: Cross-Modal Failure Attribution for Safe Quadrupedal Navigation Recovery"
 
 > **One sentence:** This paper is not a navigation system paper. Its object of study is **cross-modal failure attribution** — the cognitive operation of resolving conflicts between proprioceptive evidence and visual evidence to select the correct recovery — and its currency of evaluation is **frozen failure snapshots + interventional consequence measurement**, not closed-loop reach. E1 and E2 already carry the two load-bearing claims; this document designs the experiments that complete the paper around them.
 >
-> Status of inherited evidence: **E1 (C2ST certification) DONE & reproducible. E2 three-row (open-loop, frozen snapshots) DONE & reproducible. E2 Suite-Cal closed-loop parity DOWNGRADED (E4). E4 (2026-07-01 update) PARTIALLY UNBLOCKED: detector-layer caliper fixed (`monitor_abaware`, A-class false-fire ↓5–80×, B-class TPR flat) + hardened operating point (debounce 25) ⇒ O10 closed-loop left endpoint EXISTS (b1 reach 1.00 at floors 0.9/0.7/0.4; monitor fully silent at 0.9). Remaining E4 items: determinism (item 3 → A0.1 here) and θ\*/agent protocol (item 2 → A6 here *is* that protocol).**
+> Final A0–A7 status is audited in `A实验/A0-A7_实验数据汇总.md`. A3 now has a failure-driven structured successor whose method and five checkpoints were frozen before a second untouched confirmation; the historical 692-snapshot specialist and failed first confirmation remain separate provenance. In the controlled core, A0–A4, A5.6 and A7 provide the positive spine; A5.1–A5.5/A6/A7 uncertainty results retain C4's falsifiable boundaries. The realistic direct C4 v3 endpoint is now complete: 75/75 process-isolated pairs across three test scenes/domains give `selective−always-safe=-5.934`, scene-clustered 95% CI `[-8.704,-3.557]`, coverage 0.20 and released precision 1.00. Historical A4 recovery-versus-continue remains side evidence for its old policy/action stack. The design predictions below are retained for provenance, but current machine artifacts—not predictions—govern paper claims.
+
+### Changelog v1.3 → v1.4 (2026-07-19 A3 successor closure)
+
+1. The historical B5-conflict-bi result remains a T3 diagnostic specialist: T3=0.917 but reverse/T4/T5 fail. It is no longer described as the final all-battery method.
+2. Frozen successor v1 reached 1.0 on development data and then failed its first untouched confirmation (T3=0; T5=0.333–0.667). The negative artifact is preserved and became method-development data only.
+3. Successor v2 removes the unreliable high-capacity conflict-VLA routing branch and uses auditable proprio summaries, train-fitted material prototypes, and separate ExtraTrees intervention/regime/category experts. It consumes no operator/scenario/appearance ID/cell/truth/θ at deployment and must be described as a structured evidence router, not an end-to-end VLA.
+4. Before the second confirmation, the method, five checkpoints, prototypes and thresholds were hashed (`method_sha256=537a5861…1d89c`). On 237 new snapshots, 15 new appearance IDs and 33 appearance/physical-case clusters, every one of five training seeds obtains T1–T5=1.0, T3 looks-safe/O8/reverse=1.0, worst=macro=1.0.
+5. Inference uses a two-level seed/appearance-cluster bootstrap and paired exact sign tests, never 237 independent snapshot trials. Strict all-snapshot/all-seed cluster success is 33/33, exact 95% CI `[0.894,1.000]`; paired cluster-balanced improvements over B1/B-F/historical B5-bi are +0.545/+0.864/+0.818 with all p<1.5e−5. A coarser sensitivity analysis merges physical cases sharing an appearance ID: 15/15 strict success, exact CI `[0.782,1.000]`, with all appearance-ID paired p≤4.883e−4.
+
+### Changelog v1.2 → v1.3 (2026-07-19 C4 closure)
+
+1. A5.6 adds a downstream, frozen See–Feel–Act structured gate without changing VLA/Projector/training/A1–A4.
+2. Final-v2 (288 snapshots, 2 released appearance clusters) reduces cost `1.75→1.5417`, paired CI `[−0.2083,−0.2083]`.
+3. A same-gate confirmatory replication (300 snapshots, 6 released appearance clusters) reduces cost `1.72→1.52`, paired CI `[−0.20,−0.20]`; released-attribution precision is 1.00, all six clusters strictly improve, and the cluster-level one-sided exact sign test is `p=0.015625`.
+4. C4 is positive only for supported selective recovery. θ-OOD, LOO naming, scalar-score abstention and learned θ-boundary remain negative.
+
+### Changelog v1.1 → v1.2 (2026-07-18 artifact reconciliation)
+
+1. A3 T5 is scored against the pre-registered `nominal/continue` decision truth; all trained agents are 0/116.
+2. A4 actual actions now use observed parameters, missing scenarios are excluded, and two-stage bootstrap replaces the old 0.11/0.44 table.
+3. A5.5 now uses frozen appearance calibration/test, always-safe/continue/agent baselines and nonzero coverage points; no nonzero residual policy beats always-safe.
+4. A6 reports the base bracket `[0.25,0.30]`; learned agents never flip, and residual AUROC=1.0 has exact floor-group p=0.10.
+5. A7 posterior selection uses the frozen appearance split and two-stage bootstrap; entropy/MSP do not strictly beat always-safe.
 
 ### Changelog v1.0 → v1.1 (incorporating E4 2026-07-01 update)
 
@@ -21,10 +44,10 @@
 ### 0.1 What the paper claims (C1–C5)
 
 - **C1 — Necessity (constructive):** There exists a class of locomotion failures for which **no pure-proprioception function can attribute the cause**, by construction: the matched pair O4↔O2 is certified indistinguishable (C2ST AUC≈0.50 on the binding obs48+torque representation, all T, all discriminators — E1), while vision separates it perfectly (CLIP AUC=1.0). Symmetrically, there exists a class for which **vision alone is misleading and proprioception is decisive** (visual–physics deception). Neither modality subsumes the other. **v1.1 strengthening:** the ambiguity now shows up at *three independent proprio-only layers* — discriminator family, trained attributor, and deployed-grade detector (A1.5) — establishing it as a property of the information channel, not of any one model class. *(Carried by A1 + A1.5 + A3.)*
-- **C2 — Conflict resolution is a learned, non-trivial semantic operation:** having a vision channel ≠ using it. B1 (strongest pure-proprio) 0.00 < B5-unshaped 0.27 < B5-conflict 1.00 on matched-O4 conflict cases, CI-separated (E2). The new bidirectional battery (A3) tests whether what is learned is genuine *evidence weighing* or a degenerate "always trust the camera" shortcut. *(Carried by A2 + A3 + A7.)*
+- **C2 — Conflict resolution is a learned, non-trivial semantic operation:** having a vision channel ≠ using it. A2 establishes a paired conflict-curriculum gain; the historical A3 specialist reveals both proprio-driven success and reverse/T5 shortcuts. A failed frozen successor then motivates an auditable structured architecture, whose second untouched confirmation closes every battery cell for all five training seeds. This supports failure-driven multimodal evidence routing in the closed procedural domain, not universal causal attribution or end-to-end VLA superiority. *(Carried by A2 + A3 + A7.)*
 - **C3 — Attribution correctness causally determines recovery success and safety:** an interventional label-swap study shows the same physical scene under different attributed labels yields opposite outcomes — including catastrophic ones (fall / catapult / immobilization) under misattribution, and measurable cost when intervening on benign anomalies. Misattribution costs are **asymmetric**, which yields a principled safe-default rule under uncertainty. E4 has now *fully quantified* the false-intervention chain in the wild (saturated detector → misattribution → `Set_Constraint` → stranded at final_dist≈3), giving A4's nominal rows a measured real-world referent. *(Carried by A4.)*
-- **C4 — Generalization, calibrated abstention, and the intervention boundary:** attribution generalizes across held-out appearances, held-out operator families, and operator compositions; the privileged-distillation residual is a usable OOD/abstention signal; risk–coverage analysis connects abstention to the asymmetric costs of C3; and on the unlocked O10 axis the agent's intervene/continue flip point can now be measured against an agent-independent θ\* — while on O2, "when to intervene" is itself shown to be a cross-modal question. *(Carried by A5 + A6.)*
-- **C5 — Fair-opponent guarantee:** B1 is a strong attributor (0.764 attribution fidelity on unshaped operators, TPR 0.977 / FPR 0.05), so its 0.00 on the matched pair is by construction (E1 upper bound), not under-training. *(Carried by existing E1+E2 artifacts; no closed-loop parity table needed.)*
+- **C4 — Supported consequence-aware selective recovery:** a frozen five-seed observable-input gate releases `backstep_release` only for unanimous, sufficiently confident adhesion attribution; otherwise it executes the frozen `hold_and_request` safe fallback. On 75 process-isolated test pairs across life/production/wild, it beats always-safe by `−5.934` cost (scene-clustered 95% CI `[-8.704,-3.557]`) and `+0.200` success (`[0.120,0.293]`) at 0.20 coverage and 1.00 released-attribution precision. O2/O5/O8/O9 hard cases remain in the denominator and use fallback. This is deliberately narrower than full OOD or universal recovery: LOO naming, θ-OOD, scalar-score abstention, learned O10 boundary, and unsupported O2/O5/O9 recoveries remain failed/boundary falsifiers. *(Carried by realistic direct C4 + A5.6; bounded by A5.1–A5.5 + A6 + A7.)*
+- **C5 — Fair-opponent guarantee:** B1/proprio-only is a genuinely strong comparator, including on the realistic benchmark (A2 held-out balanced accuracy 0.970–0.986; A3 macro 0.981–0.982). Any multimodal advantage must therefore beat B1 with paired cluster-level uncertainty, rather than rely on a weak-baseline comparison. The legacy E1 result remains a controlled characterization, but scale-v8 must not describe B1's matched-case behavior as “by construction” because the realistic A1 equivalence gate did not pass. *(Carried by A1 + A2 + A3.)*
 
 ### 0.2 What the paper explicitly does NOT claim
 
@@ -40,7 +63,7 @@ No navigation-system claim, no SLAM/map contribution, no monitor *contribution* 
 | §11 Embodied DPO | **Cut** (future work). Paper A's training story is SFT with scripted/truth-filtered CoT only — the "minimal-agent principle" from E2 stands. |
 | §6.9 latency budget, five-layer runtime | **Cut.** One architecture figure, no timing claims. |
 | Kino-Fail v2 full suite structure | **Re-cut** around the conflict taxonomy (§3). Suite-Sem core survives; Suite-Cal becomes the *nominal rows* of A4; Suite-Bound becomes A6 (now viable on O10); Suite-Comp/OOD survive at the attribution level inside A5. |
-| Sim-to-real actuator network, real-robot closed loop | Only if optional A8 (snapshot-level transfer) is run; no closed-loop hardware. |
+| Sim-to-real actuator network, real-robot closed loop | **Out of scope.** A0–A7 contain no physical-robot evaluation; no closed-loop hardware claim. |
 | Locomotion policy (re)training | **Frozen everywhere.** RSL-RL base policy is fixed infrastructure. |
 
 ---
@@ -123,8 +146,10 @@ Honest labels carried from E1: O5↔O10 is *not* claimed as a matched pair (it i
 - **A3.1 Build T3 scenarios** (O7 both directions + O8) with depth-channel corruption per spec §8.2-O7 (otherwise the D channel trivially sees through the deception); snapshot them into the corpus.
 - **A3.2 Reverse-conflict probe.** Appearance says hazard, proprio says nominal (hazard-colored decal on normal floor; fake-ice texture on μ=0.8) → correct answer: `continue`. An agent that learned "conflict ⇒ trust camera" backsteps around paint. Also the mirrored T2/T3 grid: an agent that learned "conflict ⇒ trust body" pushes into matched-O4.
 - **A3.3 Training variants.** B5-conflict (vision-true conflicts only — the E2 artifact) vs **B5-conflict-bi** (both conflict directions in the 20–40 scripted-CoT samples, same recipe). Prediction worth publishing either way: if B5-conflict fails A3.2, the shortcut is real and B5-conflict-bi repairs it → "conflict resolution must be taught *per evidence-direction*"; if B5-conflict passes, the operation generalizes from one direction → stronger claim. Both outcomes are findings.
-- **A3.4 Override dose–response curves.** Snapshot-level, θ-graded: in looks-safe/is-hazard scenarios sweep μ ∈ {0.6 … 0.09}; plot P(agent overrides the benign visual prior) vs proprio evidence strength; mirrored curve for the reverse direction (visual alarm strength vs P(override toward continue)). Two curves per agent — the quantitative signature of evidence weighing vs modality dominance. No closed loop needed.
-- **Deliverable figure:** taxonomy (T1–T5) × agents (B1, B-V, B-T, B-F, B5-unshaped, B5-conflict, B5-conflict-bi) accuracy heatmap. The predicted **complementary block failures** of B1 (dies on T2) and B-V (dies on T3, T4) with only fusion covering all cells *is* "Feel It, See It" in one image.
+- **A3.4 μ-sweep robustness.** Final artifact is flat 1.0 for B5-conflict-bi across μ∈{0.6,0.3,0.15,0.09}; report it as robustness, not a monotonic dose-response. The reverse probe remains failed and is an explicit boundary.
+- **A3.5 Failure-driven successor (completed).** The high-capacity v1 router was frozen and failed its first untouched confirmation, so its failure set was moved into method development and the VLA routing branch was removed. Structured v2 uses 66-D proprio distribution summaries, train-fitted material-prototype features, separate intervention/material-regime/category ExtraTrees experts, a deterministic material-pair expert and a cluster-development-selected continue threshold. After freezing five seeds, a second entirely new appearance corpus gives all gates=1.0. The result is accompanied by a strict 33-cluster exact interval and paired cluster tests against B1, B-F and historical B5-bi.
+- **Decision semantics.** T5 is the pre-registered high-level semantic abstention estimand (`nominal→continue`). Raw snapshots retain the mild physical operator category and low-level recovery metadata; A3 evaluation applies the decision overlay explicitly. This is a hierarchy, not label rewriting, and the paper must distinguish low-level stabilization from semantic intervention.
+- **Deliverable figure:** a two-panel taxonomy heatmap. Panel A preserves the historical agents and their complementary block failures, including reverse/T5. Panel B shows the frozen v2 second confirmation with all five seed ranges plus the 33-cluster uncertainty certificate. A lone perfect heatmap without the failed iteration and finite-cluster interval is not acceptable.
 
 *Cost:* scenario/decal implementation ~days; snapshots one Isaac pass; per-variant LoRA retrains ~12 min each; eval cheap.
 
@@ -150,18 +175,19 @@ Honest labels carried from E1: O5↔O10 is *not* claimed as a matched pair (it i
 - **A5.1 Appearance OOD** (held-out textures per class; plus 2–3 real-photo textures projected onto sim geometry). Report per-cell accuracy deltas for every agent; B-F predicted to degrade most.
 - **A5.2 Leave-one-operator-out.** Train without an operator family (e.g., O3 entirely); zero-shot test scored by (i) open-vocabulary label judged against cause description, (ii) **admissible-set membership of the chosen primitive** (the metric that matters even when the class name is novel), (iii) abstention rate.
 - **A5.3 Compositional stacking.** O1+O5, O4+slope, O2+O10 snapshot sets (parameter-vector concatenation per spec §8.3 — no new mechanisms). Multi-factor attribution: exact-match and per-factor recall; primitive scored against the composed admissible set.
-- **A5.4 OOD-θ residual.** Privileged-distillation head's θ-prediction residual vs distance outside the training θ range: monotonicity + AUROC as an OOD score.
-- **A5.5 Selective prediction (the "Safe" closer).** Risk–coverage curves where abstain → the A4-derived conservative default; y-axis is **expected physical cost via M**, not just error rate. One figure ties C3 and C4 together: a calibrated attributor with a safe default strictly dominates both always-intervene and never-intervene.
+- **A5.4 θ-residual diagnostic.** Current artifact has no samples outside the training θ range; report error-ranking AUROC as an in-range diagnostic until a true held-out θ-OOD split exists.
+- **A5.5 Selective prediction (completed, negative).** Frozen train appearances calibrate and frozen test appearances evaluate. Broad test baselines are always-safe=1.52, continue=1.84, agent=2.96; minimum nonzero coverage=0.0533 has cost=1.84 and paired `selective−safe` CI `[0.32,0.32]`. T2 residual is constant and non-identifiable. A positive closer requires new independent data/training, not threshold reuse.
+- **A5.6 Structured selective recovery (completed, positive within support).** Freeze VLA/Projector/training/A1–A4. Release only the registry-consistent `(high_step, compliant_terrain)` stratum when dominant-chromatic RGB distance to the two train-mud prototypes is ≤`0.13283753` and observable 500 ms peak tracking error is ≥`0.15150436`; otherwise use `backstep_detour`. The first extreme-colour corpus is development-only. Post-freeze final-v2 gives coverage 0.2083, cost 1.5417 vs safe 1.75, paired CI `[−0.2083,−0.2083]`; an unchanged-gate 24-new-appearance replication gives coverage 0.20, cost 1.52 vs 1.72, CI `[−0.20,−0.20]`, with six released appearance clusters and precision 1.00. Truth/scenario/appearance-id/θ/split/cost are forbidden deployment inputs.
 
 *Cost:* mostly retrains-on-splits (cheap LoRA) + snapshot evals; A5.3 needs one composed-snapshot collection pass.
 
-### A6 — Severity boundary on the O10 axis + the modality-dependent boundary on O2 *(PROMOTED: conditional main-text; was optional)*
-**Serves C4.** E4's 07-01 update removed the blocker this experiment was gated on: with `monitor_abaware` + debounce 25, the **closed-loop left endpoint on O10 exists** (b1 reach 1.00 at floors 0.9/0.7/0.4; monitor fully silent at 0.9), where before the fix every θ was 0.00. Independently, E4 item (2) converged on exactly this design's protocol: θ\* from a privileged controller, semantic agent (not B1) on the decision side — the two documents now agree by construction.
+### A6 — Severity boundary on the O10 axis *(completed; appendix/failure analysis)*
+**Serves C4 as a boundary result.** The privileged base sweep identifies only `[0.25,0.30]`; `0.2754` is a descriptive logistic midpoint on a five-point separated grid. All evaluated learned agents intervene at every floor, so the primary learned-boundary hypothesis fails.
 
 - **θ\* (ground truth, R4):** privileged base condition (monitor suppressed, frozen policy), deterministic backend (A0.1), N≥10/θ, logistic fit crossing 0.5. **The grid must extend downward:** E4 §3.7 shows base=1.00 even at floor=0.4 while §3.3 shows startup paralysis at 0.15 ⇒ **θ\*∈(0.15, 0.4)**; sweep floor∈{0.4, 0.3, 0.25, 0.2, 0.15}. The early §3.1 base zeros at floors 0.4–0.7 were residue-contaminated — direct evidence that **A0.1 gates the θ\* curve itself**, not just agent rows.
-- **Agent side (snapshot-level, primary):** at each θ, B5-conflict-bi (and the roster) outputs `continue` vs an intervention label from frozen snapshots; report decision-flip point vs θ\* with overlaid curves. This satisfies E4 item (2)'s "real semantic agent, not B1" requirement without putting the agent in the loop.
+- **Agent side (snapshot-level, failed primary):** all evaluated agents output intervention at every θ, so no decision-flip point is established. Keep this negative result and do not substitute residual tracking for the missing learned decision boundary.
 - **Closed-loop confirmation (secondary, appendix):** the E4 leftpoint harness with B5 swapped in for B1 under the hardened trigger, at 3 θ points spanning θ\*. Requires A0.1 — the floor=0.5 non-monotonic dip (0.4 passes, 0.5 fails on one spurious fire) is exactly the noise A0.1 must remove.
-- **O2 is deliberately NOT a boundary axis — it is the modality-dependence demonstration.** E1+E4 jointly show a proprio-only trigger *cannot* be made silent on mild O2 without violating R8: the certified ambiguity lives below the detector (at debounce 25, O2 is the only A-class operator still firing, misattributed to O4). So on O2 the intervene/continue boundary is only expressible by the cross-modal layer: show snapshot-level that B5-conflict-bi outputs `continue` on mild mud (vision confirms mud; benign) at θ where the proprio-only detector necessarily fires. One panel, and it turns E4's "hardest axis" into a headline point: **on ambiguous terrain, even *when* to intervene is a cross-modal question.** (If a fully-clean O2 nominal row is also wanted for A4, probe k_c∈{2,4}.)
+- **O2 is not a positive boundary demonstration.** On the strict 40 O2_A nominal snapshots, B5-unshaped and B5-conflict-bi intervene on 100%; zero-shot intervenes on 50%. The detector ambiguity remains useful corroboration, but the cross-modal agents did not express the desired literal `continue` behavior.
 - **Gates:** A0.1 for the θ\* curve and the closed-loop rows (the last remaining E4 item); the O10 downward pre-sweep. Kill criterion softened accordingly: if θ\* cannot be located deterministically, ship snapshot-level decision curves against the coarse bracket (0.15, 0.4) and say so.
 
 ### A7 — Method ablations
@@ -171,11 +197,6 @@ Honest labels carried from E1: O5↔O10 is *not* claimed as a matched pair (it i
 - **Conflict-data dose curve:** matched samples ∈ {0, 5, 10, 20, 40} → O4-conflict accuracy. Locates the knee (E2 used 20); "a 20-sample curriculum installs the operation" is a strong efficiency claim if it holds.
 - Truth-filtered vs unfiltered scripted/Oracle CoT (spec §10 PHASE-3 filter), plus **rationale grounding rate** at test time: run the same automatic checker on emitted rationales (does the stated physical cause match privileged θ?) — measures whether accuracy comes with grounded explanations or confabulation.
 - Privileged-distillation vs contrastive-only vs from-scratch encoder (attribution + θ-regression error + A5.4 residual quality). Window length T ∈ {25,50,100}. Anomaly-gated injection on/off.
-
-### A8 — Real-world snapshot transfer *(OPTIONAL; only if hardware time is free)*
-Staged hazards on physical Go2 (adhesive mat, elastic cord, low-μ board, foam/mud pit, weighted backpack), synchronized 1 kHz proprio + RGB-D, teleoperated approach, snapshot at anomaly; offline attribution zero-shot and after few-shot encoder calibration. ~20 trials × 5 hazards; confusion matrix; 2–3 qualitative recovery clips for the video. **Snapshot-level only — no closed-loop hardware navigation.** If the encoder gap is large, report as limitation; sim remains primary.
-
----
 
 ## 5. Agent / baseline roster (single table, reused across A2–A6)
 
@@ -187,7 +208,8 @@ Staged hazards on physical Go2 (adhesive mat, elastic cord, low-μ board, foam/m
 | B-F | Closed-set fusion classifier (CLIP feats ⊕ proprio-encoder feats → MLP) | new (small) | honest "no-VLM" baseline; expected to force the win onto A5 axes |
 | B5-unshaped | Qwen3-VL-4B + LoRA + Kino-Projector, trained on unshaped ops only | ✔ E2 | "has vision ≠ uses vision" middle row |
 | B5-conflict | + vision-true matched samples (20, scripted CoT) | ✔ E2 | E2 headline |
-| B5-conflict-bi | + both conflict directions | new (12-min retrain) | A3 shortcut test; likely the paper's final model |
+| B5-conflict-bi | + both conflict directions | ✔ historical artifact | A3 shortcut test and failed all-battery comparator; not the final model |
+| Successor v2 | Structured proprio/material evidence router; 5 ExtraTrees seeds | ✔ frozen + second confirmation | A3 final all-battery method; explicitly not an end-to-end VLA |
 | Zero-shot VLM | off-the-shelf, vision(+text-summary) | new (API/eval only) | context row |
 
 *(Not agents: `monitor_abaware` + hardened operating point is scoped infrastructure — A0.2-secondary, A1.5 datum, A4.5/A6 robustness. Deployed `monitor.pt` untouched.)*
@@ -196,21 +218,21 @@ Staged hazards on physical Go2 (adhesive mat, elastic cord, low-μ board, foam/m
 
 ## 6. Claim × experiment matrix
 
-| | A1 (+A1.5) | A2 | A3 | A4 (+A4.5) | A5 | A6 | A7 | A8 |
-|---|---|---|---|---|---|---|---|---|
-| C1 necessity (both directions) | ●core + ●triangulation | ○ | ●T3 side | | | ○(O2 panel) | | |
-| C2 learned conflict resolution | | ●rows | ●bi + dose–response | | | | ●dose curve | |
-| C3 attribution ⇒ consequence/safety | ○(A1.3 gates) | | | ●core + ○robustness | ○(A5.5 uses M) | | | |
-| C4 generalization + abstention + boundary | | | | | ●core | ●O10 boundary + O2 modality-dependence (gated A0.1) | ○ | ○transfer |
-| C5 fair opponent | ●(bounds) | ●(0.764 row) | | | | | | |
+| | A1 (+A1.5) | A2 | A3 | A4 (+A4.5) | A5 | A6 | A7 |
+|---|---|---|---|---|---|---|---|
+| C1 necessity (both directions) | ●core + ●triangulation | ○ | ●T3 side | | | ○(O2 panel) | |
+| C2 learned conflict resolution | | ●rows | ●historical bi diagnosis + ●frozen structured successor | | | | ●dose curve |
+| C3 attribution ⇒ consequence/safety | ○(A1.3 gates) | | | ●matrix core; ○actual-action composition | ○diagnostic | | ○attribution-implied dose projection |
+| C4 supported recovery + boundaries | | | | ○safe-default cost | ●A5.6 two frozen finals; △LOO/θ-OOD | △base bracket; no learned flip | △posterior trend; not > safe |
+| C5 fair opponent | ●(bounds) | ●(0.764 row) | | | | | |
 
 Every experiment serves ≥1 claim; no claim rests on a single fragile leg; nothing closed-loop is load-bearing except A4 — which is interventional and scripted, not an agent system.
 
 ## 7. Statistics protocol (uniform)
 
-Wilson 95% CIs on all proportions; McNemar for paired agent comparisons on shared frozen snapshots; lane-grouped bootstrap + two-sided permutation for all C2ST numbers (E1 machinery, unchanged); ≥100 snapshots per headline cell (CI half-width ≲0.09 at extremes), N=10 seeds per (s,ℓ) cell in A4 and per θ in A6; all train/eval seed sets and appearance splits disjoint and pre-registered in configs; every table stamped with config hash + commit + seed list (E1/E2 convention); closed-loop tables additionally stamped with the A0.1 permutation-variance certificate.
+Wilson 95% CIs on proportions; McNemar for paired agent comparisons on shared frozen snapshots; lane-grouped bootstrap + two-sided permutation for C2ST; A4 uses N=10 per `(s,ℓ)`, while the completed A6 sweep uses N=6 per floor and reports its wider Wilson intervals explicitly. A4 composition and A5/A7 selective prediction use appearance-cluster + physical-episode two-stage bootstrap. Train/eval seed sets and appearance splits remain frozen and disjoint where pre-registered.
 
-## 8. Sequencing (cheap → load-bearing → early, per the E-series criterion)
+## 8. Sequencing (historical execution order; A0–A7 now complete)
 
 1. **A1.5 immediately** — zero collection cost, artifacts already on disk; a finished figure this week.
 2. **A1.3 / A1.2** — certification of every configuration the paper will stand on (cheapest gates; expect iteration-1 failures, as E1 did).
@@ -219,7 +241,7 @@ Wilson 95% CIs on all proportions; McNemar for paired agent comparisons on share
 5. **A0.1 determinism gate** — in parallel from day 1; **it is the single remaining E4 blocker (item 3)** and the long pole for A4.4/A4.5/A6.
 6. **Pre-sweeps:** O10 downward grid (floors {0.4→0.15}, base condition) and A4.1 placements (p₀; high-step over k_c; optional O2 k_c∈{2,4} nominal probe) → **A4 matrix (+A4.5)**.
 7. **A6 (promoted)** once A0.1 passes; snapshot-level decision curves can start earlier against the bracketed θ\*.
-8. **A5, A7** interleaved as GPU allows; **A8** only if hardware time appears.
+8. **A5, A7** interleaved as GPU allows; final hardening remains within A0–A7.
 
 ## 9. Risk register
 
@@ -247,4 +269,4 @@ Wilson 95% CIs on all proportions; McNemar for paired agent comparisons on share
 
 ## 11. Paper skeleton (for orientation)
 
-Intro (visual illusion vs dynamic truth → attribution, not adaptation, is the missing operation) → Conflict taxonomy + certified benchmark (A1, A0), including the **three-layer ambiguity triangulation (A1.5)** → Method (Kino-tokens, scripted conflict CoT, truth filter) → Results: three rows at scale (A2) → bidirectional battery + override curves (A3) → consequence matrix, cost asymmetry, ERS/Regret (A4, robustness A4.5) → generalization + selective prediction (A5) → **intervention boundary: O10 decision curve vs θ\* + the O2 "when-to-intervene is cross-modal" panel (A6, now plausible main text)** → ablations (A7) → optional real-world snapshots (A8) → Limitations (sim physics approximations: spring-damper adhesion, pendulum payloads; detection as a contribution out of scope — only the corroboration datum and robustness condition are used; no closed-loop system claim). Related-work axis rotates accordingly: REFLECT/AHA become the primary comparison (low-frequency, post-hoc, manipulation-focused, text-injected — vs 1 kHz certified-necessary proprio channel, pre-failure, legged, latent), RMA-line becomes the *characterized opponent* (B1 + E1 bound) rather than a rival system, VLMaps/CBF/monitor literature each get one contrast sentence.
+Intro (visual illusion vs dynamic truth → attribution, not adaptation, is the missing operation) → Conflict taxonomy + certified benchmark (A1, A0), including the **three-layer ambiguity triangulation (A1.5)** → Method (Kino-tokens, scripted conflict CoT, truth filter) → Results: three rows at scale (A2) → bidirectional battery + μ-sweep robustness (A3) → consequence matrix + cost asymmetry (A4; agent bridge explicitly open) → scoped appearance/LOO/residual diagnostics (A5) → O10 privileged base boundary as appendix (A6) → ablations (A7) → Limitations (sim physics approximations, no physical-robot evidence, no closed-loop system claim). Related-work axis rotates accordingly: REFLECT/AHA become the primary comparison (low-frequency, post-hoc, manipulation-focused, text-injected — vs 1 kHz certified-necessary proprio channel, pre-failure, legged, latent), RMA-line becomes the *characterized opponent* (B1 + E1 bound) rather than a rival system, VLMaps/CBF/monitor literature each get one contrast sentence.

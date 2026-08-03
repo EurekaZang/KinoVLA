@@ -1,0 +1,71 @@
+experiment: A5.6-C4-final-v2
+method: supported_registry_consistent_structured_gate_v2
+frozen_before_final_collection: true
+frozen_date: 2026-07-19
+
+# Fit only from the original calibration rows and already-inspected development rows.  The first
+# extreme-colour corpus is method-development evidence, never a final result.  The hash makes any
+# post-final method change detectable.
+development_artifact:
+  path: outputs/eval/a5/a5_6_material_gate_development.json
+  sha256: 34244a696e00829896b3e13a0a93f91b18f06aebb23c52f5265db3d5d3ab534c
+  status: method_development_not_headline
+
+material_model:
+  schema_version: 1
+  feature: dominant_chromatic_rgb
+  feature_field: material_rgb
+  target_class: compliant_terrain
+  distance: nearest_prototype_l2
+  n_appearances: 2
+  prototypes_by_calibration_appearance:
+    brown_mud: [0.39, 0.26, 0.13]
+    dark_gray_mud: [0.29, 0.27, 0.25]
+  deployment_forbidden_inputs: [appearance_id, semantic_class, truth, scenario, theta]
+
+gate:
+  schema_version: 2
+  category_field: attribution
+  decision_inputs: [agent_label, attribution, material_distance, tracking_error_peak]
+  forbidden_inputs: [truth, scenario, theta, appearance_id, appearance_split, method_split, test_cost]
+  fallback: safe_label
+  accepted_strata:
+    - {agent_label: high_step, attribution: compliant_terrain}
+  support:
+    field: material_distance
+    metric: nearest_calibration_material_prototype_l2
+    max_value: 0.13283753
+  evidence:
+    field: tracking_error_peak
+    metric: maximum_tracking_error_in_observation_window
+    min_value: 0.15150436
+
+fit_constraints:
+  registry_canonical_primitive_required: true
+  min_calibration_appearance_clusters: 2
+  minimum_fit_coverage: 0.10
+  max_per_cluster_agent_minus_safe: 0.0
+  aggregate_agent_minus_safe_strictly_negative: true
+  zero_invalid_acted_rows: true
+  operating_point_selection: maximum_coverage_then_widest_support_then_smallest_anomaly_threshold
+
+primary_endpoint:
+  metric: mean_physical_cost
+  comparator: always_safe
+  minimum_coverage: 0.10
+  success_gate: paired_two_stage_ci_upper_lt_zero
+  bootstrap_unit: appearance_cluster_within_scenario_plus_a4_episode
+  bootstrap_reps: 2000
+
+secondary_endpoint:
+  metric: precision_of_released_interventions
+  target: 1.0
+  purpose: prevent a cost-neutral but semantically wrong release from supporting C4
+
+non_interference:
+  freeze_vla_weights: true
+  freeze_projector_weights: true
+  freeze_training_data: true
+  freeze_a1_a4_artifacts: true
+  no_truth_scenario_theta_or_appearance_id_at_deployment: true
+

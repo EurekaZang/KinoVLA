@@ -1,0 +1,23 @@
+{
+  "asset_lock_sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003",
+  "collection_contract": {
+    "cases": 15,
+    "domains": 3,
+    "operator_physics_after_decision_boundary": true,
+    "samples_after_three_views": 90,
+    "scene_clusters": 3,
+    "shared_proprioception_across_causes": true
+  },
+  "collector_sha256": "161b19c59dd7be07f7ef6e9b0e3b8519db1f0c32a00577ae165bbbdcd01d4ce2",
+  "created_utc": "2026-07-24T14:57:40.054905+00:00",
+  "design_audit_sha256": "5527df2330ff4cdb322799c39ae774b1b010bebf3da853e057a171c7cf9f8b19",
+  "design_tag": "c2_bidirectional_confirmation_v5_t2",
+  "outcomes_available_at_freeze": false,
+  "protocol_id": "kinofail-realistic-c2-v5-t2-collection",
+  "runner_sha256": "d2993f9918c961fff4dfa694cbbe43208a4f8676228a2ce3bb51649428fd8f05",
+  "scene_registry_sha256": "6665a1accf81446b74d8eda81dc736f0077a17b292e9ec3041c2c4f40ae757f5",
+  "schedule_sha256": "f8f4eed77de3c88df768cd94d9a5730b60eaeb7a70ab07b178128ebdee1c8863",
+  "schema_version": "kinofail.realistic-c2-v5-t2-collection-protocol.v1",
+  "status": "frozen_before_v5_confirmation_collection",
+  "visual_helper_sha256": "9a0c72b682e757198e1b40dedf281a7be42325ba041137de78e23dee9cc23c78"
+}

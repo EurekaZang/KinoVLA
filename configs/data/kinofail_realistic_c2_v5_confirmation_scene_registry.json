@@ -1,0 +1,53 @@
+{
+  "schema_version": "kinofail.realistic-c2-v5-scene-registry.v1",
+  "created_utc": "2026-07-24T15:00:00Z",
+  "status": "frozen_before_c2_v5_confirmation_collection",
+  "selection_policy": {
+    "purpose": "Untouched C2 confirmation after v3 and v4 outcomes were consumed for the post-interaction temporal-contract diagnosis.",
+    "prior_c2_development_or_confirmation_scene_clusters": 15,
+    "confirmation_scene_clusters": 3,
+    "confirmation_domains": [
+      "life",
+      "production",
+      "wild"
+    ],
+    "scene_instance_overlap_with_any_prior_c2_battery": false,
+    "c2_outcomes_available_at_selection_time": false,
+    "selection_uses_c2_model_predictions": false
+  },
+  "scenes": [
+    {
+      "scene_id": "indoor_bedroom_190",
+      "domain": "life",
+      "split": "test",
+      "room_family": "Bedroom",
+      "source": "EmbodiedGen-v2",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20261537/route_surface_o4_v38_development_stream/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "episode_sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20261537/route_surface_o4_v38_development_stream/val_concrete045/terrain_route_v2/compiled_scene_audit.json",
+      "compiled_audit_sha256": "837eb07635f0813efd819ee945717551a7fbc6fc99779a43b96ef982df2d5861"
+    },
+    {
+      "scene_id": "indoor_office_156",
+      "domain": "production",
+      "split": "test",
+      "room_family": "Office",
+      "source": "EmbodiedGen-v2",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261469/route_surface_o4_v34_heldout_stream/train_tiles141/terrain_route_v2/episode_terrain_v2.usda",
+      "episode_sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261469/route_surface_o4_v34_heldout_stream/train_tiles141/terrain_route_v2/compiled_scene_audit.json",
+      "compiled_audit_sha256": "e2af8ad3e24b7810673fa6c43fe49de70d8acb24421d318339f1876c472e34d5"
+    },
+    {
+      "scene_id": "forest_trail_metric_g02",
+      "domain": "wild",
+      "split": "test",
+      "room_family": "ForestTrail",
+      "source": "PolyHaven-hybrid",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g02_dev01/isaac_hybrid_composition_dev_v19/episode.usda",
+      "episode_sha256": "abeaf7609c6f891f5e2fa29b080ba3affbc6c215238eb0e599145eccb6011add",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g02_dev01/isaac_hybrid_composition_dev_v19/compiled_scene_audit.json",
+      "compiled_audit_sha256": "8b52bbee97f9092d2661786716a214ecca94c3b5593a9eb8e2ac90f706e6bea4"
+    }
+  ]
+}

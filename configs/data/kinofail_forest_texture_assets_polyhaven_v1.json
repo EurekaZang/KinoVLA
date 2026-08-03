@@ -1,0 +1,77 @@
+{
+  "schema_version": "kinofail.forest-texture-assets.v1",
+  "status": "development_asset_lock_input",
+  "provider": {
+    "name": "Poly Haven",
+    "api": "https://api.polyhaven.com",
+    "license": "CC0",
+    "license_url": "https://polyhaven.com/license",
+    "api_terms_url": "https://polyhaven.com/our-api"
+  },
+  "selection_policy": {
+    "selected_before_a0_a7_model_evaluation": true,
+    "resolution": "2k",
+    "format": "jpg",
+    "purpose": "Decouple fixed terrain physics from forest-route and forest-bank appearance; provide realistic visual families instead of binding O2 proprioception to one synthetic texture."
+  },
+  "materials": [
+    {
+      "id": "train_polyhaven_dirt_2k",
+      "source_asset_id": "dirt",
+      "display_name": "Dirt",
+      "asset_page": "https://polyhaven.com/a/dirt",
+      "author": "Charlotte Baglioni",
+      "split": "train",
+      "domains": ["wild"],
+      "semantic_family": "compacted_forest_dirt",
+      "physical_size_m": [2.0, 2.0],
+      "maps": {
+        "basecolor": {"filename": "dirt_diff_2k.jpg", "bytes": 3053062, "md5": "8e6fb7316bca5840c386cb72a3f16c62", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/dirt/dirt_diff_2k.jpg"},
+        "normal": {"filename": "dirt_nor_gl_2k.jpg", "bytes": 4914156, "md5": "060d0ca175eeb140ac46f48bc56263ad", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/dirt/dirt_nor_gl_2k.jpg"},
+        "roughness": {"filename": "dirt_rough_2k.jpg", "bytes": 964887, "md5": "420569deb8fab894119e32ed3712f7b8", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/dirt/dirt_rough_2k.jpg"},
+        "displacement": {"filename": "dirt_disp_2k.jpg", "bytes": 1274950, "md5": "4e23138b81f4d8e57352bb544fcd49dd", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/dirt/dirt_disp_2k.jpg"}
+      }
+    },
+    {
+      "id": "train_polyhaven_forrest_ground03_2k",
+      "source_asset_id": "forrest_ground_03",
+      "display_name": "Forest Ground 03",
+      "asset_page": "https://polyhaven.com/a/forrest_ground_03",
+      "author": "Rob Tuytel",
+      "split": "train",
+      "domains": ["wild"],
+      "semantic_family": "pine_needle_leaf_litter",
+      "physical_size_m": [2.0, 2.0],
+      "maps": {
+        "basecolor": {"filename": "forrest_ground_03_diff_2k.jpg", "bytes": 3522953, "md5": "605bfa541b0d406bcf88a16a8c82b821", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forrest_ground_03/forrest_ground_03_diff_2k.jpg"},
+        "normal": {"filename": "forrest_ground_03_nor_gl_2k.jpg", "bytes": 6812765, "md5": "104ecda19a7dce8f7b809b332cb41d37", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forrest_ground_03/forrest_ground_03_nor_gl_2k.jpg"},
+        "roughness": {"filename": "forrest_ground_03_rough_2k.jpg", "bytes": 1877319, "md5": "79937abe86f3ff582f48cd5388ad6aa2", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forrest_ground_03/forrest_ground_03_rough_2k.jpg"},
+        "displacement": {"filename": "forrest_ground_03_disp_2k.jpg", "bytes": 1220484, "md5": "9f4313598fa4a11a988607cd7c2b34f5", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forrest_ground_03/forrest_ground_03_disp_2k.jpg"}
+      }
+    },
+    {
+      "id": "val_polyhaven_forest_leaves04_2k",
+      "source_asset_id": "forest_leaves_04",
+      "display_name": "Forest Leaves 04",
+      "asset_page": "https://polyhaven.com/a/forest_leaves_04",
+      "author": "Rob Tuytel",
+      "split": "val",
+      "domains": ["wild"],
+      "semantic_family": "dry_leaf_litter",
+      "physical_size_m": [1.5, 1.5],
+      "maps": {
+        "basecolor": {"filename": "forest_leaves_04_diff_2k.jpg", "bytes": 1539210, "md5": "a6cfde9e6846f5aa27bcbe0a58fe9907", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_leaves_04/forest_leaves_04_diff_2k.jpg"},
+        "normal": {"filename": "forest_leaves_04_nor_gl_2k.jpg", "bytes": 2187173, "md5": "556be132fa21f23036afc33cd12cd4d8", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_leaves_04/forest_leaves_04_nor_gl_2k.jpg"},
+        "roughness": {"filename": "forest_leaves_04_rough_2k.jpg", "bytes": 1227328, "md5": "af02739e88a39f8760df09f28c64fee6", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_leaves_04/forest_leaves_04_rough_2k.jpg"},
+        "displacement": {"filename": "forest_leaves_04_disp_2k.jpg", "bytes": 416672, "md5": "1777c60f9d0aa03c92929280b1bbee17", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_leaves_04/forest_leaves_04_disp_2k.jpg"}
+      }
+    }
+  ],
+  "interpretation_policy": {
+    "appearance_only": true,
+    "does_not_change_o2_o3_physics": true,
+    "split_labels_are_frozen_before_model_evaluation": true,
+    "one_texture_is_not_one_physical_operator": true,
+    "counts_as_a0_a7_evidence": false
+  }
+}

@@ -7,11 +7,18 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from collections import Counter
+from collections import defaultdict
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from kino_vla.eval.a4_consequence import (
+    Outcome,
+    a3_row_to_a4_scenario,
+    attribution_to_label,
+    physical_cost,
+    primitive_to_label,
+)
 from kino_vla.eval.a7_ablation import (
     aggregate_dose_curves,
     artifact_meta,
@@ -60,33 +67,6 @@ def _policy(route: str, adapter: str | None, *, proprio_detail: str = "binned"):
     )
 
 
-SNAP_TO_A4_SCENARIO = {
-    ("T2", "adhesion", "other"): "matched_O4_twophase",
-    ("T1", "compliant_terrain", "other"): "matched_O2",
-    ("T3", "low_friction", "looks_safe"): "O7_looks_safe",
-    ("T3", "nominal", "reverse"): "O7_reverse",
-    ("T3", "invisible_obstacle", "O8"): "O8_invisible",
-    ("T4", "overload", "other"): "O5_payload_B",
-    ("T4", "effort_decay", "other"): "O10_decay_B",
-    ("T5", "compliant_terrain", "other"): "O2_A_nominal",
-    ("T5", "low_friction", "other"): "O1_A_nominal",
-    ("T5", "effort_decay", "other"): "O10_A_nominal",
-}
-
-
-PRIMITIVE_TO_COST_LABEL = {
-    "Backstep": "backstep_detour",
-    "Switch_Gait": "high_step",
-    "Set_Constraint": "slow_low",
-    "Adjust_Posture": "slow_low",
-    "Hold_and_Request": "hold_request",
-    "Update_Topology": "detour_replan",
-    "Replan_Waypoint": "detour_replan",
-    "Continue": "continue",
-    "NoOp": "continue",
-}
-
-
 ATTR_TO_PRIMITIVE = {
     "adhesion": "Backstep",
     "compliant_terrain": "Switch_Gait",
@@ -113,7 +93,9 @@ PRIMITIVE_PARAMS = {
 }
 
 
-def eval_a2_adapter(adapter: str | None, route: str, proprio_detail: str, corpus: str) -> tuple[list[dict], dict]:
+def eval_a2_adapter(
+    adapter: str | None, route: str, proprio_detail: str, corpus: str
+) -> tuple[list[dict], dict]:
     from kino_vla.eval.a2_headline import aggregate, eval_policy, load_matched_corpus
 
     items = load_matched_corpus(corpus)
@@ -175,12 +157,25 @@ def _load_eval_a3():
     return mod
 
 
-def eval_a3_adapter(adapter: str | None, route: str, proprio_detail: str, a0: str, t3: str) -> tuple[list[dict], dict]:
+def eval_a3_adapter(
+    adapter: str | None, route: str, proprio_detail: str, a0: str, t3: str
+) -> tuple[list[dict], dict]:
     ea = _load_eval_a3()
 
     snaps = ea.load_merged(a0, t3)
     pol = _policy(route, adapter, proprio_detail=proprio_detail)
-    rows = ea.score_agent(pol, snaps)
+
+    def key_fn(snapshot):
+        return ea.vla_input_key(
+            snapshot,
+            cfg=pol._cfg,
+            route=pol._route,
+            n_images=pol._n_images,
+            proprio_detail=pol._proprio_detail,
+            mask=pol._mask_proprio,
+        )
+
+    rows = ea.score_agent(pol, snaps, input_key=key_fn)
     heatmap = {cell: ea.cell_acc(rows, cell) for cell in ea.CELLS}
     return rows, heatmap
 
@@ -232,7 +227,9 @@ def _m7_route_summary(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
             "route": r0["route"],
             "proprio_detail": r0["proprio_detail"],
             "attr_ambiguous_greedy": r0["attr_ambiguous"],
-            "attr_ambiguous_greedy_ci": list(wilson(round(r0["attr_ambiguous"] * r0["n_ambiguous"]), r0["n_ambiguous"])),
+            "attr_ambiguous_greedy_ci": list(
+                wilson(round(r0["attr_ambiguous"] * r0["n_ambiguous"]), r0["n_ambiguous"])
+            ),
             "attr_overall_greedy": r0["attr_overall"],
             "parse_rate": r0["parse_rate"],
             "mean_prompt_tokens": r0["mean_prompt_tokens"],
@@ -240,7 +237,9 @@ def _m7_route_summary(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
             "sampled_ambiguous_mean": (r8.get("sampled") or {}).get("ambiguous_attr_acc_mean"),
             "sampled_ambiguous_std": (r8.get("sampled") or {}).get("ambiguous_attr_acc_std"),
         }
-    token_ratio = round(arms["text_binned"]["mean_prompt_tokens"] / arms["latent"]["mean_prompt_tokens"], 2)
+    token_ratio = round(
+        arms["text_binned"]["mean_prompt_tokens"] / arms["latent"]["mean_prompt_tokens"], 2
+    )
     result = {
         **artifact_meta(
             config_path,
@@ -302,7 +301,6 @@ def _a3_method_summary(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
 def _addons(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
     a5 = load_json(cfg["sources"]["a5_ood_theta"])
     risk = load_json(cfg["sources"]["a5_risk_coverage"])
-    a6 = load_json(cfg["sources"]["a6_theta_sweep"])
     a6_eval = load_json(cfg["sources"]["a6_eval"])
     result = {
         **artifact_meta(
@@ -319,9 +317,15 @@ def _addons(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
         "not_core_a7_claims": True,
         "ood_theta_abstention": a5.get("abstention_utility", {}),
         "risk_coverage": risk,
-        "theta_star": a6.get("theta_star"),
-        "theta_star_rows": a6.get("rows", []),
-        "a6_decision_flip_scope": a6_eval.get("a6_2_decision_flip", {}).get("note"),
+        "theta_boundary_bracket": a6_eval.get("base_boundary", {}).get(
+            "primary_identified_bracket"
+        ),
+        "theta_star_descriptive": a6_eval.get("base_boundary", {}).get(
+            "logistic_midpoint_descriptive"
+        ),
+        "theta_star_warning": a6_eval.get("base_boundary", {}).get("logistic_fit_warning"),
+        "theta_star_rows": a6_eval.get("base_boundary", {}).get("rows", []),
+        "a6_decision_flip_scope": a6_eval.get("conclusion"),
     }
     write_json(repo_path(cfg["output_dir"]) / "addons.json", result)
     return result
@@ -337,40 +341,17 @@ OPERATOR_TO_A4_SCENARIO = {
     "O1_low_friction": "O1_A_nominal",
 }
 
-PRIMITIVE_TO_A4_LABEL = {
-    "Backstep": "backstep_detour",
-    "Switch_Gait": "high_step",
-    "Set_Constraint": "slow_low",
-    "Adjust_Posture": "slow_low",
-    "Hold_and_Request": "hold_request",
-    "Replan_Waypoint": "detour_replan",
-    "Update_Topology": "detour_replan",
-    "Continue": "continue",
-    "NoOp": "continue",
-    "Crawl": "crawl",
-}
-
-ATTR_TO_A4_LABEL = {
-    "adhesion": "backstep_detour",
-    "compliant_terrain": "high_step",
-    "low_friction": "slow_low",
-    "invisible_obstacle": "detour_replan",
-    "overload": "hold_request",
-    "effort_decay": "crawl",
-    "nominal": "continue",
-}
-
 
 def _row_to_a4_projection(row: dict[str, Any]) -> dict[str, Any] | None:
     op = row.get("operator") or row.get("operator_name") or row.get("true_operator")
     scenario = OPERATOR_TO_A4_SCENARIO.get(str(op))
     pred_attr = row.get("pred_attr") or row.get("attribution") or row.get("predicted_attribution")
-    primitive_raw = row.get("primitive") or row.get("pred_primitive")
-    primitive = PRIMITIVE_TO_A4_LABEL.get(str(primitive_raw), primitive_raw)
-    primitive = primitive or ATTR_TO_A4_LABEL.get(str(pred_attr))
-    if scenario is None or primitive is None:
+    if scenario is None or pred_attr is None:
         return None
-    return {"scenario": scenario, "primitive": str(primitive)}
+    return {
+        "scenario": scenario,
+        "primitive": attribution_to_label(str(pred_attr)),
+    }
 
 
 def _ers_regret(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
@@ -383,18 +364,25 @@ def _ers_regret(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
         p = text_dir / f"per_item_{name}.json"
         if p.exists():
             rows = load_json(p)
-            agents[f"text_schema:{name}"] = [x for r in rows if (x := _row_to_a4_projection(r)) is not None]
+            agents[f"text_schema:{name}"] = [
+                x for r in rows if (x := _row_to_a4_projection(r)) is not None
+            ]
 
     complete_conflict_seeds = []
     for seed in [int(x) for x in cfg["seeds"]["train"]]:
-        paths = [conflict_dir / f"per_item_seed{seed}_dose{int(d):02d}.json" for d in cfg["conflict_doses"]["matched_samples"]]
+        paths = [
+            conflict_dir / f"per_item_seed{seed}_dose{int(d):02d}.json"
+            for d in cfg["conflict_doses"]["matched_samples"]
+        ]
         if all(p.exists() for p in paths):
             complete_conflict_seeds.append((seed, paths))
     for _seed, paths in complete_conflict_seeds:
         for p in paths:
             rows = load_json(p)
             stem = p.stem.replace("per_item_", "")
-            agents[f"conflict_dose:{stem}"] = [x for r in rows if (x := _row_to_a4_projection(r)) is not None]
+            agents[f"conflict_dose:{stem}"] = [
+                x for r in rows if (x := _row_to_a4_projection(r)) is not None
+            ]
 
     projected = ers_regret_from_agent_rows(agents, a4["M_mean_cost"], a4["canonical_label"])
     by_dose: dict[str, list[dict[str, Any]]] = {}
@@ -414,7 +402,9 @@ def _ers_regret(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
     }
     best_regret_dose = None
     if aggregate_by_dose:
-        best_regret_dose = int(min(aggregate_by_dose.items(), key=lambda kv: (kv[1]["mean_regret"], int(kv[0])))[0])
+        best_regret_dose = int(
+            min(aggregate_by_dose.items(), key=lambda kv: (kv[1]["mean_regret"], int(kv[0])))[0]
+        )
     result = {
         **artifact_meta(
             config_path,
@@ -426,7 +416,10 @@ def _ers_regret(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
         ),
         "stage": "ers_regret",
         "status": "available" if projected else "requires_evaluated_per_item",
-        "projection_rule": "A7 predictions mapped to A4 scenario/label cost rows; missing mappings excluded and counted",
+        "projection_rule": (
+            "attribution-implied A4 label projection; cached A7/A2 rows do not preserve action "
+            "parameters, so this is a mechanism diagnostic rather than actual-action ERS"
+        ),
         "complete_conflict_dose_seeds": [seed for seed, _paths in complete_conflict_seeds],
         "partial_conflict_dose_seeds_excluded": [
             int(seed)
@@ -442,12 +435,22 @@ def _ers_regret(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
 
 
 def _cot_filter(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
-    filtered_card = repo_path(cfg["output_dir"]) / "datasets" / "cot_filter" / "truth_filtered_card.json"
+    filtered_card = (
+        repo_path(cfg["output_dir"]) / "datasets" / "cot_filter" / "truth_filtered_card.json"
+    )
     src = repo_path(cfg["sources"]["hindsight_filtered"])
     kept_path = src / "samples.jsonl"
     dropped_path = src / "dropped.jsonl"
-    kept = [json.loads(line) for line in kept_path.read_text().splitlines() if line] if kept_path.exists() else []
-    dropped = [json.loads(line) for line in dropped_path.read_text().splitlines() if line] if dropped_path.exists() else []
+    kept = (
+        [json.loads(line) for line in kept_path.read_text().splitlines() if line]
+        if kept_path.exists()
+        else []
+    )
+    dropped = (
+        [json.loads(line) for line in dropped_path.read_text().splitlines() if line]
+        if dropped_path.exists()
+        else []
+    )
     judged = kept + [r for r in dropped if r.get("annotation") is not None]
     oracle_errors = [r for r in dropped if r.get("verdict", {}).get("reason") == "oracle_error"]
     filter_rejects = [r for r in dropped if r.get("annotation") is not None]
@@ -488,7 +491,10 @@ def _cot_filter(cfg: dict[str, Any], config_path: str) -> dict[str, Any]:
             - float(unfiltered_grounding.get("grounded_correct_rate", 0.0)),
             3,
         ),
-        "cards": {"truth_filtered": str(filtered_card), "unfiltered_api_oracle_source": str(dropped_path)},
+        "cards": {
+            "truth_filtered": str(filtered_card),
+            "unfiltered_api_oracle_source": str(dropped_path),
+        },
         "scope_note": "Uses the real ApiOracle kept+dropped Hindsight stream already on disk; oracle transport errors are excluded from filter-effect denominators.",
     }
     write_json(repo_path(cfg["output_dir"]) / "cot_filter_summary.json", result)
@@ -540,18 +546,6 @@ def _encoder(cfg: dict[str, Any], config_path: str, *, run_grid: bool = False) -
     return result
 
 
-def _snap_to_a4(row: dict[str, Any]) -> str | None:
-    key = (str(row.get("cell")), str(row.get("truth")), str(row.get("t3_sub", "other")))
-    if key in SNAP_TO_A4_SCENARIO:
-        return SNAP_TO_A4_SCENARIO[key]
-    fallback = (str(row.get("cell")), str(row.get("truth")), "other")
-    return SNAP_TO_A4_SCENARIO.get(fallback)
-
-
-def _primitive_to_cost_label(primitive: str | None) -> str:
-    return PRIMITIVE_TO_COST_LABEL.get(str(primitive), "continue")
-
-
 def _load_a3_rows(agent: str = "B5-conflict-bi") -> list[dict[str, Any]]:
     stem = agent.replace("-", "_")
     return load_json(f"outputs/eval/a3/per_item_{stem}.json")
@@ -565,17 +559,36 @@ def _a7_abs_points(cfg: dict[str, Any]) -> list[dict[str, Any]]:
     points: list[dict[str, Any]] = []
     for row in rows:
         sid = str(row["sid"])
-        scenario = _snap_to_a4(row)
-        if scenario is None or scenario not in a4["M_full"] or sid not in residuals or not row.get("parsed"):
+        scenario = a3_row_to_a4_scenario(row)
+        if (
+            scenario is None
+            or scenario not in a4["M_full"]
+            or sid not in residuals
+            or not row.get("parsed")
+        ):
             continue
         cells = a4["M_full"][scenario]
-        pred_label = _primitive_to_cost_label(row.get("primitive"))
+        primitive = row.get("primitive")
+        if primitive == "Switch_Gait" and not row.get("action_params_observed", False):
+            raise ValueError(f"legacy A3 row {sid} lost Switch_Gait mode; rerun scripts.eval_a3")
+        pred_label = primitive_to_label(
+            primitive or "continue",
+            row.get("primitive_params") or {},
+            strict_params=True,
+        )
+        appearance_id = str(row.get("appearance_id", ""))
+        appearance_split = str(row.get("appearance_split", ""))
+        if not appearance_id or appearance_split not in {"train", "test"}:
+            raise ValueError(f"A3 row {sid} lacks frozen appearance split metadata")
         points.append(
             {
                 "sample_id": sid,
                 "scenario": scenario,
                 "truth": row.get("truth"),
                 "cell": row.get("cell"),
+                "appearance_id": appearance_id,
+                "appearance_split": appearance_split,
+                "cluster_id": f"{scenario}|{appearance_id}",
                 "attr_ok": bool(row.get("attr_ok")),
                 "cost_agent": float(cells.get(pred_label, {}).get("mean_cost", 4.0)),
                 "cost_safe": float(cells.get("backstep_detour", {}).get("mean_cost", 4.0)),
@@ -583,9 +596,125 @@ def _a7_abs_points(cfg: dict[str, Any]) -> list[dict[str, Any]]:
                 "ood_theta_residual": float(residuals[sid]),
                 "pred_primitive": row.get("primitive"),
                 "pred_cost_label": pred_label,
+                "agent_label": pred_label,
+                "safe_label": "backstep_detour",
+                "continue_label": "continue",
             }
         )
     return points
+
+
+def _a4_episode_costs(
+    path: str | Path = "outputs/eval/a4/matrix.jsonl",
+) -> dict[tuple[str, str], list[float]]:
+    cells: dict[tuple[str, str], list[float]] = defaultdict(list)
+    for line in repo_path(path).read_text().splitlines():
+        if not line:
+            continue
+        outcome = Outcome(**json.loads(line))
+        cells[(outcome.scenario, outcome.label)].append(float(physical_cost(outcome)))
+    return dict(cells)
+
+
+def _resample_a7_clusters(rows: list[dict[str, Any]], rng) -> list[dict[str, Any]]:
+    """Resample appearance clusters within each physical scenario."""
+    by_scenario: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
+    for row in rows:
+        by_scenario[str(row["scenario"])][str(row["cluster_id"])].append(row)
+    sampled: list[dict[str, Any]] = []
+    for clusters in by_scenario.values():
+        keys = list(clusters)
+        for index in rng.integers(0, len(keys), size=len(keys)):
+            sampled.extend(clusters[keys[int(index)]])
+    return sampled
+
+
+def _a7_policy_cost(
+    rows: list[dict[str, Any]],
+    *,
+    score_field: str,
+    tau: float,
+    policy: str,
+    cost_map: dict[tuple[str, str], float],
+) -> tuple[float, float]:
+    costs: list[float] = []
+    covered = 0
+    for row in rows:
+        if policy == "selective":
+            keep = float(row[score_field]) <= float(tau)
+            label = row["agent_label"] if keep else row["safe_label"]
+            covered += int(keep)
+        elif policy == "agent":
+            label = row["agent_label"]
+        elif policy == "safe":
+            label = row["safe_label"]
+        elif policy == "continue":
+            label = row["continue_label"]
+        else:
+            raise ValueError(policy)
+        costs.append(float(cost_map[(row["scenario"], label)]))
+    return sum(costs) / len(costs), covered / len(rows)
+
+
+def _a7_two_stage_bootstrap(
+    rows: list[dict[str, Any]],
+    *,
+    score_field: str,
+    tau: float,
+    episode_costs: dict[tuple[str, str], list[float]],
+    reps: int = 2000,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Bootstrap test appearance clusters and A4 physical episodes jointly."""
+    import numpy as np
+
+    rng = np.random.default_rng(seed)
+    policies = ("selective", "agent", "safe", "continue")
+    draws: dict[str, list[float]] = {name: [] for name in policies}
+    coverages: list[float] = []
+    for _ in range(reps):
+        sampled_rows = _resample_a7_clusters(rows, rng)
+        sampled_costs = {
+            key: float(np.mean(rng.choice(values, size=len(values), replace=True)))
+            for key, values in episode_costs.items()
+        }
+        for policy in policies:
+            cost, coverage = _a7_policy_cost(
+                sampled_rows,
+                score_field=score_field,
+                tau=tau,
+                policy=policy,
+                cost_map=sampled_costs,
+            )
+            draws[policy].append(cost)
+            if policy == "selective":
+                coverages.append(coverage)
+
+    def ci(values: list[float]) -> list[float]:
+        return [
+            round(float(np.quantile(values, 0.025)), 4),
+            round(float(np.quantile(values, 0.975)), 4),
+        ]
+
+    deltas = {
+        f"selective_minus_{name}": [
+            selective - baseline
+            for selective, baseline in zip(draws["selective"], draws[name], strict=True)
+        ]
+        for name in ("agent", "safe", "continue")
+    }
+    delta_ci = {name: ci(values) for name, values in deltas.items()}
+    return {
+        "reps": int(reps),
+        "unit": "appearance cluster within scenario + A4 episode within (scenario,label)",
+        "cost_ci": {name: ci(values) for name, values in draws.items()},
+        "coverage_ci": ci(coverages),
+        "paired_delta_ci": delta_ci,
+        "strictly_better_with_95ci": {
+            name.removeprefix("selective_minus_"): bounds[1] < 0.0
+            for name, bounds in delta_ci.items()
+        },
+    }
 
 
 def _compute_projector_residuals(adapter: str, corpus_dirs: list[str]) -> dict[str, float]:
@@ -626,7 +755,9 @@ def _compute_projector_residuals(adapter: str, corpus_dirs: list[str]) -> dict[s
                     continue
                 w = torch.from_numpy(npz[key].astype("float32")).unsqueeze(0)
                 _soft, pred = pj(w)
-                out[sid] = float(np.linalg.norm(pred.squeeze(0).numpy() - np.asarray(theta, dtype="float32")))
+                out[sid] = float(
+                    np.linalg.norm(pred.squeeze(0).numpy() - np.asarray(theta, dtype="float32"))
+                )
     return out
 
 
@@ -747,13 +878,13 @@ def _score_completion_posteriors(
     use_dropout: bool = False,
 ) -> dict[str, dict[str, float]]:
     import math
-    import numpy as np
+
     import torch
 
+    from kino_vla.utils.config import load_config
     from kino_vla.vla.dataset_build import _snapshot_from_record
     from kino_vla.vla.model import KinoVLA
     from kino_vla.vla.prompt import build_messages, context_from_snapshot
-    from kino_vla.utils.config import load_config
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     pcfg = load_config("data/hindsight.yaml")
@@ -773,10 +904,20 @@ def _score_completion_posteriors(
     else:
         model.eval()
     index = _sample_id_index(cfg)
-    categories = ["adhesion", "compliant_terrain", "low_friction", "invisible_obstacle", "overload", "effort_decay", "nominal"]
+    categories = [
+        "adhesion",
+        "compliant_terrain",
+        "low_friction",
+        "invisible_obstacle",
+        "overload",
+        "effort_decay",
+        "nominal",
+    ]
     targets = {cat: _target_for_attr(cat) for cat in categories}
     out: dict[str, dict[str, float]] = {}
-    if cache_path is not None and _posterior_cache_has_verified_meta(cache_path, use_dropout=use_dropout):
+    if cache_path is not None and _posterior_cache_has_verified_meta(
+        cache_path, use_dropout=use_dropout
+    ):
         out.update(load_json(cache_path))
     selected = points if limit is None else points[: int(limit)]
     try:
@@ -792,7 +933,9 @@ def _score_completion_posteriors(
             frames = {k: npz[f"{sid}__{k}"] for k in ("rgb", "depth", "proprio")}
             snap = _snapshot_from_record(rec, frames)
             ctx = context_from_snapshot(snap, route="latent", proprio_detail="binned")
-            messages = build_messages(ctx, pcfg, route="latent", n_images=int(vcfg.data.get("n_images", 1)))
+            messages = build_messages(
+                ctx, pcfg, route="latent", n_images=int(vcfg.data.get("n_images", 1))
+            )
             images = list(snap.rgb[-int(vcfg.data.get("n_images", 1)) :]) if snap.rgb.size else []
             vals: dict[str, float] = {}
             with torch.no_grad():
@@ -806,7 +949,9 @@ def _score_completion_posteriors(
                         loss_span="action",
                     )
                     labels = x.labels
-                    n_tokens = int((labels[:, 1:] != -100).sum().item()) if labels is not None else 1
+                    n_tokens = (
+                        int((labels[:, 1:] != -100).sum().item()) if labels is not None else 1
+                    )
                     vals[cat] = float(model.completion_logprob(x).detach().cpu()) / max(1, n_tokens)
             mx = max(vals.values())
             exps = {k: math.exp(v - mx) for k, v in vals.items()}
@@ -834,7 +979,9 @@ def _score_completion_posteriors(
     return out
 
 
-def _score_from_posteriors(points: list[dict[str, Any]], posteriors: dict[str, dict[str, float]]) -> None:
+def _score_from_posteriors(
+    points: list[dict[str, Any]], posteriors: dict[str, dict[str, float]]
+) -> None:
     for pt in points:
         probs = posteriors.get(pt["sample_id"])
         if not probs:
@@ -871,7 +1018,9 @@ def _ensemble_variance(
     return _attach_posterior_variance(points, posteriors, field="ensemble_variance")
 
 
-def _write_abstention_figures(out_dir: Path, curves: dict[str, list[dict[str, Any]]], reliability: dict[str, Any]) -> None:
+def _write_abstention_figures(
+    out_dir: Path, curves: dict[str, list[dict[str, Any]]], reliability: dict[str, Any]
+) -> None:
     try:
         import matplotlib
 
@@ -897,7 +1046,14 @@ def _write_abstention_figures(out_dir: Path, curves: dict[str, list[dict[str, An
     bins = reliability.get("bins", [])
     fig, ax = plt.subplots(figsize=(4.8, 4.2))
     ax.plot([0, 1], [0, 1], color="#898781", lw=1.5, ls="--", label="ideal")
-    ax.plot([b["confidence"] for b in bins if b["n"]], [b["accuracy"] for b in bins if b["n"]], marker="o", lw=2, color="#2a78d6", label="B5 posterior")
+    ax.plot(
+        [b["confidence"] for b in bins if b["n"]],
+        [b["accuracy"] for b in bins if b["n"]],
+        marker="o",
+        lw=2,
+        color="#2a78d6",
+        label="B5 posterior",
+    )
     ax.set_xlabel("confidence")
     ax.set_ylabel("accuracy")
     ax.set_title(f"Reliability (ECE={reliability.get('ece', 'n/a')})")
@@ -908,7 +1064,9 @@ def _write_abstention_figures(out_dir: Path, curves: dict[str, list[dict[str, An
     plt.close(fig)
 
 
-def _abstention_baselines(cfg: dict[str, Any], config_path: str, *, evaluate: bool = False) -> dict[str, Any]:
+def _abstention_baselines(
+    cfg: dict[str, Any], config_path: str, *, evaluate: bool = False
+) -> dict[str, Any]:
     out_dir = repo_path(cfg["output_dir"]) / "abstention_baselines"
     cal_dir = repo_path(cfg["output_dir"]) / "calibration"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -958,41 +1116,82 @@ def _abstention_baselines(cfg: dict[str, Any], config_path: str, *, evaluate: bo
     }
     if has_ensemble:
         score_fields["ensemble_variance"] = "3-seed ensemble variance"
-    curves = {name: risk_coverage_curve(points, score_field=field) for field, name in score_fields.items()}
+    curves = {
+        name: risk_coverage_curve(points, score_field=field) for field, name in score_fields.items()
+    }
     aurc = {
         name: {
             "aurc": risk_coverage_auc(curve),
             "best": min(curve, key=lambda p: (float(p["expected_cost"]), -float(p["coverage"]))),
-            "error_auroc": round(auroc([float(p[field]) for p in points], [0 if p["attr_ok"] else 1 for p in points]), 3),
+            "error_auroc": round(
+                auroc(
+                    [float(p[field]) for p in points], [0 if p["attr_ok"] else 1 for p in points]
+                ),
+                3,
+            ),
         }
         for field, name in score_fields.items()
         for curve in [curves[name]]
     }
     heldout = {
-        field: heldout_threshold_selection(points, score_field=field, split_seed=int(cfg["seeds"]["split_seed"]))
+        field: heldout_threshold_selection(
+            points,
+            score_field=field,
+            split_seed=int(cfg["seeds"]["split_seed"]),
+            split_field="appearance_split",
+        )
         for field in score_fields
     }
-    risk_source = load_json(cfg["sources"]["a5_risk_coverage"])
-    risk_budget = float(risk_source["always_intervene_cost"])
+    episode_costs = _a4_episode_costs()
+    heldout_test = [point for point in points if point["appearance_split"] == "test"]
+    for index, field in enumerate(score_fields):
+        heldout[field]["two_stage_bootstrap"] = _a7_two_stage_bootstrap(
+            heldout_test,
+            score_field=field,
+            tau=float(heldout[field]["tau"]),
+            episode_costs=episode_costs,
+            reps=2000,
+            seed=int(cfg["seeds"]["split_seed"]) + index,
+        )
+
+    calibration_points = [point for point in points if point["appearance_split"] == "train"]
+    risk_budget = sum(float(point["cost_safe"]) for point in calibration_points) / len(
+        calibration_points
+    )
     conformal = {
-        field: conformal_risk_control(points, score_field=field, risk_budget=risk_budget, alpha=0.1, cost_range=6.0)
+        field: conformal_risk_control(
+            calibration_points,
+            score_field=field,
+            risk_budget=risk_budget,
+            alpha=0.1,
+            cost_range=6.0,
+        )
         for field in score_fields
     }
     reliability = expected_calibration_error(
         [
-            {"confidence": p.get("posterior_confidence", 0.0), "correct": p.get("posterior_correct", False)}
+            {
+                "confidence": p.get("posterior_confidence", 0.0),
+                "correct": p.get("posterior_correct", False),
+            }
             for p in points
             if "posterior_confidence" in p
         ],
         n_bins=10,
     )
     write_json(out_dir / "per_item_scores.json", points)
-    write_json(out_dir / "risk_coverage.json", {"curves": curves, "n": len(points), "posterior_method": posterior_method})
+    write_json(
+        out_dir / "risk_coverage.json",
+        {"curves": curves, "n": len(points), "posterior_method": posterior_method},
+    )
     write_json(out_dir / "aurc.json", aurc)
     write_json(out_dir / "heldout_threshold.json", heldout)
     write_json(out_dir / "conformal_bound.json", conformal)
     write_json(cal_dir / "reliability.json", reliability)
-    write_json(cal_dir / "ece.json", {"ece": reliability["ece"], "n": reliability["n"], "posterior_method": posterior_method})
+    write_json(
+        cal_dir / "ece.json",
+        {"ece": reliability["ece"], "n": reliability["n"], "posterior_method": posterior_method},
+    )
     _write_abstention_figures(out_dir, curves, reliability)
     result = {
         **artifact_meta(
@@ -1011,6 +1210,7 @@ def _abstention_baselines(cfg: dict[str, Any], config_path: str, *, evaluate: bo
         "score_fields": score_fields,
         "best_aurc": min(aurc.items(), key=lambda kv: kv[1]["aurc"]),
         "risk_budget": risk_budget,
+        "risk_budget_definition": "A7 frozen-calibration always-safe cost",
     }
     write_json(out_dir / "summary.json", result)
     return result
@@ -1036,7 +1236,14 @@ def _conflict_dose(
     for seed in seeds:
         dose_rows: dict[str, list[dict[str, Any]]] = {}
         for dose in dose_values:
-            adapter = repo_path(cfg["output_dir"]) / "adapters" / "conflict_dose" / f"seed{seed}" / f"dose_{dose:02d}" / "adapter_best"
+            adapter = (
+                repo_path(cfg["output_dir"])
+                / "adapters"
+                / "conflict_dose"
+                / f"seed{seed}"
+                / f"dose_{dose:02d}"
+                / "adapter_best"
+            )
             per_item = out_dir / f"per_item_seed{seed}_dose{dose:02d}.json"
             key = f"seed{seed}_dose{dose:02d}"
             if per_item.exists():
@@ -1057,9 +1264,16 @@ def _conflict_dose(
                 }
                 continue
             if evaluate:
-                rows, agg = eval_a2_adapter(str(adapter), "latent", "binned", cfg["sources"]["a0_corpus"])
+                rows, agg = eval_a2_adapter(
+                    str(adapter), "latent", "binned", cfg["sources"]["a0_corpus"]
+                )
                 write_json(per_item, rows)
-                summary["rows"][key] = {"status": "available", "adapter": str(adapter), "per_item": str(per_item), "summary": agg}
+                summary["rows"][key] = {
+                    "status": "available",
+                    "adapter": str(adapter),
+                    "per_item": str(per_item),
+                    "summary": agg,
+                }
                 dose_rows[str(dose)] = [r for r in rows if r["operator"] == "O4_tether"]
             else:
                 summary["rows"][key] = {
@@ -1068,13 +1282,19 @@ def _conflict_dose(
                     "finding": False,
                 }
         if dose_rows:
-            summary.setdefault("curves", {})[f"seed{seed}"] = dose_curve_summary(dose_rows, "attr_ok")
+            summary.setdefault("curves", {})[f"seed{seed}"] = dose_curve_summary(
+                dose_rows, "attr_ok"
+            )
     status_values = [r["status"] for r in summary["rows"].values()]
     complete_statuses = {"available", "available_cached"}
     summary["status_counts"] = status_counts(summary["rows"])
     if summary.get("curves"):
         summary["aggregate"] = aggregate_dose_curves(summary["curves"])
-    summary["status"] = "available" if status_values and all(s in complete_statuses for s in status_values) else "partial_available"
+    summary["status"] = (
+        "available"
+        if status_values and all(s in complete_statuses for s in status_values)
+        else "partial_available"
+    )
     write_json(out_dir / "summary.json", summary)
     return summary
 
@@ -1104,19 +1324,36 @@ def _text_schema_eval(cfg: dict[str, Any], config_path: str, *, evaluate: bool) 
             summary["rows"][name] = {"status": "requires_run", "adapter": adapter, "finding": False}
             continue
         if evaluate:
-            rows, agg = eval_a2_adapter(adapter, spec["route"], spec["proprio_detail"], cfg["sources"]["a0_corpus"])
+            rows, agg = eval_a2_adapter(
+                adapter, spec["route"], spec["proprio_detail"], cfg["sources"]["a0_corpus"]
+            )
             write_json(per_item, rows)
-            summary["rows"][name] = {"status": "available", "adapter": adapter, "per_item": str(per_item), "summary": agg}
+            summary["rows"][name] = {
+                "status": "available",
+                "adapter": adapter,
+                "per_item": str(per_item),
+                "summary": agg,
+            }
         else:
-            summary["rows"][name] = {"status": "adapter_available_needs_eval", "adapter": adapter, "finding": False}
+            summary["rows"][name] = {
+                "status": "adapter_available_needs_eval",
+                "adapter": adapter,
+                "finding": False,
+            }
     statuses = [r["status"] for r in summary["rows"].values()]
     summary["status_counts"] = status_counts(summary["rows"])
-    summary["status"] = "available" if statuses and all(s in {"available", "available_cached"} for s in statuses) else "partial_available"
+    summary["status"] = (
+        "available"
+        if statuses and all(s in {"available", "available_cached"} for s in statuses)
+        else "partial_available"
+    )
     write_json(out_dir / "summary.json", summary)
     return summary
 
 
-def _test_time_grounding(cfg: dict[str, Any], config_path: str, *, evaluate: bool) -> dict[str, Any]:
+def _test_time_grounding(
+    cfg: dict[str, Any], config_path: str, *, evaluate: bool
+) -> dict[str, Any]:
     """Design §A7: run the automatic rationale checker on *emitted* model thoughts at test time."""
     out_dir = repo_path(cfg["output_dir"]) / "test_time_grounding"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1213,7 +1450,9 @@ def _test_time_grounding(cfg: dict[str, Any], config_path: str, *, evaluate: boo
             },
         ),
         "stage": "test_time_grounding",
-        "status": "available" if statuses and all(s in complete for s in statuses) else "partial_available",
+        "status": "available"
+        if statuses and all(s in complete for s in statuses)
+        else "partial_available",
         "checker": "kino_vla.eval.a7_ablation.rationale_grounding",
         "scope_note": (
             "Test-time emitted-rationale grounding on real Qwen3-VL-4B generations over frozen "
@@ -1224,9 +1463,13 @@ def _test_time_grounding(cfg: dict[str, Any], config_path: str, *, evaluate: boo
         "status_counts": status_counts(rows_out),
     }
     # Headline: best grounded-correct among complete rows
-    complete_rows = [r for r in rows_out.values() if r.get("status") in complete and r.get("grounding")]
+    complete_rows = [
+        r for r in rows_out.values() if r.get("status") in complete and r.get("grounding")
+    ]
     if complete_rows:
-        best = max(complete_rows, key=lambda r: float(r["grounding"].get("grounded_correct_rate", 0.0)))
+        best = max(
+            complete_rows, key=lambda r: float(r["grounding"].get("grounded_correct_rate", 0.0))
+        )
         result["headline"] = {
             "best_grounded_correct_rate": best["grounding"].get("grounded_correct_rate"),
             "best_grounding_rate": best["grounding"].get("grounding_rate"),
@@ -1236,7 +1479,9 @@ def _test_time_grounding(cfg: dict[str, Any], config_path: str, *, evaluate: boo
     return result
 
 
-def _text_schema_taxonomy(cfg: dict[str, Any], config_path: str, *, evaluate: bool) -> dict[str, Any]:
+def _text_schema_taxonomy(
+    cfg: dict[str, Any], config_path: str, *, evaluate: bool
+) -> dict[str, Any]:
     """Paired latent vs REFLECT vs rich taxonomy slices (design T4 falsifier)."""
     out_dir = repo_path(cfg["output_dir"]) / "text_schema_taxonomy"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1249,7 +1494,23 @@ def _text_schema_taxonomy(cfg: dict[str, Any], config_path: str, *, evaluate: bo
         heatmap_path = out_dir / f"heatmap_{name}.json"
         adapter_ok = adapter is None or repo_path(str(adapter)).exists()
         if per_item.exists() and heatmap_path.exists() and not evaluate:
-            heatmap = load_json(heatmap_path)
+            rows = load_json(per_item)
+            # T5 is a decision task: the correct output is nominal/continue even though the
+            # simulator retains a weak physical operator.  Upgrade cached predictions without
+            # rerunning the VLA; no model output is changed.
+            changed = False
+            for row in rows:
+                if row.get("cell") != "T5":
+                    continue
+                changed = changed or row.get("truth") != "nominal"
+                row["truth"] = "nominal"
+                row["truth_category"] = "nominal"
+                row["attr_ok"] = bool(row.get("parsed") and row.get("attribution") == "nominal")
+            ea = _load_eval_a3()
+            heatmap = {cell: ea.cell_acc(rows, cell) for cell in ea.CELLS}
+            if changed:
+                write_json(per_item, rows)
+            write_json(heatmap_path, heatmap)
             rows_out[name] = {
                 "status": "available_cached",
                 "adapter": adapter,
@@ -1307,7 +1568,9 @@ def _text_schema_taxonomy(cfg: dict[str, Any], config_path: str, *, evaluate: bo
             },
         ),
         "stage": "text_schema_taxonomy",
-        "status": "available" if statuses and all(s in complete for s in statuses) else "partial_available",
+        "status": "available"
+        if statuses and all(s in complete for s in statuses)
+        else "partial_available",
         "rows": rows_out,
         "status_counts": status_counts(rows_out),
         "t4_comparison": {
@@ -1415,7 +1678,9 @@ def main() -> None:
             "text-schema-taxonomy",
         ],
     )
-    ap.add_argument("--evaluate", action="store_true", help="run VLA inference for available adapters")
+    ap.add_argument(
+        "--evaluate", action="store_true", help="run VLA inference for available adapters"
+    )
     ap.add_argument("--seeds", default=None, help="comma-separated seed subset, e.g. 0")
     args = ap.parse_args()
     seeds_filter = None

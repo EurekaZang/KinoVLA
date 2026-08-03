@@ -1,0 +1,382 @@
+{
+  "schema_version": "kinofail.o4-scene-stream-v30-freeze.v1",
+  "created_utc": "2026-07-23T07:35:00Z",
+  "freeze_status": "frozen_before_any_v34_heldout_candidate_generation_or_o4_execution",
+  "purpose": "Acquire a prospective operator-blind candidate137+ realistic cohort for one-shot held-out confirmation of the unchanged v32 early-contact action architecture under the preregistered v34 phase-aware route-containment contract.",
+  "evidence_policy": {
+    "development_only": true,
+    "counts_as_a0_a7_evidence": false,
+    "counts_as_realistic_corpus_evidence": false,
+    "counts_as_o4_confirmation": false,
+    "a8_in_scope": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "all_v31_v32_o4_scene_reruns_forbidden": true,
+    "v33_unprocessed_suffix_123_136_must_remain_untouched": true,
+    "successful_acquisition_authorizes_only_unchanged_v32_runtime_with_v34_prospective_audit": true,
+    "all_outcomes_must_be_retained": true
+  },
+  "base_config": {
+    "path": "configs/data/kinofail_o4_scene_stream_v28_prefix_freeze_v1.json",
+    "sha256": "5a8e9a3afdbe0276906ae8c523f54a7826fe3e0febb5df16877e7c6905ceb307"
+  },
+  "candidate_ids": [
+    "indoor_diningroom_137",
+    "indoor_office_138",
+    "indoor_livingroom_139",
+    "indoor_kitchen_140",
+    "indoor_house_141",
+    "indoor_bedroom_142",
+    "indoor_diningroom_143",
+    "indoor_office_144",
+    "indoor_livingroom_145",
+    "indoor_kitchen_146",
+    "indoor_house_147",
+    "indoor_bedroom_148",
+    "indoor_diningroom_149",
+    "indoor_office_150",
+    "indoor_livingroom_151",
+    "indoor_kitchen_152",
+    "indoor_house_153",
+    "indoor_bedroom_154",
+    "indoor_diningroom_155",
+    "indoor_office_156",
+    "indoor_livingroom_157",
+    "indoor_kitchen_158",
+    "indoor_house_159",
+    "indoor_bedroom_160"
+  ],
+  "new_candidates": [
+    {
+      "scene_id": "indoor_diningroom_137",
+      "room_type": "DiningRoom",
+      "source_seed": 20261431,
+      "runtime_seed": 20261432,
+      "material_id": "test_gravel022",
+      "material_split": "test",
+      "complexity": "simple",
+      "output_directory": "DiningRoom_seed20261431"
+    },
+    {
+      "scene_id": "indoor_office_138",
+      "room_type": "Office",
+      "source_seed": 20261433,
+      "runtime_seed": 20261434,
+      "material_id": "train_tiles141",
+      "material_split": "train",
+      "complexity": "simple",
+      "output_directory": "Office_seed20261433"
+    },
+    {
+      "scene_id": "indoor_livingroom_139",
+      "room_type": "LivingRoom",
+      "source_seed": 20261435,
+      "runtime_seed": 20261436,
+      "material_id": "val_tiles139",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "LivingRoom_seed20261435"
+    },
+    {
+      "scene_id": "indoor_kitchen_140",
+      "room_type": "Kitchen",
+      "source_seed": 20261437,
+      "runtime_seed": 20261438,
+      "material_id": "test_tiles140",
+      "material_split": "test",
+      "complexity": "simple",
+      "output_directory": "Kitchen_seed20261437"
+    },
+    {
+      "scene_id": "indoor_house_141",
+      "room_type": "House",
+      "source_seed": 20261439,
+      "runtime_seed": 20261440,
+      "material_id": "train_concrete034",
+      "material_split": "train",
+      "complexity": "simple",
+      "output_directory": "House_seed20261439"
+    },
+    {
+      "scene_id": "indoor_bedroom_142",
+      "room_type": "Bedroom",
+      "source_seed": 20261441,
+      "runtime_seed": 20261442,
+      "material_id": "val_concrete045",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "Bedroom_seed20261441"
+    },
+    {
+      "scene_id": "indoor_diningroom_143",
+      "room_type": "DiningRoom",
+      "source_seed": 20261443,
+      "runtime_seed": 20261444,
+      "material_id": "test_concrete039",
+      "material_split": "test",
+      "complexity": "simple",
+      "output_directory": "DiningRoom_seed20261443"
+    },
+    {
+      "scene_id": "indoor_office_144",
+      "room_type": "Office",
+      "source_seed": 20261445,
+      "runtime_seed": 20261446,
+      "material_id": "train_road007",
+      "material_split": "train",
+      "complexity": "simple",
+      "output_directory": "Office_seed20261445"
+    },
+    {
+      "scene_id": "indoor_livingroom_145",
+      "room_type": "LivingRoom",
+      "source_seed": 20261447,
+      "runtime_seed": 20261448,
+      "material_id": "val_asphalt023s",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "LivingRoom_seed20261447"
+    },
+    {
+      "scene_id": "indoor_kitchen_146",
+      "room_type": "Kitchen",
+      "source_seed": 20261449,
+      "runtime_seed": 20261450,
+      "material_id": "test_pathway002",
+      "material_split": "test",
+      "complexity": "simple",
+      "output_directory": "Kitchen_seed20261449"
+    },
+    {
+      "scene_id": "indoor_house_147",
+      "room_type": "House",
+      "source_seed": 20261451,
+      "runtime_seed": 20261452,
+      "material_id": "train_concrete046",
+      "material_split": "train",
+      "complexity": "simple",
+      "output_directory": "House_seed20261451"
+    },
+    {
+      "scene_id": "indoor_bedroom_148",
+      "room_type": "Bedroom",
+      "source_seed": 20261453,
+      "runtime_seed": 20261454,
+      "material_id": "val_concrete040",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "Bedroom_seed20261453"
+    },
+    {
+      "scene_id": "indoor_diningroom_149",
+      "room_type": "DiningRoom",
+      "source_seed": 20261455,
+      "runtime_seed": 20261456,
+      "material_id": "test_asphalt031",
+      "material_split": "test",
+      "complexity": "simple",
+      "output_directory": "DiningRoom_seed20261455"
+    },
+    {
+      "scene_id": "indoor_office_150",
+      "room_type": "Office",
+      "source_seed": 20261457,
+      "runtime_seed": 20261458,
+      "material_id": "train_ground054",
+      "material_split": "train",
+      "complexity": "simple",
+      "output_directory": "Office_seed20261457"
+    },
+    {
+      "scene_id": "indoor_livingroom_151",
+      "room_type": "LivingRoom",
+      "source_seed": 20261459,
+      "runtime_seed": 20261460,
+      "material_id": "val_ground071",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "LivingRoom_seed20261459"
+    },
+    {
+      "scene_id": "indoor_kitchen_152",
+      "room_type": "Kitchen",
+      "source_seed": 20261461,
+      "runtime_seed": 20261462,
+      "material_id": "test_ground073",
+      "material_split": "test",
+      "complexity": "simple",
+      "output_directory": "Kitchen_seed20261461"
+    },
+    {
+      "scene_id": "indoor_house_153",
+      "room_type": "House",
+      "source_seed": 20261463,
+      "runtime_seed": 20261464,
+      "material_id": "train_ground037",
+      "material_split": "train",
+      "complexity": "simple",
+      "output_directory": "House_seed20261463"
+    },
+    {
+      "scene_id": "indoor_bedroom_154",
+      "room_type": "Bedroom",
+      "source_seed": 20261465,
+      "runtime_seed": 20261466,
+      "material_id": "val_gravel023",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "Bedroom_seed20261465"
+    },
+    {
+      "scene_id": "indoor_diningroom_155",
+      "room_type": "DiningRoom",
+      "source_seed": 20261467,
+      "runtime_seed": 20261468,
+      "material_id": "test_gravel022",
+      "material_split": "test",
+      "complexity": "simple",
+      "output_directory": "DiningRoom_seed20261467"
+    },
+    {
+      "scene_id": "indoor_office_156",
+      "room_type": "Office",
+      "source_seed": 20261469,
+      "runtime_seed": 20261470,
+      "material_id": "train_tiles141",
+      "material_split": "train",
+      "complexity": "simple",
+      "output_directory": "Office_seed20261469"
+    },
+    {
+      "scene_id": "indoor_livingroom_157",
+      "room_type": "LivingRoom",
+      "source_seed": 20261471,
+      "runtime_seed": 20261472,
+      "material_id": "val_tiles139",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "LivingRoom_seed20261471"
+    },
+    {
+      "scene_id": "indoor_kitchen_158",
+      "room_type": "Kitchen",
+      "source_seed": 20261473,
+      "runtime_seed": 20261474,
+      "material_id": "test_tiles140",
+      "material_split": "test",
+      "complexity": "simple",
+      "output_directory": "Kitchen_seed20261473"
+    },
+    {
+      "scene_id": "indoor_house_159",
+      "room_type": "House",
+      "source_seed": 20261475,
+      "runtime_seed": 20261476,
+      "material_id": "train_concrete034",
+      "material_split": "train",
+      "complexity": "simple",
+      "output_directory": "House_seed20261475"
+    },
+    {
+      "scene_id": "indoor_bedroom_160",
+      "room_type": "Bedroom",
+      "source_seed": 20261477,
+      "runtime_seed": 20261478,
+      "material_id": "val_concrete045",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "Bedroom_seed20261477"
+    }
+  ],
+  "selection_policy_overrides": {
+    "processing_order": "strict_candidate_stream_order",
+    "stop_at_first_prefix_meeting_quota": true,
+    "maximum_candidates": 24,
+    "minimum_admitted_scenes": 6,
+    "minimum_admitted_families": 4,
+    "one_generation_attempt_per_candidate": true,
+    "replacement_seed_allowed": false,
+    "source_repair_allowed": false,
+    "continue_after_terminal_rejection_until_quota_or_budget": true,
+    "all_processed_candidates_count_in_denominator": true,
+    "unprocessed_suffix_must_remain_untouched": true,
+    "o4_withheld_until_cohort_frozen": true,
+    "all_admitted_scenes_must_enter_v34_confirmation": true,
+    "fresh_process_per_stage_and_scene": true
+  },
+  "pipeline_overrides": {
+    "candidate_runner": "scripts/run_o4_scene_candidate_v30.py",
+    "route_output_name": "route_surface_o4_v34_heldout_stream"
+  },
+  "operator_output_root": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_heldout_confirmation",
+  "additional_locked_files": [
+    {
+      "path": "scripts/run_o4_scene_candidate_v30.py",
+      "sha256": "491db543bc0a5178c1e12bcff36d9648c41f69e08335f962435a4fce4e0f1784"
+    },
+    {
+      "path": "scripts/audit_o4_scene_stream_v30.py",
+      "sha256": "3dc616244718a3d950296996b8a578a9205e7db2256bdf976fbba27968e69266"
+    },
+    {
+      "path": "tests/test_o4_scene_stream_v30.py",
+      "sha256": "e276a1de7208d55215efc126fce1acae1217ac119e0853da75be78d321d3c645"
+    },
+    {
+      "path": "scripts/audit_o4_scene_stream_v34.py",
+      "sha256": "58e50718b9c5b2f53aaa0c78412db600558cea072ced38b429974f5d131fdcfd"
+    },
+    {
+      "path": "tests/test_o4_scene_stream_v34.py",
+      "sha256": "65626906a8302b39cd202df12285360d2c3ca145674602e463eb0ad116ebe3a5"
+    },
+    {
+      "path": "scripts/audit_o4_action_consequence_v34_confirmation_preflight.py",
+      "sha256": "b4cca25185d98246f5dca6353514e7670360988757b7ee29a6b280110644254c"
+    },
+    {
+      "path": "scripts/audit_o4_action_consequence_v34_confirmation_postrun.py",
+      "sha256": "06ea47fd2ec7c3cf795b61a73317f600a08fd95b0c16285db2ca212e279ee672"
+    },
+    {
+      "path": "tests/test_o4_action_consequence_v34.py",
+      "sha256": "81707989e1d3b32768e48a08e66955665194eb2442af7bd61d19f6d22aff76d2"
+    },
+    {
+      "path": "configs/data/kinofail_o4_action_consequence_v32_development_freeze_v1.json",
+      "sha256": "1637f3856591881def98bef491551de442fde08ca35c1d4d78e91348b411aece"
+    },
+    {
+      "path": "outputs/kinofail_realistic/operator_development/o4_action_v32_early_clearance/postrun_audit.json",
+      "sha256": "8d7f18ce12260eee212a928576b755f314b9f52290780d0ba7f0714720d4732e",
+      "json_passed": false,
+      "json_sealed": true
+    },
+    {
+      "path": "docs/datasets/kinofail_o4_v32_development_analysis.md",
+      "sha256": "0105837bd4df86a17f981cc56f548c6e5cdc353028f34afbbef5aa00efb44524"
+    },
+    {
+      "path": "configs/data/kinofail_o4_scene_stream_v33_development_acquisition_freeze_v1.json",
+      "sha256": "833cb6de73a882f44365f76d6a493843f41d277f2a484bae43f8aa61044c6101"
+    },
+    {
+      "path": "outputs/kinofail_realistic/operator_development/o4_action_v33_scene_stream/postrun_audit.json",
+      "sha256": "88841b4ce8715845fd39086b72998cd63e159273dbef135e55c97a19a017df12",
+      "json_passed": true,
+      "json_sealed": true
+    },
+    {
+      "path": "/home/eureka/nvidia/isaacsim/kit/python/lib/python3.11/site-packages/pxr/__init__.py",
+      "sha256": "b562c0316021f102951b9976572119f65f816ff5790f0c9b4ac0be7e4acc1ee5"
+    },
+    {
+      "path": "/home/eureka/nvidia/isaacsim/kit/python/lib/python3.11/site-packages/pxr/Usd/_usd.so",
+      "sha256": "e3468b0eeb405359ac4f148f40fe19e7ffe7adecff9a8a45c6967564d1931d68"
+    },
+    {
+      "path": "/home/eureka/nvidia/isaacsim/kit/python/lib/python3.11/site-packages/pxr/UsdGeom/_usdGeom.so",
+      "sha256": "eb4ab5e5e9a4f40caf507fe81244232fb80898354532d1044c21b56f8c029339"
+    }
+  ]
+}

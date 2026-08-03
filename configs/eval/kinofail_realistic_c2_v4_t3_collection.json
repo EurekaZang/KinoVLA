@@ -1,0 +1,33 @@
+{
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "protocol_id": "kinofail-realistic-c2-v4-t3-collection",
+  "status": "frozen_before_v4_confirmation_collection",
+  "frozen_utc": "2026-07-24T13:32:00Z",
+  "benchmark_id": "c2_bidirectional_confirmation_v3_t3",
+  "schedule_path": "outputs/kinofail_realistic/design_c2_bidirectional_confirmation_v4_t3/schedule.jsonl",
+  "schedule_sha256": "e2fa97115ce5dcfd2f00ca832a2d923eb5e81c0b2793467b1ad1ea470f892b4a",
+  "case_schedule_sha256": "5476eb854a1e45cdae27d52c296a975c282aca92aaade3dcf82018a5f4daeee7",
+  "design_audit_sha256": "8e08c69925dd46e6edcc88ce9a2bbd4600b099b6480755cb095a0262ae372182",
+  "scene_registry_path": "configs/data/kinofail_realistic_c2_v4_confirmation_scene_registry.json",
+  "scene_registry_sha256": "b3d922776bf8d1b60bde2f791d4fe23540170da58acd1aa4c18e17d4b0ef9e96",
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_pair_v2.py",
+  "collector_sha256": "d5e50103508b33784cad2584584d0cc560f22a6cc80ed482d266b13ce4500240",
+  "runner_path": "scripts/run_kinofail_realistic_c2_v3_t3_isolated.py",
+  "runner_sha256": "9b8c6f3215f43e361c1a3f0660b46475562eaf09e6498b4cb3218b5d87c9985b",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "outcomes_available_at_freeze": false,
+  "collection_contract": {
+    "counterfactual_pairs": 30,
+    "physical_episodes": 60,
+    "scene_families": 3,
+    "domains": 3,
+    "operators": 2,
+    "appearance_views_per_episode": 3,
+    "isaac_processes": 30,
+    "pairs_per_process": 1,
+    "formal_collection_status": "formal_pilot",
+    "per_scene_parameter_tuning_forbidden": true,
+    "outcome_strength_is_reported_not_gated": true
+  }
+}

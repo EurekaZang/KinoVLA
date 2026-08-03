@@ -1,0 +1,77 @@
+{
+  "acceptance": {
+    "beats_proprio_only_point": true,
+    "beats_vision_only_point": true,
+    "minimum_balanced_accuracy": 0.9,
+    "minimum_texture_swap_hard_consistency": 0.9,
+    "minimum_worst_direction_accuracy": 0.85,
+    "ours_minus_best_unstructured_ci_lower_gt_0": true
+  },
+  "best_baseline_method": "early_fusion",
+  "bootstrap": {
+    "draws": 20000,
+    "seed": 2026072412
+  },
+  "claim_boundary": "C2 is supported only for the predeclared O2/O4 and O7/O8 bidirectional conflict battery in three held-out realistic domains. The result demonstrates learned observable evidence routing; it does not claim universal open-world conflict resolution.",
+  "created_utc": "2026-07-24T10:15:49.777817+00:00",
+  "development_report": "outputs/eval/c2_bidirectional_formal_v1/development_v2/development_report.json",
+  "development_report_sha256": "91b673aeb28cfef60de59242d83a052e626acd92eca5be094118908803f52c20",
+  "evaluator": "scripts/eval_kinofail_realistic_c2_bidirectional_v1.py",
+  "evaluator_sha256": "b762b89a6b906ae95151f488527a0bfd50f6bc20c67d90590d63e9adc5709487",
+  "feature_builder": "scripts/build_kinofail_realistic_c2_bidirectional_features_v1.py",
+  "feature_builder_sha256": "7ad31552d6915c488e165a0a1ebcbeec36de82759c205c82467f019ed9d1f42d",
+  "feature_manifest": "outputs/eval/c2_bidirectional_formal_v1/features/feature_manifest.json",
+  "feature_manifest_sha256": "8b76fe3e74d6d06cd131ed64488adc43a8f2ef64ffb01a1bcfdddf72a569b0e8",
+  "model_roster": [
+    "vision_only",
+    "proprio_only",
+    "early_fusion",
+    "late_fusion",
+    "structured_evidence_router"
+  ],
+  "protocol_id": "kinofail-realistic-c2-bidirectional-formal-v1",
+  "schema_version": "kinofail.realistic-c2-bidirectional-protocol.v1",
+  "selected_C": {
+    "early_fusion": 0.01,
+    "late_fusion": 0.01,
+    "proprio_only": 0.01,
+    "structured_evidence_router": 0.01,
+    "vision_only": 0.1
+  },
+  "status": "frozen_after_validation_before_first_test_evaluation",
+  "structured_method": {
+    "T2_expert": "visual-only O2/O4 classifier",
+    "T3_expert": "proprio-only O7/O8 classifier",
+    "deployment_inputs": [
+      "five Go2-front ground-ROI CLIP embeddings",
+      "21-sample proprioceptive temporal summary"
+    ],
+    "family_gate": "observable joint feature gate: T2 vision-decisive versus T3 proprio-decisive",
+    "forbidden_deployment_inputs": [
+      "truth label",
+      "operator ID",
+      "cell ID",
+      "scene ID",
+      "domain",
+      "split",
+      "severity",
+      "material ID",
+      "test correctness"
+    ],
+    "probability_composition": "family probability times the corresponding binary expert"
+  },
+  "test_design": {
+    "appearance_views_per_label_case": 3,
+    "directions": {
+      "T2": "proprio byte-identical; physical visual cue differs",
+      "T3": "RTX sequence byte-identical; actual physical proprio differs"
+    },
+    "statistical_unit": "scene cluster with matched case resampling nested within scene",
+    "test_cases": 18,
+    "test_domains": 3,
+    "test_samples": 108,
+    "test_scene_clusters": 3
+  },
+  "test_outcomes_available_at_freeze": false,
+  "test_used_for_model_or_baseline_selection": false
+}

@@ -1,0 +1,55 @@
+{
+  "a8_in_scope": false,
+  "acceptance": {
+    "independent_seeds_per_level": 5,
+    "interpolated_point_forbidden_without_identified_bracket": true,
+    "interval_estimates_required": true,
+    "levels_per_family": 4,
+    "operator_parameter_families": 5
+  },
+  "amendment": {
+    "analysis_logic_or_threshold_changed": false,
+    "base_analysis_protocol": "configs/eval/kinofail_realistic_a6_analysis_v1.json",
+    "base_analysis_protocol_sha256": "05ae24de87caab155462cae778e1b4647f15490958ca7f1402d07e79dd91225e",
+    "changed": "collection protocol and fresh corpus-root bindings only"
+  },
+  "bootstrap": {
+    "repetitions": 10000,
+    "seed": 20260723,
+    "unit": "paired scene seed within level"
+  },
+  "boundary": "first adjacent nominal/mild/moderate/severe interval whose seed-level effect rate crosses 0.5; otherwise report one-sided/unidentified bracket",
+  "collection_protocol": "configs/data/kinofail_realistic_a6_boundary_formal_v3.json",
+  "corpus_root": "outputs/kinofail_realistic/corpus_a6_boundary_v3",
+  "effect_event": {
+    "or_max_tilt_increase_rad_ge": 0.2,
+    "or_route_progress_loss_m_ge": 0.25,
+    "paired_excess_fall": true
+  },
+  "parameter_scalar": {
+    "O10_effort_decay": {
+      "field": "effort_floor",
+      "worse_direction": "decreasing"
+    },
+    "O1_mu_field": {
+      "field": "mu_d",
+      "worse_direction": "decreasing"
+    },
+    "O2_compliance": {
+      "field": "sink_depth_m",
+      "worse_direction": "increasing"
+    },
+    "O4_tether": {
+      "field": "tangential_force_cap_n",
+      "worse_direction": "increasing"
+    },
+    "O5_payload": {
+      "field": "mass_kg",
+      "worse_direction": "increasing"
+    }
+  },
+  "protocol_id": "kinofail_realistic_a6_analysis_v2",
+  "schedule": "outputs/kinofail_realistic/design_a6_boundary_v2/schedule.jsonl",
+  "schema_version": "kinofail.realistic-a6-analysis-protocol.v1",
+  "status": "frozen_after_provenance_amendment_before_valid_a6_simulation"
+}

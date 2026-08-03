@@ -1,0 +1,34 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v3-development",
+  "status": "development_fix_after_v2_rtx_material_and_sky_failure",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v2.json",
+    "sha256": "87db7f5b06cfb805834589006e4898a878a0d2f99048ff5ff14fd0ae402fe01a"
+  },
+  "overrides": {
+    "background": {
+      "intensity": 280.0
+    },
+    "near_field": {
+      "material_compatibility_mode": "isaac_preview_override_v1"
+    },
+    "appearance": {
+      "distant_light_intensity": 350.0
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_hybrid_composition_dev_v3"
+    }
+  },
+  "failure_addressed": {
+    "v2_nominal_manifest": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_hybrid_composition_dev_v2/o2_fresh_app_pair_dev_v2_attempt4/nominal/lane_manifest.json",
+      "sha256": "3e5fe417034ec208d6d90a0b7d00ddc3af0b6d5195fc8c223d842e49446d75d3"
+    },
+    "observations": [
+      "The base Isaac skyLight overrode the EmbodiedGen panorama.",
+      "Referenced Poly Haven USD material graphs rendered as compile-failure magenta in Isaac Sim 5.1.",
+      "The machine non-degeneracy check passed but the human scene-quality gate failed."
+    ],
+    "policy": "Preserve v2 as failed visual QA; do not lower pixel thresholds or count it as evidence."
+  }
+}

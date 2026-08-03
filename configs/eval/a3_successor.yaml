@@ -1,0 +1,78 @@
+experiment: A3.4-evidence-routed-bidirectional-successor
+
+sources:
+  a0_corpus: outputs/eval/a0/corpus
+  a3_t3_corpus: outputs/eval/a3/corpus_t3
+  successor_reverse_train: outputs/eval/a3_successor/reverse_train_v1
+  conflict_predictions: outputs/eval/a3/per_item_B5_conflict_bi.json
+  successor_reverse_conflict_predictions: outputs/eval/a3_successor/reverse_train_v1_conflict_predictions.json
+  conflict_adapter: outputs/eval/a3/b5_conflict_bi/adapter_best
+  baseline_dir: outputs/eval/a3
+  baselines:
+    B1: outputs/eval/a3/per_item_B1.json
+    B-F: outputs/eval/a3/per_item_B_F.json
+    B5-conflict-bi: outputs/eval/a3/per_item_B5_conflict_bi.json
+    B-V: outputs/eval/a3/per_item_B_V.json
+    zero-shot: outputs/eval/a3/per_item_zero_shot.json
+
+output_dir: outputs/eval/a3_successor
+feature_cache: outputs/eval/a3_successor/features.npz
+
+protocol:
+  fit_appearance_split: train
+  confirmatory_appearance_split: test
+  development_fraction: 0.20
+  counterfactual_nominal_ratio: 0.0
+  material_appearance_config: eval/a3_successor_appearances.yaml
+  forbidden_deployment_inputs:
+    [operator_name, scenario, appearance_id, appearance_split, taxonomy_cell, truth, theta]
+
+model:
+  hidden: 128
+  conflict_logit_scale: 8.0
+  material_pair_logit_scale: 8.0
+  proprio_std_eps: 0.001
+
+training:
+  seeds: [0, 1, 2, 3, 4]
+  epochs: 500
+  lr: 0.001
+  weight_decay: 0.0001
+  grad_clip: 5.0
+  patience: 80
+  loss:
+    category: 1.0
+    intervention: 1.0
+    router: 2.0
+    visual_expert: 0.25
+    proprio_expert: 0.25
+    joint_expert: 0.25
+    theta: 0.1
+
+selection:
+  continue_thresholds: [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
+                        0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90]
+  objective: lexicographic_worst_cell_then_macro
+
+acceptance:
+  T1: 0.90
+  T2: 1.00
+  T3_strictly_greater_than: 0.917
+  T4: 1.00
+  T5: 0.90
+  t3_subcells:
+    looks_safe: 0.90
+    O8: 0.90
+    reverse: 0.90
+  worst_cell: 0.90
+  macro: 0.95
+  n_train_seeds: 5
+  require_every_seed: true
+
+statistics:
+  bootstrap_unit: appearance_cluster_within_cell
+  bootstrap_reps: 10000
+  bootstrap_seed: 20260719
+  paired_test: exact_paired_sign_test_over_appearance_clusters
+  alpha: 0.05
+  current_split_status: inspected_method_development_not_confirmatory

@@ -1,0 +1,126 @@
+{
+  "schema_version": "kinofail.embodiedgen-direct-velocity-v13-screen.v1",
+  "purpose": "Screen the already-trained direct-velocity Go2 policy on the failed Kitchen centerline protocol before committing to a new locomotion training run.",
+  "evidence_boundary": {
+    "evidence_role": "locomotion_policy_development_screen_only",
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "old_a0_a7_results_are_reference_only": true,
+    "completion_requires_new_realistic_corpus_training_inference_and_a0_a7": true
+  },
+  "failed_basis": {
+    "v12_postrun_audit": {
+      "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_centerline_v12_development_matrix_v1/postrun_audit.json",
+      "sha256": "b314ec461799921c8c4a98b89fc8cb91c01d47bd4c552f7c6a0709ca2c3b8938"
+    },
+    "finding": "The shipped policy fell before O2 contact while centerline tracking remained inside the 0.30 m budget."
+  },
+  "candidate_policy": {
+    "path": "outputs/locomotion/policy.pt.yaw_retrain",
+    "sha256": "730a57fb0ea53ab35e63d2bf37cac59789756a6bfdfcda00300b87895e258490",
+    "training_config": {
+      "path": "configs/locomotion/go2_flat_ppo.yaml",
+      "sha256": "56fe085b69bdaebf25d6706d469cadce9e61b83afe60075c128d1ab542f377de"
+    },
+    "training_log": {
+      "path": "outputs/locomotion/retrain_yaw.log",
+      "sha256": "66e398d2e74c831fbd29def9eb63b75cf68ad74e6174ac62b89f0914fb945ff7"
+    },
+    "final_checkpoint": {
+      "path": "outputs/locomotion/go2_flat_kino_seed42/model_final.pt",
+      "sha256": "7dc8e0637ace1c89a73300f36a39138147649a3134756014d7e2995a1527c33c"
+    },
+    "training_fact": "This candidate was trained with direct sustained velocity commands, including lin_vel_y and ang_vel_z, unlike the shipped policy.",
+    "old_stack_regression_status": "Previously failed five legacy end-to-end gates; this screen does not waive them and is only for the new realistic benchmark stack."
+  },
+  "source_freeze": {
+    "collector_wrapper": {
+      "path": "scripts/isaac_collect_realistic_route_operator_lane_v13.py",
+      "sha256": "55a7a5ee884f48274e2bbbf4b57157a9af3c9d2bd4da3d0859ba8ca9a7fed263"
+    },
+    "collector_engine": {
+      "path": "scripts/isaac_collect_realistic_route_operator_lane_v6.py",
+      "sha256": "dcd4c399407c5ad38c50011326b85a845b19606c23e5a8c38220d90a71d9df5e"
+    },
+    "backend": {
+      "path": "kino_vla/sim/isaac_policy_backend.py",
+      "sha256": "2a2572dfdffb90b871fbeef37b242e4963f09c1a9c05daccd069fd9ba249ce80"
+    },
+    "controller": {
+      "path": "kino_vla/sim/realistic_route_controller_v3.py",
+      "sha256": "7e0f8281cd394cf6faa57bfc49aedc29444c1928358a8a7bf033b5499f12bf8d"
+    },
+    "runtime_gate": {
+      "path": "kino_vla/eval/realistic_route_runtime_gate.py",
+      "sha256": "9148478366022e4ae3db4a0bfe45218a272d5b57ceede1cce8593db41c146bb5"
+    },
+    "scene_contract": {
+      "path": "kino_vla/eval/realistic_route_scene_contract.py",
+      "sha256": "c466a8a6aa5b29d70cbe426e5c092a5cbac1e7792bcdf51812d3f5e7125e0022"
+    },
+    "route_protocol": {
+      "path": "kino_vla/sim/realistic_route_protocol_v2.py",
+      "sha256": "10256042d810456526a6ab5b93f291a612ff4ebd642adda7fd9d0de3d750572e"
+    },
+    "o2_operator": {
+      "path": "kino_vla/sim/operators/o2_compliance.py",
+      "sha256": "63abd0dbde8b38d90597e3a6daf7997d3936e9dedfeb72d1ddf715a5de13517e"
+    },
+    "material_lock": {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    }
+  },
+  "execution_policy": {
+    "fresh_isaac_process": true,
+    "one_attempt": true,
+    "nominal_only": true,
+    "no_parameter_change_from_v12": true,
+    "candidate_policy_is_the_only_runtime_change": true,
+    "run_no_anomaly": true,
+    "if_failed_train_new_realistic_route_policy": true,
+    "if_passed_require_livingroom_and_diningroom_development_replication": true
+  },
+  "runtime": {
+    "operator": "o2",
+    "lane": "nominal",
+    "camera_profile": "go2_front_calib_b",
+    "steps": 650,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": 0.0,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.6,
+    "start_lateral_offset_m": 0.0,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": 0.0,
+    "forward_speed_mps": 0.18,
+    "maximum_route_deviation_m": 0.3,
+    "minimum_nominal_region_samples": 40,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.2,
+    "yaw_rate_limit_radps": 0.6,
+    "seed": 20261121
+  },
+  "scene": {
+    "scene_id": "indoor_kitchen_31",
+    "scene_family": "Kitchen",
+    "material_id": "test_ground073",
+    "terrain_compiled_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/compiled_scene_audit.json",
+      "sha256": "81155f31d69c0f05f8d5d55a51061589e3bc1a2e574a05444069788889141cf3"
+    },
+    "terrain_episode": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/episode_terrain_v2.usda",
+      "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"
+    },
+    "offline_usd_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/offline_usd_audit.json",
+      "sha256": "5f07c3fb7a45e10b3ef1bdbf5685fde0410fba1a9cf46e5cc498ac5ab8d334e3"
+    }
+  },
+  "planned_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_direct_velocity_v13_screen_v1/kitchen31/o2_nominal"
+}

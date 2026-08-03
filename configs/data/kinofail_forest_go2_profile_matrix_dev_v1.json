@@ -1,0 +1,71 @@
+{
+  "schema_version": "kinofail.visual-shell-go2-profile-matrix.v1-development",
+  "status": "post_development_aggregate_not_preregistered_not_scene_admission",
+  "scene_id": "forest_trail_01",
+  "compiled_scene_audit": {
+    "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_composition_dev_v1/compiled_scene_audit.json",
+    "sha256": "99c1246a34f5eda04364f034a4a3211657422b3d2606bc4bf6110f231b9ad76a"
+  },
+  "episode_usd": {
+    "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_composition_dev_v1/episode.usda",
+    "sha256": "4390bbd574cf6562a33d2bc5aad7412dd32ba5c1b5f082db4d44bfc84a06147d"
+  },
+  "qa_script": {
+    "path": "scripts/isaac_embodiedgen_go2_scene_qa.py",
+    "sha256": "709d9671af7866b5a3b62807da76ccc9f0769945663990f2de53b2818d766f0e"
+  },
+  "required_profiles": [
+    "go2_front_calib_a",
+    "go2_front_calib_b",
+    "go2_front_calib_c"
+  ],
+  "qa_runs": [
+    {
+      "profile": "go2_front_calib_a",
+      "audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_composition_dev_v1/go2_qa_tracking_v1_profile_a/go2_scene_audit.json",
+      "sha256": "a5be04d2c4e1ec648bb33af899e5a749c31e3bd9cba565274ab35b6f9932fb2e"
+    },
+    {
+      "profile": "go2_front_calib_b",
+      "audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_composition_dev_v1/go2_qa_tracking_v1_profile_b/go2_scene_audit.json",
+      "sha256": "5c026349f0b85c42f919b56cbdd5c645caad76a0777d6036c66cb6e5729056ee"
+    },
+    {
+      "profile": "go2_front_calib_c",
+      "audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_composition_dev_v1/go2_qa_tracking_v1_profile_c/go2_scene_audit.json",
+      "sha256": "2b7f84025cb55d4353211db75a777bedb4875fd133d263bf8adc7d490fcf6fc6"
+    }
+  ],
+  "development_history": {
+    "open_loop_failure": {
+      "audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_composition_dev_v1/go2_qa/go2_scene_audit.json",
+      "sha256": "9af926c5081786bd57dc52ba10741a99b3138ab18c899e375f8312afe180835f"
+    },
+    "open_loop_repeat_failure": {
+      "audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_composition_dev_v1/go2_qa_repeat_same_seed/go2_scene_audit.json",
+      "sha256": "ca0946e6529b288590569aa27d0cc5d657d029dfa77b5e5f0270faf9ea36643b"
+    },
+    "lower_speed_failure": {
+      "audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_composition_dev_v1/go2_qa_speed020_seed20260721/go2_scene_audit.json",
+      "sha256": "8527a9c344332975505388dbff3d30c7ded887e626b628fe2ab42eb24a077cd8"
+    },
+    "interpretation": "The open-loop controller reproducibly drifted and violated the unchanged tilt gate; slowing it down also failed. The selected route-tracking controller adds cross-track and heading feedback while preserving the scene, physics, target distance, camera and thresholds. These failed attempts remain in the audit trail and are not reclassified."
+  },
+  "required_controller": {
+    "enabled": true,
+    "command_speed_mps": 0.32,
+    "cross_track_gain": 1.0,
+    "heading_gain": 2.0,
+    "lateral_command_limit_mps": 0.16,
+    "yaw_rate_command_limit_radps": 0.6
+  },
+  "admission_policy": {
+    "all_profiles_must_pass": true,
+    "physics_telemetry_must_match_across_camera_profiles": true,
+    "physical_fixture_camera_calibration_required_for_registry": true,
+    "independent_human_review_required_for_registry": true,
+    "may_proceed_to_operator_development_if_matrix_passes": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

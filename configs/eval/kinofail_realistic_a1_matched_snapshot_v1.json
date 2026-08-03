@@ -1,0 +1,85 @@
+{
+  "amendment": {
+    "basis": "The first v5 pair was inspected before scale collection and before any snapshot feature/model result.",
+    "changed": "Admit the exact route-material semantic-tag false-negative issues when all three sequences are distinct and at least one independent PBR swap exceeds the direct RGB intervention gate; weak individual swaps remain reported.",
+    "model_outcomes_used": false,
+    "preflight_anomaly_manifest_sha256": "c5b7adcb832c3a7ca197f4a00b2a94f091b8bc6be7070dad481dbf6208ec1438",
+    "preflight_nominal_manifest_sha256": "9293430cd20bd11f17727aff8fb23f46569ae66e00526aebc1b219852aff9d87",
+    "sensor_qa": {
+      "distinct_appearance_sequences": 3,
+      "mean_pair_rgb_l1": [0.128249285735336, 0.15607941805147657],
+      "minimum_required_rgb_l1": 0.015,
+      "rgb_frames": 16,
+      "scene_context_fraction": 0.750610622829861
+    },
+    "temporal_availability_correction": {
+      "changed": "Decision time is first measured contact minus 0.5 s, rather than the contact instant.",
+      "model_features_or_outcomes_existed": false,
+      "observed_event_times_s": [1.7, 1.72, 2.0],
+      "reason": "The bounded collector retains independent 10 Hz frames through 1.52 s. A fixed -0.5 s offset is the latest common pre-contact decision point that provides five distinct frames for every scene, including the 2.0 s event case.",
+      "scientific_role": "Strictly pre-contact construct validity: body evidence must remain equivalent while scanned-PBR cause appearance is available."
+    }
+  },
+  "appearance_interventions": {
+    "count_views_as_independent_physical_samples": false,
+    "include_all_manifest_views": true,
+    "require_timestamp_identity_across_views": true,
+    "share_proprio_across_views": true
+  },
+  "development_only": false,
+  "operator_event_adapters": {
+    "coverage": "O2/O4 only",
+    "selection_rule": "first measured foot sinkage/contact for O2 or first measured foot attachment for O4 supplies the anchor; the decision window ends 0.5 s before that event"
+  },
+  "output_dir": "outputs/eval/realistic_a0_a7_v4/a1_matched/snapshots",
+  "protocol_id": "realistic_a1_matched_snapshot_v1",
+  "publication_guard": {
+    "may_satisfy_realistic_a0_a7": true,
+    "reason": "Fresh-app/deep-reset matched O2/O4 construct extension frozen before collection."
+  },
+  "schema_version": "kinofail.realistic-snapshot-protocol.v2",
+  "selection": {
+    "allow_nonblocking_runtime_issue_suffixes": [
+      "appearance_effect_too_small",
+      "rgb_spatial_contrast_too_low",
+      "appearance_local_qa_failed",
+      "scheduled_appearance_not_visible",
+      "appearance_view_primary_local_qa_failed",
+      "appearance_view_primary_not_visible",
+      "appearance_view_swap_01_local_qa_failed",
+      "appearance_view_swap_01_not_visible",
+      "appearance_view_swap_02_local_qa_failed",
+      "appearance_view_swap_02_not_visible"
+    ],
+    "operators_with_admitted_event_adapter": [
+      "O2_compliance",
+      "O4_tether"
+    ],
+    "require_complete_counterfactual_pair": true,
+    "require_evaluation_eligible": false,
+    "require_runtime_validation_passed": true,
+    "required_collection_protocol_id": "kinofail_realistic_a1_matched_o2_o4_36_v5"
+  },
+  "source_corpus_root": "outputs/kinofail_realistic/corpus_a1_matched_v5",
+  "source_schedule": "outputs/kinofail_realistic/design_a1_matched_v2/schedule.jsonl",
+  "source_schedule_sha256": "2d0d5f4f40e2338acfed19c55fe6832974b30f39ebc8b40b185b2b90c0f95f44",
+  "status": "frozen_after_runtime_sensor_qa_before_a1_feature_extraction",
+  "temporal_alignment": {
+    "anchor": "first_predeclared_privileged_operator_event_in_anomaly_only",
+    "decision_delay_s": -0.5,
+    "decision_delay_s_by_operator": {},
+    "max_proprio_end_skew_s": 0.021,
+    "max_rgb_target_skew_s": 0.041,
+    "minimum_decision_time_s": 0.42,
+    "nominal_alignment": "reuse_anomaly_event_and_decision_times_exactly",
+    "proprio_samples": 21,
+    "proprio_window_s": 0.5,
+    "rgb_offsets_from_decision_s": [
+      -0.4,
+      -0.3,
+      -0.2,
+      -0.1,
+      0.0
+    ]
+  }
+}

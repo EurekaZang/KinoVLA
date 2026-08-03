@@ -1,0 +1,67 @@
+{
+  "schema_version": "kinofail.unified-moe-development-protocol.v1",
+  "protocol_id": "kinofail-unified-moe-v1-development-20260725",
+  "status": "development_protocol_on_previously_observed_corpora",
+  "evidence_boundary": "Architecture development and retrospective stress testing only. A new frozen scene extension is required before confirmatory superiority language.",
+  "scale_records": "outputs/eval/realistic_a0_a7_v6/snapshots/snapshot_records.jsonl",
+  "scale_features": "outputs/eval/unified_moe_v1_features/features.npz",
+  "scale_feature_manifest": "outputs/eval/unified_moe_v1_features/feature_manifest.json",
+  "scene_registry": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "c2_development_features": "outputs/eval/c2_bidirectional_v5/development_features_six_scene",
+  "c2_formal_features": "outputs/eval/c2_bidirectional_v5/formal_features",
+  "c4_schedule": "outputs/kinofail_realistic/design_c4_direct_v3/schedule.jsonl",
+  "c4_direct_report": "outputs/eval/realistic_a0_a7_v6/a5_c4_direct.json",
+  "output_root": "outputs/eval/unified_moe_v1_development_full",
+  "primary_axis": "scene_and_material",
+  "heldout_axes": [
+    "scene",
+    "material",
+    "scene_and_material",
+    "camera_profile"
+  ],
+  "training_seeds": [0, 1, 2, 3, 4],
+  "router": {
+    "experts": ["vision", "proprio", "joint"],
+    "default_expert": "proprio",
+    "selection_source": "nested grouped out-of-fold training predictions only",
+    "minimum_override_precision": 0.8,
+    "minimum_override_groups": 6,
+    "route_threshold_margin": 0.05,
+    "forbidden_inputs": [
+      "scene",
+      "operator",
+      "material",
+      "severity",
+      "appearance",
+      "split",
+      "truth",
+      "outcome",
+      "cost",
+      "privileged telemetry"
+    ]
+  },
+  "selective_coverage": [0.1, 0.2, 0.3, 0.5, 0.75, 1.0],
+  "methods": [
+    "learned_router",
+    "fixed_vision",
+    "fixed_proprio",
+    "fixed_joint",
+    "late_average",
+    "legacy_class_rule",
+    "random_route",
+    "oracle_route"
+  ],
+  "statistical_units": {
+    "scale": "counterfactual pair; appearance views are not independent",
+    "c2": "matched physical case; six appearance/cause samples per case",
+    "scene": "scene instance",
+    "material": "material family"
+  },
+  "closed_loop_rule": {
+    "target": "adhesion",
+    "minimum_seed_agreement": 5,
+    "mean_probability_threshold": 0.5,
+    "release_action": "backstep_release",
+    "fallback_action": "hold_and_request"
+  }
+}

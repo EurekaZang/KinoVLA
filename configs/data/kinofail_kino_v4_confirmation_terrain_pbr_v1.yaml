@@ -1,0 +1,28 @@
+# Frozen, KiNO-v4 independent-confirmation-only CC0 appearance catalog.
+# All source assets are absent from the development and earlier confirmation
+# catalogs at F1. Zero upstream dimensions use a preregistered 1 m UV basis.
+catalog_id: kinofail_kino_v4_confirmation_terrain_pbr_v1
+schema_version: kinofail.terrain-material-catalog.v1
+status: frozen_source_before_confirmation_f1
+source_provider: ambientCG
+license: CC0
+resolution: 1K-JPG
+required_maps: [color, normal, roughness]
+domain_material_count: 4
+total_material_count: 12
+
+materials:
+  - {id: kino_v4_confirm_life_pbr_00, source_asset_id: WoodFloor070, semantic_family: modern_parquet, source: "https://ambientcg.com/a/WoodFloor070", archive_url: "https://ambientcg.com/get?file=WoodFloor070_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRMultiAngle, split: confirmatory, domains: [life]}
+  - {id: kino_v4_confirm_life_pbr_01, source_asset_id: Carpet016, semantic_family: wool_indoor_carpet, source: "https://ambientcg.com/a/Carpet016", archive_url: "https://ambientcg.com/get?file=Carpet016_1K-JPG.zip", license: CC0, physical_size_m: [1.7, 1.7], source_dimension_cm: [170, 170], creation_method: PBRPhotogrammetry, split: confirmatory, domains: [life]}
+  - {id: kino_v4_confirm_life_pbr_02, source_asset_id: Marble012, semantic_family: veined_indoor_marble, source: "https://ambientcg.com/a/Marble012", archive_url: "https://ambientcg.com/get?file=Marble012_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRProcedural, split: confirmatory, domains: [life]}
+  - {id: kino_v4_confirm_life_pbr_03, source_asset_id: Tiles138, semantic_family: dark_stone_tile, source: "https://ambientcg.com/a/Tiles138", archive_url: "https://ambientcg.com/get?file=Tiles138_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRPhotogrammetry, split: confirmatory, domains: [life]}
+
+  - {id: kino_v4_confirm_production_pbr_00, source_asset_id: Concrete048, semantic_family: clean_industrial_concrete, source: "https://ambientcg.com/a/Concrete048", archive_url: "https://ambientcg.com/get?file=Concrete048_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRPhotogrammetry, split: confirmatory, domains: [production]}
+  - {id: kino_v4_confirm_production_pbr_01, source_asset_id: PavingStones151, semantic_family: arched_workyard_cobble, source: "https://ambientcg.com/a/PavingStones151", archive_url: "https://ambientcg.com/get?file=PavingStones151_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRPhotogrammetry, split: confirmatory, domains: [production]}
+  - {id: kino_v4_confirm_production_pbr_02, source_asset_id: Asphalt033, semantic_family: granular_service_asphalt, source: "https://ambientcg.com/a/Asphalt033", archive_url: "https://ambientcg.com/get?file=Asphalt033_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRPhotogrammetry, split: confirmatory, domains: [production]}
+  - {id: kino_v4_confirm_production_pbr_03, source_asset_id: MetalWalkway014, semantic_family: rusted_factory_walkway, source: "https://ambientcg.com/a/MetalWalkway014", archive_url: "https://ambientcg.com/get?file=MetalWalkway014_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRPhotogrammetry, split: confirmatory, domains: [production]}
+
+  - {id: kino_v4_confirm_wild_pbr_00, source_asset_id: Ground106, semantic_family: forest_riverbed_soil, source: "https://ambientcg.com/a/Ground106", archive_url: "https://ambientcg.com/get?file=Ground106_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRPhotogrammetry, split: confirmatory, domains: [wild]}
+  - {id: kino_v4_confirm_wild_pbr_01, source_asset_id: ScatteredLeaves009, semantic_family: autumn_leaf_litter, source: "https://ambientcg.com/a/ScatteredLeaves009", archive_url: "https://ambientcg.com/get?file=ScatteredLeaves009_1K-JPG.zip", license: CC0, physical_size_m: [1.7, 1.7], source_dimension_cm: [170, 170], creation_method: PBRPhotogrammetry, split: confirmatory, domains: [wild]}
+  - {id: kino_v4_confirm_wild_pbr_02, source_asset_id: Ground085, semantic_family: rocky_forest_ground, source: "https://ambientcg.com/a/Ground085", archive_url: "https://ambientcg.com/get?file=Ground085_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRPhotogrammetry, split: confirmatory, domains: [wild]}
+  - {id: kino_v4_confirm_wild_pbr_03, source_asset_id: Ground078, semantic_family: sandy_forest_path, source: "https://ambientcg.com/a/Ground078", archive_url: "https://ambientcg.com/get?file=Ground078_1K-JPG.zip", license: CC0, physical_size_m: [1.0, 1.0], source_dimension_cm: [0, 0], physical_size_basis: frozen_fallback_upstream_dimension_unavailable, creation_method: PBRPhotogrammetry, split: confirmatory, domains: [wild]}

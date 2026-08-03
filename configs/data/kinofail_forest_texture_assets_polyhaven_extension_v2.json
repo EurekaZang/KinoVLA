@@ -1,0 +1,43 @@
+{
+  "schema_version": "kinofail.forest-texture-assets.v1",
+  "status": "development_asset_lock_input",
+  "provider": {
+    "name": "Poly Haven",
+    "api": "https://api.polyhaven.com",
+    "license": "CC0",
+    "license_url": "https://polyhaven.com/license",
+    "api_terms_url": "https://polyhaven.com/our-api"
+  },
+  "selection_policy": {
+    "selected_before_a0_a7_model_evaluation": true,
+    "resolution": "2k",
+    "format": "jpg",
+    "purpose": "Add a darker moss-and-leaf forest bank family after source-level review showed that dry pine needles did not match the selected lush photographic HDRI."
+  },
+  "materials": [
+    {
+      "id": "train_polyhaven_forest_leaves02_2k",
+      "source_asset_id": "forest_leaves_02",
+      "display_name": "Forest Leaves 02",
+      "asset_page": "https://polyhaven.com/a/forest_leaves_02",
+      "author": "Rob Tuytel",
+      "split": "train",
+      "domains": ["wild"],
+      "semantic_family": "mossy_leaf_litter",
+      "physical_size_m": [3.0, 3.0],
+      "maps": {
+        "basecolor": {"filename": "forest_leaves_02_diffuse_2k.jpg", "bytes": 1668009, "md5": "b7837ba1c51fb0e11af36d6b4e225c20", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_leaves_02/forest_leaves_02_diffuse_2k.jpg"},
+        "normal": {"filename": "forest_leaves_02_nor_gl_2k.jpg", "bytes": 2323898, "md5": "f974000a2ddc7dcd22bc84c37aa5d7ce", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_leaves_02/forest_leaves_02_nor_gl_2k.jpg"},
+        "roughness": {"filename": "forest_leaves_02_rough_2k.jpg", "bytes": 723748, "md5": "76e0435a0a0a0db7e591641b0a918e9e", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_leaves_02/forest_leaves_02_rough_2k.jpg"},
+        "displacement": {"filename": "forest_leaves_02_disp_2k.jpg", "bytes": 332158, "md5": "13830bbe7693f4cf7f0e3c0958d3f211", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_leaves_02/forest_leaves_02_disp_2k.jpg"}
+      }
+    }
+  ],
+  "interpretation_policy": {
+    "appearance_only": true,
+    "does_not_change_o2_o3_physics": true,
+    "split_labels_are_frozen_before_model_evaluation": true,
+    "one_texture_is_not_one_physical_operator": true,
+    "counts_as_a0_a7_evidence": false
+  }
+}

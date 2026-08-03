@@ -1,0 +1,130 @@
+{
+  "schema_version": "kinofail.embodiedgen-native-v4-tracking-confirmation.v2",
+  "purpose": "Confirm the Kitchen31-calibrated long-route controller on two untouched EmbodiedGen scene families before any terrain anomaly run.",
+  "evidence_boundary": {
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "old_a0_a7_role": "protocol_and_target_conclusions_only",
+    "completion_requires_new_realistic_corpus_a0_a7_replication": true,
+    "realistic_a0_a7_readiness_expected_before_corpus": "0/8"
+  },
+  "source_freeze": {
+    "native_collector": {
+      "path": "scripts/isaac_collect_realistic_route_operator_lane_v4.py",
+      "sha256": "552f7c6cbb7aede247a34aeee32d5f1d4f77210e428a41c062b5406814774acd"
+    },
+    "route_protocol": {
+      "path": "kino_vla/sim/realistic_route_protocol_v2.py",
+      "sha256": "10256042d810456526a6ab5b93f291a612ff4ebd642adda7fd9d0de3d750572e"
+    },
+    "backend": {
+      "path": "kino_vla/sim/isaac_policy_backend.py",
+      "sha256": "4f602d4f178c08e685ba9bd4a69bab6dbf111f7d175142471c3a0e821e7b2bb1"
+    },
+    "o1_operator": {
+      "path": "kino_vla/sim/operators/o1_mu_field.py",
+      "sha256": "226d1b71d8ebe69b9cccca3cee389aa286e8ebc64ea3eca398198251156bd9e5"
+    },
+    "terrain_compiler": {
+      "path": "kino_vla/sim/embodiedgen_terrain_route_v2.py",
+      "sha256": "50066309bf4fc632459d51697407d60778efff7648d1429763789f6dd8440a3b"
+    },
+    "offline_auditor": {
+      "path": "scripts/audit_embodiedgen_terrain_route_v2.py",
+      "sha256": "d6249ac7ccee874956ac7c73b321ef918d090ca081a5163391aec71331a2ec9d"
+    },
+    "controller_calibration": {
+      "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_route_controller_calibration_v1/calibration_audit.json",
+      "sha256": "17bead565ade84c1e84d1c56e0655f84b6df94b168f37569f5cfb67fac31c1b9"
+    },
+    "material_lock": {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    }
+  },
+  "execution_policy": {
+    "nominal_preflight_before_any_anomaly": true,
+    "one_attempt_per_scene": true,
+    "no_retry_or_scene_replacement": true,
+    "fresh_isaac_process_per_lane": true,
+    "failed_attempts_are_retained": true,
+    "controller_frozen_before_office27_or_bedroom28_runtime": true
+  },
+  "frozen_nominal_contract": {
+    "operator": "o1",
+    "lane": "nominal",
+    "camera_profile": "go2_front_calib_b",
+    "steps": 650,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": -0.15,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.4,
+    "start_lateral_offset_m": 0.0,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": -0.25,
+    "forward_speed_mps": 0.2,
+    "maximum_route_deviation_m": 0.3,
+    "minimum_operator_region_samples": 40,
+    "nominal_static_friction": 0.8,
+    "nominal_dynamic_friction": 0.6
+  },
+  "scenes": [
+    {
+      "scene_id": "indoor_office_27",
+      "scene_family": "Office",
+      "scene_role": "untouched_controller_confirmation",
+      "material_id": "test_tiles140",
+      "seed": 20260931,
+      "route_surface_admission": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260853/route_surface_v7_confirmation/test_tiles140/route_surface_v7_admission_audit.json",
+        "sha256": "496d94c6ba42d9f0ca34da0feeded53e4acb648b9e0bc5b6d0ad8b27737662d1"
+      },
+      "terrain_compiled_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260853/route_surface_v7_confirmation/test_tiles140/terrain_route_v2/compiled_scene_audit.json",
+        "sha256": "a872b3ce3df2378b87af061b52e56816e0aa459c8743c3c9551f834ea5c3dd96"
+      },
+      "terrain_episode": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260853/route_surface_v7_confirmation/test_tiles140/terrain_route_v2/episode_terrain_v2.usda",
+        "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"
+      },
+      "offline_usd_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260853/route_surface_v7_confirmation/test_tiles140/terrain_route_v2/offline_usd_audit.json",
+        "sha256": "430ff0c3cb87c075119b689f1464005d6d37dc85a048d953dc9bd9999f71e8bd"
+      },
+      "planned_nominal_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_native_v4_tracking_confirmation_v2/office27/o1_nominal"
+    },
+    {
+      "scene_id": "indoor_bedroom_28",
+      "scene_family": "Bedroom",
+      "scene_role": "untouched_controller_confirmation",
+      "material_id": "test_concrete039",
+      "seed": 20260932,
+      "route_surface_admission": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/route_surface_v7_admission_audit.json",
+        "sha256": "a8909eed4208ee480b65a89d2a4d508f5105d073e4e2c16b515614a46785a563"
+      },
+      "terrain_compiled_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/terrain_route_v2/compiled_scene_audit.json",
+        "sha256": "3d086926fe790303a19b3ad97b79f9db011682dd5672c4bb9c93bbda298fb833"
+      },
+      "terrain_episode": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/terrain_route_v2/episode_terrain_v2.usda",
+        "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"
+      },
+      "offline_usd_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/terrain_route_v2/offline_usd_audit.json",
+        "sha256": "78e49770cd17304f47dd98db6fef4eae2444b40f6e2370c624cd9e11d8eea5ea"
+      },
+      "planned_nominal_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_native_v4_tracking_confirmation_v2/bedroom28/o1_nominal"
+    }
+  ],
+  "post_confirmation_sequence": [
+    "freeze cross-domain O1/O2/O3 pair auditor and anomaly endpoints",
+    "complete operator confirmation without retuning or scene replacement",
+    "bind admitted scenes into a new scene registry",
+    "collect the full realistic Kino-Fail corpus under a frozen schedule",
+    "train and infer only on that new corpus",
+    "rerun A0 through A7 with publication-grade statistics"
+  ]
+}

@@ -56,28 +56,31 @@ class FrictionRegion:
 
 @dataclass(frozen=True)
 class CollapseRegion:
-    """A region whose friction collapses once dwelled-on past a threshold (operator O3).
+    """A support region with either a legacy dwell trigger or load-damage topology trigger.
 
-    Models thin ice / a trigger-and-swap collider: intact (``mu_intact``) until the
-    robot accumulates ``trigger_dwell_s`` of contact inside it, then it drops to
-    ``mu_collapsed`` for the rest of the episode (region-level topology hazard).
+    ``damage_threshold_ns`` activates the realistic path: foot normal impulse is accumulated and,
+    at threshold, support cells are removed while a catch surface remains ``drop_m`` below.  The
+    dwell/friction-only fields remain for the controlled causal core and backwards compatibility.
     """
 
     rect: Rect
     mu_intact: float
     mu_collapsed: float
     trigger_dwell_s: float
+    damage_threshold_ns: float | None = None
+    drop_m: float = 0.0
+    residual_support: float = 0.0
 
 
 @dataclass(frozen=True)
 class BlockingRegion:
-    """An impassable collider with no effect until touched (operator O8: invisible wall).
-
-    Forward motion into the region is hard-stopped at its boundary; nothing is
-    rendered, so only proprioception (a tracking-error spike) reveals it.
-    """
+    """A visually weak obstacle with independently controlled collision (operator O8)."""
 
     rect: Rect
+    height_m: float | None = None
+    collision_enabled: bool = True
+    geometry_kind: str = "legacy_invisible_wall"
+    optical_transmission: float = 1.0
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,54 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v7-development",
+  "iteration_id": "forest-river-walk-unseen-appearance-metric-geometry-g07-v24",
+  "status": "frozen_unseen_scene_candidate_before_operator_admission_v3_runtime",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v14.json",
+    "sha256": "f1b60ae56f6a8e35ff7a2c977af6d7ea79dda4220c85b2be9e4f6b8f7fada824"
+  },
+  "overrides": {
+    "scene_id": "forest_river_walk_metric_g07",
+    "source_scene_id": "forest_river_walk_shell_metric_g07_confirmation",
+    "background": {
+      "panorama": {"path": "outputs/assets/forest_hdri_polyhaven_confirmation_v3/river_walk_1/river_walk_1_4k.hdr", "sha256": "36df73fa68914e592b0186f72538dc5399e9f04b500d9f132493ee127dc8dde4"},
+      "preflight": {"path": "outputs/assets/forest_hdri_polyhaven_confirmation_v3/river_walk_1/preflight.json", "sha256": "72cdbe1c470831c893bb986023f74ae22c85504757283a63f032f740ad51b7e4"},
+      "intensity": 325.0,
+      "rotation_xyz_deg": [0.0, 0.0, 240.0]
+    },
+    "appearance": {
+      "route_material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+      "route_material_id": "test_gravel022",
+      "route_expected_split": "test",
+      "surrounding_material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+      "surrounding_material_id": "test_ground073",
+      "surrounding_expected_split": "test"
+    },
+    "route": {
+      "waypoints_xy_m": [[0.0, 0.61], [1.35, 0.61], [2.70, 0.61], [4.05, 0.61], [5.40, 0.61]],
+      "surface_width_m": 1.50,
+      "endpoint_margin_m": 0.88
+    },
+    "near_field": {
+      "prop_transform_overrides": {
+        "roots_left_00": {"xyz_m": [-0.20, 3.85, 0.0], "rotation_xyz_deg": [0.0, 0.0, 24.0]},
+        "roots_right_00": {"xyz_m": [4.05, -2.85, 0.0], "rotation_xyz_deg": [0.0, 0.0, 232.0]},
+        "roots_left_01": {"xyz_m": [6.60, 3.90, 0.0], "rotation_xyz_deg": [0.0, 0.0, 167.0]},
+        "rocks_left_00": {"xyz_m": [2.35, 3.95, 0.08], "rotation_xyz_deg": [0.0, 0.0, 351.0]},
+        "rocks_right_00": {"xyz_m": [1.20, -2.95, 0.08], "rotation_xyz_deg": [0.0, 0.0, 194.0]},
+        "rocks_right_01": {"xyz_m": [6.95, -3.00, 0.08], "rotation_xyz_deg": [0.0, 0.0, 277.0]},
+        "stump_left_00": {"xyz_m": [5.10, 4.00, 0.10], "rotation_xyz_deg": [0.0, 0.0, 103.0]},
+        "stump_right_00": {"xyz_m": [-1.30, -2.90, 0.10], "rotation_xyz_deg": [0.0, 0.0, 225.0]}
+      },
+      "opaque_composited_ground": {"seed": 2424, "centerline_wander_m": 0.13, "phase_rad": 1.87},
+      "visual_height_variation": {"phase_rad": 0.19}
+    },
+    "output": {"directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_river_walk_metric_g07_confirmation/isaac_hybrid_composition_dev_v24"}
+  },
+  "confirmation_contract": {
+    "appearance_family_unseen_by_g01_g05": true,
+    "metric_geometry_unseen_by_g01_g05": true,
+    "test_split_route_and_surrounding_materials": true,
+    "selected_before_v3_runtime": true,
+    "counts_as_a0_a7_evidence": false
+  }
+}

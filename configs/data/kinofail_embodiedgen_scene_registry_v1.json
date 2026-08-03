@@ -1,0 +1,86 @@
+{
+  "schema_version": "kinofail.realistic-scene-registry.v1",
+  "registry_id": "kinofail-embodiedgen-scenes-20260721-v1",
+  "status": "development_registry_not_publication_freeze",
+  "admission_contract": "A scene is registered only after source-package integrity, Kino-owned collision/route compilation, RTX multiview QA, and articulated Go2 route QA all pass with frozen hashes.",
+  "scenes": [
+    {
+      "scene_id": "indoor_bedroom_01",
+      "scene_family": "EmbodiedGen-v2-Bedroom",
+      "domain": "life",
+      "split": "train",
+      "room_type": "Bedroom",
+      "source_scene_seed": 20260724,
+      "admission_state": "o4_vertical_slice_ready_not_all_operator_ready",
+      "operator_capabilities": ["O4"],
+      "source_manifest": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260724/source_manifest.json",
+        "sha256": "ea32e22f8d51dc7448dce843074d878128d4bf843fa6976b20dae4d0eeca825e"
+      },
+      "compiled_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260724/kinofail_route_relative_v2/compiled_scene_audit.json",
+        "sha256": "37d29536f3a11bd84476acd9287c2593c379d0dc000a88f8c2658580061660be"
+      },
+      "rtx_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260724/kinofail_route_relative_v2/rtx_qa/rtx_scene_audit.json",
+        "sha256": "c83e021f18df7fa99618657a2c3e70534c42bb7450275a724efaeea73e56ba2d"
+      },
+      "go2_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260724/kinofail_route_relative_v2/go2_qa/go2_scene_audit.json",
+        "sha256": "3d08035900ef916da5afe9f32fc29f5a8094246d67d91028bb736622bc18a19e"
+      }
+    },
+    {
+      "scene_id": "indoor_livingroom_01",
+      "scene_family": "EmbodiedGen-v2-LivingRoom",
+      "domain": "life",
+      "split": "val",
+      "room_type": "LivingRoom",
+      "source_scene_seed": 20260723,
+      "admission_state": "o4_vertical_slice_ready_not_all_operator_ready",
+      "operator_capabilities": ["O4"],
+      "source_manifest": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260723/source_manifest.json",
+        "sha256": "a68e565bbe46052b70386a7c65a3c6103fb80483fa5154837abfba82b30a83d4"
+      },
+      "compiled_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260723/kinofail_route_relative_v2/compiled_scene_audit.json",
+        "sha256": "6373231c1b95e809f5a42c9d5d4c583d04836cf9d0133a0ecdfb5ff8e974abb0"
+      },
+      "rtx_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260723/kinofail_route_relative_v2/rtx_qa/rtx_scene_audit.json",
+        "sha256": "9e146218c75cea94e07969809197644337b927a498707bdb62bab5032e9f0d3e"
+      },
+      "go2_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260723/kinofail_route_relative_v2/go2_qa/go2_scene_audit.json",
+        "sha256": "87185b5b7d91231c84bbd39e896e1ea84651525cb60b950a09f71c896c3927b8"
+      }
+    },
+    {
+      "scene_id": "indoor_kitchen_01",
+      "scene_family": "EmbodiedGen-v2-Kitchen",
+      "domain": "life",
+      "split": "test",
+      "room_type": "Kitchen",
+      "source_scene_seed": 20260727,
+      "admission_state": "o4_formal_heldout_pair_admitted_not_all_operator_ready",
+      "operator_capabilities": ["O4"],
+      "source_manifest": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260727/source_manifest.json",
+        "sha256": "fcba5c57a5fefdbbac50658c22217bffafabc3b20d6ed60cff3436db4f4ee68e"
+      },
+      "compiled_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260727/kinofail/compiled_scene_audit.json",
+        "sha256": "4a1833b446d504a049f51f1c77bc02b819b540f315cfa7142efc6799ac31ea82"
+      },
+      "rtx_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260727/kinofail/rtx_qa/rtx_scene_audit.json",
+        "sha256": "0b6371462e6054eadce945b2d59ce99d1361a9549b9782fa23fc626df15ee52d"
+      },
+      "go2_audit": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260727/kinofail/go2_qa/go2_scene_audit.json",
+        "sha256": "595fce91871a4c5767cf1b171a897d41fab039836d2a873eeebc6cdac7054015"
+      }
+    }
+  ]
+}

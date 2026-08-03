@@ -1,0 +1,91 @@
+{
+  "acceptance": {
+    "all_case_manifests_pass": true,
+    "maximum_paired_proprio_probability_delta": 1e-12,
+    "minimum_test_domains": 3,
+    "minimum_test_scene_clusters": 3,
+    "minimum_texture_swap_hard_consistency": 0.9,
+    "minimum_visual_macro_within_scene_auc": 0.9,
+    "minimum_visual_per_scene_auc": 0.85,
+    "minimum_visual_scene_bootstrap_ci95_lower": 0.85,
+    "proprio_byte_identity_rate": 1.0,
+    "proprio_roc_auc_target": 0.5
+  },
+  "analyzer": "scripts/analyze_kinofail_realistic_c1_causal_v1.py",
+  "analyzer_sha256": "98cb67ca1c474d02e05d76718bfd816b57f21d82e4015fb5c7ff066c054cd493",
+  "asset_lock": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+  "asset_lock_sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003",
+  "causal_contract": {
+    "cause_geometry_has_no_collision": true,
+    "class_dependent_color_or_texture_forbidden": true,
+    "class_signal": [
+      "soft-surface metric deformation",
+      "overlapping protective film and metric creases"
+    ],
+    "decision_boundary_precedes_operator_region": true,
+    "proprio_bytes_must_be_identical_across_labels": true,
+    "render_only_counterfactual_must_not_advance_physics": true,
+    "same_pbr_material_view_for_both_labels": true,
+    "same_physics_rollout_for_o2_and_o4": true
+  },
+  "claim_boundary": "This battery establishes the constructive O2/O4 arm of C1: before contact, paired proprioception contains no label information while front-camera physical appearance can distinguish the causes across unseen realistic scenes and PBR materials. It is not a universal open-world identifiability claim.",
+  "collector": "scripts/isaac_collect_kinofail_realistic_c1_causal_v1.py",
+  "collector_sha256": "ff6f236820577df42249002fc349d2d90b2d978c37ab27ebfae949ac25a38bec",
+  "created_utc": "2026-07-24T10:46:21.213058+00:00",
+  "design_audit": "outputs/kinofail_realistic/development_c1_causal_visibility_v3_design/audit.json",
+  "design_audit_sha256": "3ae761f08f3cb15db4620825cb9df36c5598ecd56e35d62c26aafe18a2189d5c",
+  "design_tag": "c1_causal_visibility_preflight_v3",
+  "excluded_development_data": [],
+  "feature_extractor": "scripts/extract_kinofail_realistic_c1_causal_features_v1.py",
+  "feature_extractor_sha256": "e49809b7040653f4b9467dedcee02ad8d9cb3e50926c436e1315d0b6f60d9960",
+  "frozen_analysis": {
+    "candidate_C": [
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "classifier": "L2 logistic regression",
+    "primary_visual_estimand": "macro within-scene ROC-AUC over three held-out scene clusters",
+    "proprio_summary": "mean/std/min/max/q25/q75/first/last/delta/slope",
+    "selection": "maximize validation macro within-scene ROC-AUC; ties choose smaller C",
+    "temporal_summary": "mean + last + last-minus-first over five frames",
+    "test_policy": "held-out test split opened once after selection",
+    "texture_consistency": "within-case hard prediction agreement and probability dispersion across the three shared material views",
+    "uncertainty": {
+      "draws": 20000,
+      "method": "scene-cluster bootstrap",
+      "seed": 2026072411
+    },
+    "visual_encoder": "local frozen CLIP ViT-B/32",
+    "visual_input": "Go2-front RTX RGB; full width and rows 45%-100% only"
+  },
+  "outcomes_available_at_freeze": false,
+  "protocol_id": "kinofail-realistic-c1-causal-visibility-preflight-v3",
+  "runner": "scripts/run_kinofail_realistic_c1_causal_v1.py",
+  "runner_sha256": "d2993f9918c961fff4dfa694cbbe43208a4f8676228a2ce3bb51649428fd8f05",
+  "sample_design": {
+    "appearance_views_per_cause": 3,
+    "causes_per_case": 2,
+    "domains": [
+      "production"
+    ],
+    "nested_repetitions": "three reset profiles and three appearance views",
+    "proprio_samples_per_sample": 21,
+    "rgb_frames_per_sample": 5,
+    "scene_clusters": 1,
+    "shared_physics_prefix_cases": 1,
+    "splits": [
+      "val"
+    ],
+    "statistical_unit": "scene cluster"
+  },
+  "scene_registry": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule": "outputs/kinofail_realistic/development_c1_causal_visibility_v3_design/schedule.jsonl",
+  "schedule_sha256": "aa4b8ea8a26591ecaeebea450abce98506e9506ac395bb66d2be41dbe56d4597",
+  "schema_version": "kinofail.realistic-c1-causal-protocol.v1",
+  "status": "development_preflight",
+  "visual_helper": "kino_vla/sim/c1_causal_visuals.py",
+  "visual_helper_sha256": "a94d95dddd3e353f7dcc011fa98dc09151b03de5880007cc75960ec6e40e9593"
+}

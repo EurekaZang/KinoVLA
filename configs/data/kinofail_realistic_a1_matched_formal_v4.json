@@ -1,0 +1,95 @@
+{
+  "allowed": {
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_04e7e9cf7bd17f2c6ac0",
+      "cf_13e4122d422a5aac6c11",
+      "cf_1e47840910e20d7b3067",
+      "cf_32151481dbb6c90561c4",
+      "cf_50d410be183857136754",
+      "cf_57b14eabb526e813078a",
+      "cf_65339f0a10abfc1906bc",
+      "cf_656882dfa54215236dee",
+      "cf_7217ebe9c4e6ac7038c9",
+      "cf_75e146390359b84f25a6",
+      "cf_9a3603c9b6d6364d727f",
+      "cf_b36d7a51598ad487dad2",
+      "cf_c9bd6af8feb7bc2b2f31",
+      "cf_d6c19322279f9e194f7f",
+      "cf_db2aae880a2f40289f33",
+      "cf_e00486c945485bb888fc",
+      "cf_e102716ba7d00e76fd5c",
+      "cf_f277e41016ddfce52b6b"
+    ],
+    "geometry_profiles": [
+      "irregular_protective_film",
+      "pressure_sinkage_field"
+    ],
+    "physical_realizations": [
+      "adhesive_foot_contact",
+      "foot_terramechanics"
+    ],
+    "scene_families": [
+      "forest_river_walk_metric_g07",
+      "forest_slope_metric_g06",
+      "forest_trail_metric_g03",
+      "indoor_bedroom_118",
+      "indoor_kitchen_140",
+      "indoor_livingroom_139",
+      "indoor_office_162",
+      "indoor_office_168",
+      "indoor_office_186"
+    ],
+    "severity_ids": [
+      "matched_mild",
+      "matched_moderate"
+    ],
+    "target_operators": [
+      "O2_compliance",
+      "O4_tether"
+    ]
+  },
+  "amendment_reason": "Correct invalid development-only surface-state tokens primary/swap_a/swap_b to the renderer-supported clean/scuffed/wet states. The scanned PBR assets, physics, scenes, seeds, cameras, horizon, analysis, and pair IDs are unchanged; no prior A1 manifest exists.",
+  "benchmark_id": "kinofail_realistic_a1_matched_v1",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "construct_horizon_control_steps": 220,
+    "construct_horizon_s": 4.4,
+    "counterfactual_pairs": 18,
+    "cross_operator_match_groups": 9,
+    "deep_reset_before_each_episode": true,
+    "domains": 3,
+    "fresh_isaac_app_per_counterfactual_pair": true,
+    "independent_scene_clusters": 9,
+    "operator_first_contact_and_local_qa_required": true,
+    "operator_region_start_route_progress_m": 0.7,
+    "per_scene_parameter_tuning_forbidden": true,
+    "physical_episodes": 36,
+    "post_contact_outcome_not_an_a1_endpoint": true,
+    "rgb_capture_max_frames_per_view": 12,
+    "rgb_capture_start_route_progress_m": 0.45,
+    "same_scene_seed_camera_and_reset_seed_required": true,
+    "snapshot_alignment": "end exactly at first measured operator contact; no positive post-contact delay"
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_a1_matched_v3.py",
+  "collector_sha256": "c89abc5390b5579139f652f9730c60faa4ee5e91653c758ebeccfa81bd8a738c",
+  "design_audit_path": "outputs/kinofail_realistic/design_a1_matched_v2/audit.json",
+  "design_audit_sha256": "db49d1e46924442a3926b0b0ecad5e23961756373f2d6e62473fa30a1af0e5ee",
+  "frozen_utc": "2026-07-23T16:01:11.222844+00:00",
+  "protocol_id": "kinofail_realistic_a1_matched_o2_o4_36_v4",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule_path": "outputs/kinofail_realistic/design_a1_matched_v2/schedule.jsonl",
+  "schedule_sha256": "2d0d5f4f40e2338acfed19c55fe6832974b30f39ebc8b40b185b2b90c0f95f44",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "A1 fresh-app/deep-reset O2/O4 pre-contact matched construct across nine realistic scene clusters; A8 excluded.",
+  "status": "frozen",
+  "superseded_protocol_sha256": "066ef66fb4ebc6237b16f07056a35b68d06458e3492e0b694a02c51c02deb0c8",
+  "supersedes_uncollected_protocol": "configs/data/kinofail_realistic_a1_matched_formal_v3.json"
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v7-development",
+  "iteration_id": "forest-photographic-hdri-rigid-prop-collision-v14",
+  "status": "development_prop_collision_iteration_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v13.json",
+    "sha256": "770af9caea830ff9be8d558d2dd6f6ee1801d55f5e8b702a70bcc20fa21bc512"
+  },
+  "overrides": {
+    "near_field": {
+      "prop_transform_overrides": {
+        "roots_left_00": {"xyz_m": [0.5, 2.2, 0.0]},
+        "roots_right_00": {"xyz_m": [3.7, -2.2, 0.0]},
+        "roots_left_01": {"xyz_m": [5.2, 2.2, 0.0]},
+        "rocks_left_00": {"xyz_m": [2.0, 2.3, 0.08]},
+        "rocks_right_00": {"xyz_m": [1.2, -2.3, 0.08]},
+        "rocks_right_01": {"xyz_m": [5.8, -2.5, 0.08]},
+        "stump_left_00": {"xyz_m": [4.5, 2.3, 0.10]},
+        "stump_right_00": {"xyz_m": [-0.7, -2.3, 0.10]}
+      },
+      "prop_collision_policy": {
+        "enabled": true,
+        "rigid_asset_ids": [
+          "pine_roots",
+          "rock_moss_set_01",
+          "tree_stump_01"
+        ],
+        "flexible_noncolliding_asset_ids": [
+          "fir_sapling",
+          "fern_02",
+          "shrub_03"
+        ],
+        "horizontal_proxy_inset": 0.82,
+        "vertical_proxy_inset": 0.90,
+        "classification_contract": "Every used prop asset is either a rigid static proxy or explicitly flexible noncolliding vegetation."
+      }
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v14"
+    }
+  },
+  "quality_policy": {
+    "rigid_visual_assets_are_moved_outside_route_clearance_before_proxy_authoring": true,
+    "collision_proxies_are_invisible_and_static": true,
+    "flexible_vegetation_exemptions_are_explicit": true,
+    "body_fixed_go2_rtx_review_required": true,
+    "nominal_and_anomaly_pair_must_be_recollected": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

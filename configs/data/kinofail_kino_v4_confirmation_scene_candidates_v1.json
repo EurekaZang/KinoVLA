@@ -1,0 +1,61 @@
+{
+  "schema_version": "kinofail.kino-v4-confirmation-scene-candidates.v1",
+  "status": "frozen_source_before_confirmation_f1",
+  "method_f0": "outputs/freeze/kino_v4_dinov2large_terrain448_f0/freeze_manifest.json",
+  "selection_policy": {
+    "target_per_domain": 4,
+    "gap_free_prefix_until_four_admissions": true,
+    "one_generation_attempt_per_candidate": true,
+    "replacement_or_source_repair_allowed": false,
+    "model_or_attribution_outcomes_visible": false
+  },
+  "indoor_pipeline": {
+    "embodiedgen_root": "/home/eureka/dependencies/EmbodiedGen-v2.0.0",
+    "source_root": "/data/eureka/kinofail_kino_v4_confirmation_v1/scenes/embodiedgen_sources",
+    "compiled_root": "/data/eureka/kinofail_kino_v4_confirmation_v1/scenes/embodiedgen_compiled",
+    "route_surface_width_m": 1.2,
+    "dome_intensity": 350.0,
+    "panel_intensity": 450.0,
+    "panel_exposure": 7.0,
+    "rtx_width": 960,
+    "rtx_height": 540,
+    "rtx_warmup_frames": 36,
+    "go2_qa_steps": 140,
+    "go2_qa_target_progress_m": 0.5,
+    "go2_qa_command_speed_mps": 0.32,
+    "go2_qa_camera_profile": "go2_front_calib_b",
+    "terrain_static_friction": 0.8,
+    "terrain_dynamic_friction": 0.6,
+    "terrain_max_spacing_m": 0.04
+  },
+  "indoor_candidates": [
+    {"scene_id":"kino4c_life_001","domain":"life","room_type":"Kitchen","complexity":"simple","source_seed":28268001,"runtime_seed":2182000001},
+    {"scene_id":"kino4c_life_002","domain":"life","room_type":"House","complexity":"minimalist","source_seed":28268003,"runtime_seed":2182000003},
+    {"scene_id":"kino4c_life_003","domain":"life","room_type":"Bedroom","complexity":"simple","source_seed":28268005,"runtime_seed":2182000005},
+    {"scene_id":"kino4c_life_004","domain":"life","room_type":"LivingRoom","complexity":"minimalist","source_seed":28268007,"runtime_seed":2182000007},
+    {"scene_id":"kino4c_life_005","domain":"life","room_type":"Kitchen","complexity":"minimalist","source_seed":28268009,"runtime_seed":2182000009},
+    {"scene_id":"kino4c_life_006","domain":"life","room_type":"House","complexity":"simple","source_seed":28268011,"runtime_seed":2182000011},
+    {"scene_id":"kino4c_life_007","domain":"life","room_type":"Bedroom","complexity":"minimalist","source_seed":28268013,"runtime_seed":2182000013},
+    {"scene_id":"kino4c_life_008","domain":"life","room_type":"LivingRoom","complexity":"simple","source_seed":28268015,"runtime_seed":2182000015},
+    {"scene_id":"kino4c_production_001","domain":"production","room_type":"Office","complexity":"simple","source_seed":28268101,"runtime_seed":2182000101},
+    {"scene_id":"kino4c_production_002","domain":"production","room_type":"Office","complexity":"minimalist","source_seed":28268103,"runtime_seed":2182000103},
+    {"scene_id":"kino4c_production_003","domain":"production","room_type":"Office","complexity":"simple","source_seed":28268105,"runtime_seed":2182000105},
+    {"scene_id":"kino4c_production_004","domain":"production","room_type":"Office","complexity":"minimalist","source_seed":28268107,"runtime_seed":2182000107},
+    {"scene_id":"kino4c_production_005","domain":"production","room_type":"Office","complexity":"simple","source_seed":28268109,"runtime_seed":2182000109},
+    {"scene_id":"kino4c_production_006","domain":"production","room_type":"Office","complexity":"minimalist","source_seed":28268111,"runtime_seed":2182000111},
+    {"scene_id":"kino4c_production_007","domain":"production","room_type":"Office","complexity":"simple","source_seed":28268113,"runtime_seed":2182000113},
+    {"scene_id":"kino4c_production_008","domain":"production","room_type":"Office","complexity":"minimalist","source_seed":28268115,"runtime_seed":2182000115},
+    {"scene_id":"kino4c_production_009","domain":"production","room_type":"Office","complexity":"simple","source_seed":28268117,"runtime_seed":2182000117},
+    {"scene_id":"kino4c_production_010","domain":"production","room_type":"Office","complexity":"minimalist","source_seed":28268119,"runtime_seed":2182000119}
+  ],
+  "wild_scenes": [
+    {"scene_id":"kino4c_wild_001","domain":"wild","hdri_id":"forest_slope","metric_geometry_seed":2183000001,"runtime_seed":2183000002,"route_variant":0},
+    {"scene_id":"kino4c_wild_002","domain":"wild","hdri_id":"forest_slope","metric_geometry_seed":2183000003,"runtime_seed":2183000004,"route_variant":1},
+    {"scene_id":"kino4c_wild_003","domain":"wild","hdri_id":"river_walk_1","metric_geometry_seed":2183000005,"runtime_seed":2183000006,"route_variant":0},
+    {"scene_id":"kino4c_wild_004","domain":"wild","hdri_id":"river_walk_1","metric_geometry_seed":2183000007,"runtime_seed":2183000008,"route_variant":1},
+    {"scene_id":"kino4c_wild_005","domain":"wild","hdri_id":"forest_slope","metric_geometry_seed":2183000009,"runtime_seed":2183000010,"route_variant":2},
+    {"scene_id":"kino4c_wild_006","domain":"wild","hdri_id":"river_walk_1","metric_geometry_seed":2183000011,"runtime_seed":2183000012,"route_variant":2},
+    {"scene_id":"kino4c_wild_007","domain":"wild","hdri_id":"forest_slope","metric_geometry_seed":2183000013,"runtime_seed":2183000014,"route_variant":3},
+    {"scene_id":"kino4c_wild_008","domain":"wild","hdri_id":"river_walk_1","metric_geometry_seed":2183000015,"runtime_seed":2183000016,"route_variant":3}
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema_version": "kinofail.realistic-snapshot-protocol.v2",
+  "protocol_id": "realistic_snapshot_scale_v8_five_seed_v1",
+  "status": "frozen_before_scale_v8_collection_outcomes",
+  "development_only": false,
+  "source_schedule": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+  "source_schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+  "source_corpus_root": "outputs/kinofail_realistic/corpus_scale_v8_replication_v1",
+  "output_dir": "outputs/eval/realistic_a0_a7_v5/snapshots",
+  "selection": {
+    "operators_with_admitted_event_adapter": [
+      "O1_mu_field",
+      "O2_compliance",
+      "O3_collapse",
+      "O4_tether",
+      "O5_payload",
+      "O6_push",
+      "O7_visual_remap",
+      "O8_invisible_collider",
+      "O9_high_centering",
+      "O10_effort_decay",
+      "O11_obs_bias"
+    ],
+    "require_complete_counterfactual_pair": true,
+    "require_evaluation_eligible": false,
+    "require_runtime_validation_passed": true,
+    "allow_nonblocking_runtime_issue_suffixes": [
+      "appearance_effect_too_small",
+      "rgb_spatial_contrast_too_low"
+    ],
+    "required_collection_protocol_id": "kinofail_realistic_scale_1980_v8_replication_v2"
+  },
+  "appearance_interventions": {
+    "include_all_manifest_views": true,
+    "share_proprio_across_views": true,
+    "require_timestamp_identity_across_views": true,
+    "count_views_as_independent_physical_samples": false
+  },
+  "operator_event_adapters": {
+    "coverage": "O1-O11",
+    "selection_rule": "predeclared measured mechanism events only; no outcome-maximum heuristic"
+  },
+  "temporal_alignment": {
+    "anchor": "first_predeclared_privileged_operator_event_in_anomaly_only",
+    "decision_delay_s": 0.0,
+    "decision_delay_s_by_operator": {
+      "O5_payload": 0.4,
+      "O10_effort_decay": 0.7,
+      "O11_obs_bias": 0.4
+    },
+    "minimum_decision_time_s": 0.42,
+    "nominal_alignment": "reuse_anomaly_event_and_decision_times_exactly",
+    "rgb_offsets_from_decision_s": [-0.4, -0.3, -0.2, -0.1, 0.0],
+    "max_rgb_target_skew_s": 0.041,
+    "proprio_window_s": 0.5,
+    "proprio_samples": 21,
+    "max_proprio_end_skew_s": 0.021
+  },
+  "publication_guard": {
+    "may_satisfy_realistic_a0_a7": true,
+    "reason": "Five physical seeds per scene/operator/severity on the frozen scale-v8 corpus; model results must bind the v5 A0 evidence bundle."
+  },
+  "freeze_provenance": {
+    "contract": "configs/eval/kinofail_realistic_a0_a7_v5.json",
+    "contract_sha256": "534be39c4ae48f7b75e5569e742771fea1c6878eb0c9de7537ed430f6af99fa0",
+    "model_outcomes_available_at_freeze": false,
+    "physical_collection_started_at_freeze": false
+  },
+  "a8_in_scope": false
+}

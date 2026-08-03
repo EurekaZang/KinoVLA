@@ -1,0 +1,45 @@
+# Recovery-capable Go2 policy for downstream C4 action execution.
+#
+# This policy is shared by the selective method and every action-policy
+# baseline. It is not trained on attribution labels, Kino-Fail test scenes, or
+# test outcomes. Its only purpose is to make the frozen recovery actions lie
+# inside the low-level controller's command support.
+task: "Isaac-Velocity-Flat-Unitree-Go2-v0"
+num_envs: 4096
+max_iterations: 1400
+seed: 2026072401
+device: "cuda:0"
+experiment_name: "go2_recovery_route_v1"
+out_dir: "outputs/locomotion/recovery_route_v1"
+export_filename: "policy.pt"
+
+# Broad enough for recovery dynamics, but still substantially narrower than
+# the old [-1, 1] command curriculum that underfit low-speed route tracking.
+# The mass range is controller robustness, not an attribution shortcut: all C4
+# policies receive the exact same actor.
+dr:
+  static_friction_range: [0.05, 1.25]
+  dynamic_friction_range: [0.05, 1.00]
+  restitution_range: [0.0, 0.05]
+  add_base_mass_range: [-2.0, 10.0]
+  enable_push: true
+  push_interval_s: [6.0, 10.0]
+  push_velocity_range: [-0.35, 0.35]
+
+# Covers backstep, stop-and-request, slow crossing, lateral detour, and rejoin.
+command:
+  heading_command: false
+  lin_vel_x: [-0.36, 0.40]
+  lin_vel_y: [-0.50, 0.50]
+  ang_vel_z: [-0.80, 0.80]
+  rel_standing_envs: 0.15
+
+rewards:
+  track_lin_vel_xy_weight: 5.0
+  track_ang_vel_z_weight: 1.5
+  lin_vel_z_weight: -3.5
+  ang_vel_xy_weight: -0.15
+  flat_orientation_weight: -5.0
+  action_rate_weight: -0.025
+  feet_slide_weight: -0.20
+  feet_air_time_weight: 0.30

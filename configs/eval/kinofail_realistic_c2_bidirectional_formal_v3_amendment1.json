@@ -1,0 +1,81 @@
+{
+  "acceptance": {
+    "beat_every_baseline_point_estimate": true,
+    "maximum_wrong_modality_direction_accuracy": 0.6,
+    "minimum_balanced_accuracy": 0.88,
+    "minimum_delta_ci95_lower": -0.05,
+    "minimum_texture_swap_hard_consistency": 0.8,
+    "minimum_worst_direction_accuracy": 0.82,
+    "minimum_worst_scene_accuracy": 0.8
+  },
+  "amendment_id": "C2-v3-A1-registry-hash-transcription",
+  "amendment_scope": "administrative_hash_correction_only",
+  "amendment_sha256": "277ba934fa248ce44afef3ec0da4efba7a8d5043540631f7e7e9083837942563",
+  "asset_lock_sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003",
+  "bootstrap": {
+    "draws": 20000,
+    "seed": 2026072429,
+    "unit": "scene cluster with matched case resampling nested within scene"
+  },
+  "claim_boundary": "C2 v3 tests bidirectional modality conflict on four attribution categories, three appearance interventions per cause, and three scene instances absent from all v3 development. It does not claim universal optimality across all eleven operators.",
+  "clip_extractor_sha256": "e49809b7040653f4b9467dedcee02ad8d9cb3e50926c436e1315d0b6f60d9960",
+  "created_utc": "2026-07-24T12:25:08.339914+00:00",
+  "development_feature_manifest_sha256": "40d97be01e404669de686f4a71ded6dca6a0b1a117c81d9830ae1093506d1f4a",
+  "development_report_sha256": "7523dc4b3bbfed2383532a69fa38d7616dc165c843f3dc7f94716e04e662b147",
+  "development_result": {
+    "best_baseline": "early_fusion_linear",
+    "best_baseline_balanced_accuracy": 0.9401709401709402,
+    "family_gate_accuracy": 1.0,
+    "nine_scene_loso": true,
+    "structured_balanced_accuracy": 0.9873737373737373,
+    "v2_failure_used_as_development": true,
+    "v3_confirmation_outcomes_used": false
+  },
+  "evaluator_sha256": "79c71988e38df46caf376f0dc7eccd10b4143845e638767b12de7b08ba8d5be6",
+  "feature_builder_sha256": "808c340ee38a2b6e5c4a74cf2105c2d452d9e94dc1ce5618f83aed1ba0f67611",
+  "formal_design": {
+    "T2": "byte-identical proprioception across causal visual alternatives",
+    "T3": "byte-identical O7 RTX sequence across actual O7/O8 proprioceptive rollouts",
+    "appearance_views_per_cause": 3,
+    "cases_per_direction": 15,
+    "domains": 3,
+    "fresh_scene_instances": 3,
+    "matched_cases": 30,
+    "samples": 180
+  },
+  "frozen_architecture": {
+    "T2_specialist": "balanced logistic(C=0.1) on CLIP+generic HOG",
+    "T3_specialist": "balanced logistic(C=1) on proprioception",
+    "composition": "hard observable-family route; exactly one specialist is evaluated per sample",
+    "family_gate": "balanced logistic(C=1) on proprioception only",
+    "forbidden_inputs": [
+      "truth label",
+      "operator ID",
+      "cell ID",
+      "scene ID",
+      "domain",
+      "split",
+      "severity",
+      "material ID",
+      "formal correctness"
+    ]
+  },
+  "model_roster": [
+    "vision_only",
+    "proprio_only",
+    "early_fusion_linear",
+    "early_fusion_rbf",
+    "late_fusion",
+    "structured_modality_sparse_router_v3"
+  ],
+  "outcomes_available_at_freeze": false,
+  "protocol_id": "kinofail-realistic-c2-bidirectional-confirmation-v3-amendment1",
+  "scene_registry_sha256": "38c2557c7a862897727fed22ec5622bf80b9e782cf4daac5220a25d6c88e996d",
+  "schema_version": "kinofail.realistic-c2-bidirectional-protocol.v3",
+  "status": "frozen_amendment1_before_any_t3_or_office_outcome",
+  "t2_collection_protocol_sha256": "5b9431247712fb09ebac9a6f8672d3b80b39cebdcc0800dee959b2b80d784985",
+  "t2_schedule_sha256": "b1d04c7a36fdcc0144980f5c491ac8449f686821a7e0b4d99cf48fa76e013a5f",
+  "t3_case_schedule_sha256": "a8fe109c406455e4261cdb9b66ad92699a19a3d3932b924cf50c6857793fecb5",
+  "t3_collection_protocol_sha256": "9f2dbeeed4dc13fe7cdfef216f75a71f37073862bf24db09b9f59cc6bd6eafe7",
+  "t3_schedule_sha256": "8e6e4d231d4c9db8f36a0ff5f524f73bb121d1a6aecd2dbfc4d3582b67953c65"
+}

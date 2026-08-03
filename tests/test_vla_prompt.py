@@ -50,6 +50,8 @@ def test_system_prompt_is_english_and_lists_primitives(cfg):
     for cat in cfg.oracle.prompt.category_vocabulary:
         assert cat in sp
     assert "<Thought>" in sp and "<Action>" in sp
+    assert "candidate kinodynamic alert" in sp
+    assert "attribute nominal and choose continue" in sp
     assert "iron-rule" in sp.lower() or "escape first" in sp.lower()
 
 

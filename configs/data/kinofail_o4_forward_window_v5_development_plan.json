@@ -1,0 +1,91 @@
+{
+  "schema_version": "kinofail.o4-forward-window-development-plan.v1",
+  "plan_id": "o4-forward-window-v5-development-20260721",
+  "status": "frozen_before_execution",
+  "frozen_utc": "2026-07-21T13:21:48Z",
+  "purpose": "Test one analytically selected observation-window correction after sealing the failed corridor-v2 confirmatory batch; this plan cannot relabel any prior formal result.",
+  "sealed_negative_evidence": {
+    "batch_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_corridor_v2_extension_batch_v1_audit.json",
+      "sha256": "169e62cfc4b03900a36b1dec8874b163833b8504c7098fe9c0796de43f4be69f",
+      "formal_passes": 0,
+      "requested_scene_instances": 3
+    },
+    "office_formal_failure": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260805/kinofail_corridor_v2_tracking030/o4_pairs/formal_heldout_seed20260806_v4/pair_manifest.json",
+      "sha256": "1cdedf15ff6b9775377cd26e2cef3311e1322d21f11fd5989e6a606223656cbc",
+      "progress_gain_lag_m": 0.09535551071166992,
+      "relative_forward_speed_suppression": 0.15055722548574893
+    },
+    "bedroom_formal_failure": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260807/kinofail_corridor_v2_tracking030/o4_pairs/formal_heldout_seed20260808_v4/pair_manifest.json",
+      "sha256": "1b76b29e00d4bd00f9208d67e74e4c8d9b08e7290ebee752c38987a6bd088893",
+      "progress_gain_lag_m": 0.09599637985229492,
+      "relative_forward_speed_suppression": 0.15129043142636206
+    }
+  },
+  "diagnosis": {
+    "shared_failure_check": "counterfactual_locomotion_consequence",
+    "already_passing_channels": [
+      "minimum_effect_window_s",
+      "minimum_relative_speed_suppression",
+      "counterfactual_posture_consequence",
+      "registered_recovery_or_terminal_outcome"
+    ],
+    "binding_threshold": {
+      "name": "minimum_progress_gain_lag_m",
+      "value": 0.1
+    },
+    "minimum_observed_suppression_rate_mps": 0.07449649274349207,
+    "minimum_required_post_attachment_window_s": 1.3423410540261945,
+    "observed_attachment_time_s": 0.8600000000000004,
+    "analytical_minimum_forward_s": 2.202341054026195,
+    "selected_forward_s": 2.4,
+    "selection_margin_s": 0.19765894597380518,
+    "rationale": "Keep the physical operator and effect thresholds unchanged; provide enough paired forward-command time to observe the already reproducible approximately 15 percent speed suppression as at least 0.10 m integrated route-progress lag."
+  },
+  "frozen_run_contract": {
+    "forward_s": 2.4,
+    "peel_pulse_s": 0.1,
+    "recovery_s": 1.0,
+    "reverse_s": 3.0,
+    "stop_s": 1.0,
+    "rgb_fps": 5.0,
+    "protocol_role": "calibration"
+  },
+  "frozen_implementation": {
+    "collector": {
+      "path": "scripts/isaac_collect_embodiedgen_o4_pair.py",
+      "sha256": "8fe8ab7e3b81ac640a7ca168742b74cfb23c98a3108775dbd222d66f1f4d7830"
+    },
+    "backend": {
+      "path": "kino_vla/sim/isaac_policy_backend.py",
+      "sha256": "cb3a51fa1ef935388d184b609dc1b956c63f331851615ac26b895f5b5df2ed5b"
+    },
+    "adhesion_model": {
+      "path": "kino_vla/sim/adhesion.py",
+      "sha256": "3a6d7232c2186087bde15b72b39907b0b32197ad141ac06816f19a2e148e636e"
+    }
+  },
+  "development_runs": [
+    {
+      "scene_id": "indoor_office_05",
+      "source_scene_seed": 20260805,
+      "episode_seed": 20260809,
+      "output": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260805/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260809_v5"
+    },
+    {
+      "scene_id": "indoor_bedroom_06",
+      "source_scene_seed": 20260807,
+      "episode_seed": 20260810,
+      "output": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260807/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260810_v5"
+    }
+  ],
+  "decision_rule": {
+    "admit_for_new_heldout_batch": "Both predeclared development runs pass every existing v4 check without any code, force, threshold, or duration change.",
+    "reject": "Either development run fails any check.",
+    "no_iteration": true,
+    "prior_formal_results_remain_failed": true,
+    "development_scenes_are_permanently_excluded_from_future_confirmation": true
+  }
+}
