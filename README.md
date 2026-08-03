@@ -1,4 +1,4 @@
-# Kino-VLA
+# KiNO
 
 Closed-loop embodied reflection for a Unitree Go2 quadruped in Isaac Lab: a 1 kHz
 Kino-Monitor + Reflex layer keeps the robot alive while a VLA Recovery Planner
