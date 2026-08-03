@@ -25,6 +25,7 @@ A实验/
 *.doc
 *.docx
 *.tex
+!README.md
 
 # Large artifacts: checkpoints, datasets, rollout logs (QA 5.4 — never in git)
 outputs/
