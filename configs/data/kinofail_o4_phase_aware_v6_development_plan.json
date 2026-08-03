@@ -1,0 +1,95 @@
+{
+  "schema_version": "kinofail.o4-phase-aware-development-plan.v1",
+  "plan_id": "o4-phase-aware-v6-development-20260721",
+  "status": "frozen_after_development_replay_before_new_formal_collection",
+  "frozen_utc": "2026-07-21T14:49:30Z",
+  "purpose": "Replace the sequence-wide appearance-complexity test with a phase-aware sensor-integrity test so a physically real body-fixed-camera fall is not censored for showing a dark or low-texture nearby floor. This development replay cannot relabel any sealed v4/v5 batch.",
+  "diagnosis": {
+    "old_gate_problem": "The old both_sequences_visually_valid check applied a scene-level appearance-complexity threshold to every post-effect frame. It therefore conflated renderer or sensor failure with legitimate low-texture close-floor content caused by O4-induced pitch or fall.",
+    "statistical_risk": "Conditioning benchmark admission on visually complex post-failure frames creates outcome-dependent censoring and can preferentially remove the strongest physical failures.",
+    "preserved_contracts": [
+      "strict multi-view RTX scene admission remains unchanged",
+      "all source, corridor, articulated-Go2, operator, paired consequence, ordering, and terminal-outcome checks remain unchanged",
+      "all RGB files and manifests remain hash-verified",
+      "sealed batch outcomes remain immutable"
+    ]
+  },
+  "frozen_visual_contract": {
+    "pre_effect_context": {
+      "scope": "all nominal and O4 frames at or before first attachment",
+      "minimum_std_luminance": 0.025,
+      "maximum_black_fraction": 0.9,
+      "minimum_quantized_colors_5bit": 32
+    },
+    "sensor_integrity": {
+      "scope": "all captured nominal and O4 frames, including registered terminal fall",
+      "minimum_mean_luminance": 0.005,
+      "minimum_std_luminance": 0.005,
+      "maximum_black_fraction": 0.995,
+      "minimum_quantized_colors_5bit": 8
+    },
+    "terminal_binding": "When O4 falls, the last captured RGB frame must equal the registered first_fall_step and pass sensor integrity.",
+    "overall_rule": "Every inherited nonvisual check and every phase-aware visual check must pass."
+  },
+  "frozen_implementation": {
+    "phase_aware_module": {
+      "path": "kino_vla/eval/o4_phase_aware.py",
+      "sha256": "6026fc72244240a1a290fbe255058a129e778628e64a6cbbf5e876d9d6b5827b"
+    },
+    "pair_adjudicator": {
+      "path": "scripts/audit_embodiedgen_o4_pair_v6.py",
+      "sha256": "bfc169815daac2d910c4e8da56375f99f52f632f6c73502d3149d43ee485b63a"
+    },
+    "unit_tests": {
+      "path": "tests/test_o4_phase_aware.py",
+      "sha256": "93c1f2a2960f7b7ebf71eb887e691baa1fc33227f7c95e3f0189f80d2d119e6f"
+    }
+  },
+  "development_positive_controls": [
+    {
+      "scene_id": "indoor_kitchen_07",
+      "expected_role": "old_visual_false_nonvisual_true_phase_aware_true",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/kinofail_corridor_v2_tracking030/o4_pairs/formal_heldout_seed20260812_v5/phase_aware_v6_development_audit.json",
+      "sha256": "6f13132d3a1c67a1d781d4d7fc485a09528d1f4d40af421d0e6bceaf43c28ad8"
+    },
+    {
+      "scene_id": "indoor_livingroom_08",
+      "expected_role": "old_visual_true_nonvisual_true_phase_aware_true",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260813/kinofail_corridor_v2_tracking030/o4_pairs/formal_heldout_seed20260814_v5/phase_aware_v6_development_audit.json",
+      "sha256": "e3abe4d74637cc70b1e393d4fe50e499abb5e3b5350f9155fdee794e91ab88f3"
+    },
+    {
+      "scene_id": "indoor_office_05",
+      "expected_role": "old_visual_true_nonvisual_true_phase_aware_true",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260805/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260809_v5/phase_aware_v6_development_audit.json",
+      "sha256": "14b83aa0e7b587833abb3439c9a03645500aa3f6e701d53b109cf6d780c02eab"
+    },
+    {
+      "scene_id": "indoor_bedroom_06",
+      "expected_role": "old_visual_true_nonvisual_true_phase_aware_true",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260807/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260810_v5/phase_aware_v6_development_audit.json",
+      "sha256": "e28d6142a819dffcaae75d971e0def20f399d04c585815d0fdf5c2d0eaf9c8c3"
+    }
+  ],
+  "physical_negative_controls": [
+    {
+      "scene_id": "indoor_office_05",
+      "expected_role": "nonvisual_false_phase_aware_true_overall_false",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260805/kinofail_corridor_v2_tracking030/o4_pairs/formal_heldout_seed20260806_v4/phase_aware_v6_negative_control_audit.json",
+      "sha256": "1bce563afde1ab78f8a520585323fff81f1baaacd5cd5351a15b4352def9a397"
+    },
+    {
+      "scene_id": "indoor_bedroom_06",
+      "expected_role": "nonvisual_false_phase_aware_true_overall_false",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260807/kinofail_corridor_v2_tracking030/o4_pairs/formal_heldout_seed20260808_v4/phase_aware_v6_negative_control_audit.json",
+      "sha256": "f209bc4e924c50ad493b7f2312bac4bcc7463763f162f220bcf4477a19ea63e7"
+    }
+  ],
+  "decision_rule": {
+    "admit_for_new_heldout_batch": "All four positive controls pass v6, both physical negative controls remain failed specifically because inherited nonvisual checks fail, all artifacts match their hashes, and unit plus regression tests pass.",
+    "development_examples_permanently_excluded": true,
+    "old_batches_remain_sealed": true,
+    "new_formal_threshold_iteration_allowed": false
+  },
+  "authorized_inference": "The phase-aware visual contract is development-supported for a new preregistered held-out batch; it is not yet confirmatory evidence and does not make O4 or Kino-Fail publication-ready by itself."
+}

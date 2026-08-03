@@ -1,0 +1,36 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v5-development",
+  "iteration_id": "forest-photographic-hdri-alpha-blended-route-v10",
+  "status": "development_route_transition_iteration_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v9.json",
+    "sha256": "bc040a91eb1aee5ebf762040413f0ac03629bee2dffc727866c47e89d6ac1e95"
+  },
+  "overrides": {
+    "near_field": {
+      "naturalized_route_visual": {
+        "blend_bands": [
+          {"id": "OuterBlend", "minimum_bank_overlap_m": 0.20, "maximum_bank_overlap_m": 0.32, "opacity": 0.18, "z_offset_m": 0.0000},
+          {"id": "MiddleBlend", "minimum_bank_overlap_m": 0.12, "maximum_bank_overlap_m": 0.24, "opacity": 0.40, "z_offset_m": 0.0006},
+          {"id": "InnerBlend", "minimum_bank_overlap_m": 0.05, "maximum_bank_overlap_m": 0.14, "opacity": 0.68, "z_offset_m": 0.0012},
+          {"id": "Core", "minimum_bank_overlap_m": 0.00, "maximum_bank_overlap_m": 0.07, "opacity": 1.00, "z_offset_m": 0.0018}
+        ]
+      }
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v10"
+    }
+  },
+  "visual_physics_separation": {
+    "blend_bands_are_render_only": true,
+    "all_blend_bands_are_children_of_hideable_route_surface": true,
+    "collision_route_is_unchanged": true,
+    "o2_o3_operator_parameters_are_unchanged": true
+  },
+  "quality_policy": {
+    "body_fixed_go2_rtx_review_required": true,
+    "alpha_blend_renderer_compatibility_must_be_human_checked": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

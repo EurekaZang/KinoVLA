@@ -1,0 +1,201 @@
+{
+  "schema_version": "kinofail.embodiedgen-o4-phase-aware-v6-confirmation-batch.v1",
+  "batch_id": "embodiedgen-o4-phase-aware-v6-confirmation-20260721-v1",
+  "frozen_utc": "2026-07-21T14:49:30Z",
+  "status": "frozen_before_any_requested_scene_generation",
+  "objective": "Confirm the unchanged 35 N O4 causal consequence under the frozen 2.40 s protocol and phase-aware visual contract on five newly generated indoor scene instances, with all generation and gate failures retained in the denominator.",
+  "new_scene_requests": [
+    {
+      "scene_id": "indoor_house_10",
+      "scene_instance_family": "EmbodiedGen-v2-House-seed20260817",
+      "room_type": "House",
+      "complexity": "simple",
+      "source_scene_seed": 20260817,
+      "formal_episode_seed": 20260818,
+      "planned_role": "confirmatory_scene_instance_1_of_5"
+    },
+    {
+      "scene_id": "indoor_bathroom_11",
+      "scene_instance_family": "EmbodiedGen-v2-Bathroom-seed20260819",
+      "room_type": "Bathroom",
+      "complexity": "simple",
+      "source_scene_seed": 20260819,
+      "formal_episode_seed": 20260820,
+      "planned_role": "confirmatory_scene_instance_2_of_5"
+    },
+    {
+      "scene_id": "indoor_kitchen_12",
+      "scene_instance_family": "EmbodiedGen-v2-Kitchen-seed20260821",
+      "room_type": "Kitchen",
+      "complexity": "simple",
+      "source_scene_seed": 20260821,
+      "formal_episode_seed": 20260822,
+      "planned_role": "confirmatory_scene_instance_3_of_5"
+    },
+    {
+      "scene_id": "indoor_livingroom_13",
+      "scene_instance_family": "EmbodiedGen-v2-LivingRoom-seed20260823",
+      "room_type": "LivingRoom",
+      "complexity": "simple",
+      "source_scene_seed": 20260823,
+      "formal_episode_seed": 20260824,
+      "planned_role": "confirmatory_scene_instance_4_of_5"
+    },
+    {
+      "scene_id": "indoor_diningroom_14",
+      "scene_instance_family": "EmbodiedGen-v2-DiningRoom-seed20260825",
+      "room_type": "DiningRoom",
+      "complexity": "simple",
+      "source_scene_seed": 20260825,
+      "formal_episode_seed": 20260826,
+      "planned_role": "confirmatory_scene_instance_5_of_5"
+    }
+  ],
+  "selection_policy": {
+    "generation_attempts_per_request": 1,
+    "replacement_seed_allowed": false,
+    "post_generation_route_or_lighting_tuning_allowed": false,
+    "post_generation_qa_threshold_change_allowed": false,
+    "post_formal_visual_threshold_change_allowed": false,
+    "formal_runs_per_admitted_scene": 1,
+    "all_rejections_count_in_denominator": true,
+    "downstream_execution_after_failed_gate": false,
+    "stage_order": [
+      "source_integrity",
+      "base_v1_compile",
+      "corridor_v2_refinement",
+      "isaac_rtx_qa",
+      "articulated_go2_qa",
+      "independent_corridor_v2_admission_audit",
+      "formal_o4_pair",
+      "independent_formal_admission_audit",
+      "phase_aware_v6_formal_adjudication"
+    ]
+  },
+  "corridor_contract": {
+    "robot_radius_m": 0.34,
+    "physical_safety_margin_m": 0.1,
+    "maximum_tracking_error_m": 0.3,
+    "required_centerline_clearance_m": 0.74,
+    "corridor_length_m": 2.45,
+    "collector_start_waypoint_index": 2,
+    "lighting": "frozen corridor-v2 five route-aware ceiling panels plus neutral dome",
+    "failed_lighting_v3_not_used": true
+  },
+  "operator_contract": {
+    "id": "O4",
+    "name": "foot_adhesion",
+    "contact_scope": "named Go2 feet only",
+    "maximum_active_feet": 1,
+    "attach_contact_force_n": 5.0,
+    "attach_height_tolerance_m": 0.08,
+    "stiffness_xy_n_per_m": 150.0,
+    "damping_xy_ns_per_m": 3.0,
+    "stiffness_z_n_per_m": 120.0,
+    "damping_z_ns_per_m": 2.0,
+    "force_cap_n": 35.0,
+    "break_force_n": 105.0,
+    "peel_release_force_n": 10.0,
+    "peel_velocity_threshold_mps": 0.03,
+    "visual_marker_authoritative": false
+  },
+  "run_contract": {
+    "forward_s": 2.4,
+    "peel_pulse_s": 0.1,
+    "recovery_s": 1.0,
+    "reverse_s": 3.0,
+    "stop_s": 1.0,
+    "rgb_fps": 5.0,
+    "camera": "actual body-fixed Go2 front RTX RGB"
+  },
+  "consequence_contract": {
+    "minimum_effect_window_s": 1.0,
+    "minimum_progress_gain_lag_m": 0.1,
+    "minimum_relative_speed_suppression": 0.08,
+    "minimum_tilt_increase_rad": 0.12,
+    "minimum_base_height_drop_m": 0.04
+  },
+  "phase_aware_visual_contract": {
+    "thresholds": {
+      "context_min_std_luminance": 0.025,
+      "context_max_black_fraction": 0.9,
+      "context_min_quantized_colors_5bit": 32,
+      "sensor_min_mean_luminance": 0.005,
+      "sensor_min_std_luminance": 0.005,
+      "sensor_max_black_fraction": 0.995,
+      "sensor_min_quantized_colors_5bit": 8
+    },
+    "pre_effect_rule": "all frames at or before first attachment in both takes must be context-informative",
+    "post_effect_rule": "all captured frames must preserve sensor integrity; low-texture close-floor content is allowed only when it remains a nondegenerate sensor image",
+    "terminal_rule": "a terminal fall frame must equal first_fall_step and preserve sensor integrity"
+  },
+  "terminal_outcome_contract": {
+    "recoverable_path": "both takes complete the frozen horizon without a fall",
+    "terminal_failure_path": "nominal completes without fall; O4 has a complete paired forward-effect window, then an observed peel, then a captured terminal fall",
+    "invalid_formal_pair": "nominal fall, missing attachment/effect/peel, fall before the completed effect window, uncaptured early termination, corrupted RGB artifacts, or failed phase-aware visual integrity",
+    "scene_rejection": "any failed generation, source, compile, corridor, RTX, Go2, or corridor-admission gate is terminal and remains in the five-scene denominator"
+  },
+  "inference_scope": {
+    "requested_scene_instances": 5,
+    "minimum_formal_passes_for_primary_target": 3,
+    "claim_if_primary_target_met": "The unchanged 35 N O4 consequence replicated under frozen v6 adjudication on at least three of five newly generated, preregistered indoor scene instances.",
+    "claim_if_all_five_pass": "The unchanged 35 N O4 consequence replicated under frozen v6 adjudication on all five newly generated, preregistered indoor scene instances.",
+    "always_report": [
+      "all preceding sealed confirmation batches including 0/3 and 1/3 outcomes",
+      "the development-only phase-aware diagnosis and controls",
+      "exact generation and gate rejection rate",
+      "formal v6 pass count over all five requested scenes",
+      "per-scene paired consequence and visual-integrity metrics",
+      "all failed gates without replacement sampling"
+    ],
+    "not_authorized": [
+      "relabel any preceding formal result",
+      "claim all 11 operators are benchmark-ready",
+      "claim production, wild-domain, or real-Go2 sim-to-real validity",
+      "claim A0-A7 realistic-corpus completion",
+      "claim Kino-Fail is ICRA-ready from this O4 vertical slice alone"
+    ]
+  },
+  "calibration_exclusions": [
+    {"scene_id": "indoor_office_02", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260721/source_manifest.json", "sha256": "c735085c5b7566f8e4bd7a0276e108898ccdb5251250fd0919cd85b195028f7e"},
+    {"scene_id": "indoor_bedroom_01", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260724/kinofail_route_relative_v2/o4_pairs/calibration_registered_terminal_seed20260726_v4/pair_manifest.json", "sha256": "837f76c744271a45802f5f7f12a38f8a49b608250fde27ab1ec8db1ec743db07"},
+    {"scene_id": "indoor_livingroom_01", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260723/kinofail_route_relative_v2/o4_pairs/calibration_registered_terminal_seed20260726_v4/pair_manifest.json", "sha256": "fd51177d28d3b3c2817b48a5dea61f952d0b9582995e71e9039c3c1afaf4792c"},
+    {"scene_id": "indoor_kitchen_01", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260727/kinofail/o4_pairs/formal_heldout_seed20260728_v4/pair_manifest.json", "sha256": "7709d991ed9e3cc88548400fe6d1303f2fb5e05d20d431939f70e7640e792b77"},
+    {"scene_id": "indoor_diningroom_02", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260729/kinofail_corridor_v2_tracking030/corridor_refinement_rejection.json", "sha256": "6f25b413705121421c48f6862e2d50e16f39731ae78322bf4ccf3eafa7f6c04b"},
+    {"scene_id": "indoor_house_03", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20260731/kinofail_corridor_v2_tracking030/corridor_v2_admission_audit.json", "sha256": "47d017638b4b331c3b475b9cf78b0219a818dc40877f12b3cad3e7692e445965"},
+    {"scene_id": "indoor_bathroom_04", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/rejections_v2/Bathroom_seed20260803.json", "sha256": "98dd6c7390a329e8edb1af43d408a53f76ec2e01f1d8fbb34d858e971ed92f8a"},
+    {"scene_id": "indoor_office_05", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260805/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260809_v5/pair_manifest.json", "sha256": "bcdab1e131f4934c0b4babd162f6a828295158eabdc321b6cbc872c10cd4c5a8"},
+    {"scene_id": "indoor_bedroom_06", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260807/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260810_v5/pair_manifest.json", "sha256": "dfe021e86a2d74b3162ab48fc3625a77f20eecc9392f759d49e0081d92d4e47f"},
+    {"scene_id": "indoor_kitchen_07", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/kinofail_corridor_v2_tracking030/o4_pairs/formal_heldout_seed20260812_v5/pair_manifest.json", "sha256": "7a8a699cf29c9f8588e350bfdd82aef787c7393d8b8d938a70e86b57cd259e0e"},
+    {"scene_id": "indoor_livingroom_08", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260813/kinofail_corridor_v2_tracking030/o4_pairs/formal_heldout_seed20260814_v5/pair_manifest.json", "sha256": "10518f74ae74e0603462a46a121e8a9d628dfa67889ef8933f2dfac2cc0c81dc"},
+    {"scene_id": "indoor_diningroom_09", "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260815/kinofail_corridor_v2_tracking030/go2_qa/go2_scene_audit.json", "sha256": "9ee8fadf5af693eb358f700eae488113d7091c58e59d1a72878524602a527e78"}
+  ],
+  "development_evidence": {
+    "sealed_v1_confirmation_batch": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_confirmation_batch_v1_audit.json", "sha256": "1c2069bc17036c95f8fb2a3f67f9f80dd6bf6a1e024de38efdfd3348918a49fc"},
+    "sealed_corridor_v2_confirmation_batch": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_corridor_v2_extension_batch_v1_audit.json", "sha256": "169e62cfc4b03900a36b1dec8874b163833b8504c7098fe9c0796de43f4be69f"},
+    "sealed_forward_window_v5_confirmation_batch": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_forward_window_v5_confirmation_batch_v1_audit.json", "sha256": "be7b96851d0fcf37f4657da5e46518da61b7d70d549628507636625106c83f11"},
+    "forward_window_v5_development_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_forward_window_v5_development_audit.json", "sha256": "f4e6f8d84d90bbda83c49f923e56e15488e8cbf881c2eb1734ce28b34f352f55"},
+    "failed_lighting_v3_development_sweep": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/lighting_v3_development_sweep_v1_audit.json", "sha256": "1986ad8aef7df400f30c24d42f9b34d367bd71e2d6b7e324fc90721f0e8c05da"},
+    "phase_aware_v6_development_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_phase_aware_v6_development_audit.json", "sha256": "6a343d3b4760746bf09e3a708a9b80eacef0793ebfecf118697a7aa480ee4ea9"}
+  },
+  "frozen_code": {
+    "room_generator": {"path": "scripts/generate_embodiedgen_room_source.py", "sha256": "eee7a8deca19805793b26c2600364688ea52e94fb481affd87e7b7fc8c803140"},
+    "base_scene_compiler": {"path": "scripts/compile_embodiedgen_kinofail_scene.py", "sha256": "a39ce1138cbdef9bb2ba9b0b52abd5ef8cb72e2e73633fadad2a2bdca3c61564"},
+    "corridor_v2_refiner": {"path": "scripts/refine_embodiedgen_kinofail_scene_v2.py", "sha256": "b0cba713dde48c61b98e8a4610687f172e33ac2deb53976d18224131816a8304"},
+    "rtx_qa": {"path": "scripts/isaac_render_embodiedgen_scene_qa.py", "sha256": "6f1dd81a642250b651866bc4299d96cabea0d253d5b28208ed1db4bdd930971a"},
+    "go2_qa": {"path": "scripts/isaac_embodiedgen_go2_scene_qa.py", "sha256": "bf50c1d32584e87abdb2acf42dbefa850f1cb1049279e472034ef5de7ee8c593"},
+    "corridor_v2_admission": {"path": "scripts/audit_embodiedgen_corridor_v2_admission.py", "sha256": "893a098bb4b8aaeba251e65419d927029b181647dd634ecf6f6df03596bbf9df"},
+    "protocol_freezer": {"path": "scripts/freeze_embodiedgen_o4_protocol.py", "sha256": "4749e326d4a868fd9b29be9019321b826e5a58a30e8914eb19ef4db55b98fb4c"},
+    "pair_collector": {"path": "scripts/isaac_collect_embodiedgen_o4_pair.py", "sha256": "8fe8ab7e3b81ac640a7ca168742b74cfb23c98a3108775dbd222d66f1f4d7830"},
+    "formal_independence_audit": {"path": "scripts/audit_embodiedgen_o4_independence.py", "sha256": "d46edfdcdd8fb62c29cfadaf8a57bf98889c690af9d88ebc289cb068fc428f4f"},
+    "corridor_v2_batch_audit_base": {"path": "scripts/audit_embodiedgen_o4_corridor_v2_batch.py", "sha256": "63fd2ca339c9614cf4ba4f9bb6ec66472d8c3718fd98e0e02c48975e5b6c07e6"},
+    "phase_aware_module": {"path": "kino_vla/eval/o4_phase_aware.py", "sha256": "6026fc72244240a1a290fbe255058a129e778628e64a6cbbf5e876d9d6b5827b"},
+    "phase_aware_pair_adjudicator": {"path": "scripts/audit_embodiedgen_o4_pair_v6.py", "sha256": "bfc169815daac2d910c4e8da56375f99f52f632f6c73502d3149d43ee485b63a"},
+    "phase_aware_batch_auditor": {"path": "scripts/audit_embodiedgen_o4_v6_batch.py", "sha256": "97f865c87319e6216e41e00d0f9a9e1fa0121e0927603362dd073229d99e103e"},
+    "source_contract": {"path": "kino_vla/sim/embodiedgen_asset.py", "sha256": "78666c1b441a40ac9d1d93ea2da2c47df1266da1ea166913a14304ee5feafd88"},
+    "base_scene_contract": {"path": "kino_vla/sim/embodiedgen_scene.py", "sha256": "eb49fc1b261faacd8552fa3493acdb1ddbecea415b77512483f22ec950f8a719"},
+    "corridor_v2_contract": {"path": "kino_vla/sim/embodiedgen_scene_v2.py", "sha256": "a8f02462540d7143f8703309d950a46ea49b81ffc5f17a88177fb9bfc9c482ae"},
+    "backend": {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "cb3a51fa1ef935388d184b609dc1b956c63f331851615ac26b895f5b5df2ed5b"},
+    "adhesion_model": {"path": "kino_vla/sim/adhesion.py", "sha256": "3a6d7232c2186087bde15b72b39907b0b32197ad141ac06816f19a2e148e636e"}
+  }
+}

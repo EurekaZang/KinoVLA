@@ -17,22 +17,46 @@ export_filename: "policy.pt"
 # than faceplant); randomize base mass (O5 groundwork) and inject periodic pushes
 # (O6 / push-recovery robustness, complementing the Reflex layer).
 dr:
-  # Minimal DR around nominal so the policy learns a clean *upright* trot (planted
-  # stance feet → near-zero slip on good ground, which the slip channel needs). An
-  # over-low friction floor or training-time pushes drove a degenerate low/foot-
-  # dragging crawl (floor 0.25 → 0.13 m, floor 0.4 → 0.2 m). The O1 ice patch (μ=0.10)
-  # is deliberately OOD — the failure to detect, not something to train away.
-  # Wide-but-not-degenerate friction DR: the feet_slide penalty keeps the gait
-  # planted (so it slips detectably on ice) while the low floor makes the policy
-  # robust enough to survive the O1 patch (μ=0.10) during recovery instead of
-  # toppling. (A high floor → fragile-on-ice; feet_slide alone keeps it from skating.)
-  static_friction_range: [0.3, 1.0]
-  dynamic_friction_range: [0.3, 0.9]
+  # Friction DR floor LOWERED to 0.08 for ice-robustness (2026-06-17, 5090 retrain).
+  # The prior floor of 0.3 left μ≈0.07–0.10 ice far OOD: the policy never trained below
+  # μ=0.3 and FELL on the M4 μ=0.07 excitation lane, poisoning the μ̂ regression (the post-
+  # fall windows read firm). Training down to μ=0.08 lets the policy stay upright on ice-like
+  # friction so the M4 lanes yield clean windows. The feet_slide penalty (below) is what makes
+  # a low floor usable: it keeps the gait PLANTED (slips detectably on ice) instead of
+  # collapsing into the degenerate low/foot-dragging skating crawl an unpenalized low floor
+  # caused before (floor 0.25 → 0.13 m height). So: low floor (ice survival) + feet_slide
+  # (anti-skate) together. The O1 patch (μ=0.10) is still detected as a slip event — surviving
+  # ice ≠ not slipping; the planted gait slips, recovers, and stays up.
+  static_friction_range: [0.08, 1.0]
+  dynamic_friction_range: [0.08, 0.9]
   restitution_range: [0.0, 0.0]
   add_base_mass_range: [-1.0, 2.0]    # kg, added to the ~15 kg base
   enable_push: false                  # training pushes encourage a low defensive stance
   push_interval_s: [9.0, 13.0]
   push_velocity_range: [-0.6, 0.6]
+
+# ⚠️ FUTURE-SPRINT CURRICULUM — NOT reflected in the shipped policy (§6 #43). The active
+# outputs/locomotion/policy.pt was trained WITHOUT this `command:` block. Re-running
+# scripts/train_locomotion.py NOW would apply this curriculum and produce a NEW gait that REGRESSES
+# 5 of the 9 `pytest -m sim` gates (demo nav, M2-O9, M5-O7, M4-payload-MAE, M3-CBF-brace), because
+# the monitor/FSM/CBF/M4 stack is calibrated to the SHIPPED gait. Adopting a yaw-emphasis policy
+# requires the full gait recalibration first (#43). The retrained policy lives at policy.pt.yaw_retrain.
+#
+# Velocity-command sampling envelope (the commands the policy is trained to track). The IN-PLACE
+# TURN fix (user directive): the deployed backend commands ang_vel_z DIRECTLY (heading_command=False,
+# isaac_policy_backend.py) and an in-place Turn holds a SUSTAINED yaw rate at ~zero linear speed. The
+# stock flat task trains with heading_command=True, where ang_vel_z is derived from a sampled heading
+# target and DECAYS to ~0 as the base aligns — so a sustained in-place spin is essentially never
+# trained (the policy drifts/under-rotates on a held yaw command). Fix = train the way we deploy:
+# heading_command=False so ang_vel_z is sampled and HELD across the resample window (sustained yaw),
+# and widen the range to the backend yaw clamp (max_yaw_rate_radps=1.5, was the stock ±1.0). With
+# lin_vel still sampled, the uniform draw yields many small-linear/large-angular = in-place rotations.
+command:
+  heading_command: false          # train ang_vel_z DIRECTLY (matches deployment), sustained yaw
+  lin_vel_x: [-1.0, 1.0]
+  lin_vel_y: [-0.8, 0.8]
+  ang_vel_z: [-1.5, 1.5]          # match max_yaw_rate_radps (stock was ±1.0 ⇒ 1.5 was OOD)
+  rel_standing_envs: 0.05         # a small fraction held at a zero command (stand)
 
 # Reward shaping for a clean foot-planting trot. The stock flat reward set lets the
 # policy *skate* (feet slide while in contact), which yields a low, friction-robust

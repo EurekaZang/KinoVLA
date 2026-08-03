@@ -1,0 +1,61 @@
+{
+  "schema_version": "kinofail.realistic-route-locomotion-training-freeze.v1",
+  "purpose": "Train an isolated low-speed route policy after both legacy policies failed preregistered realistic O2 nominal screens.",
+  "evidence_boundary": {
+    "training_only": true,
+    "counts_as_a0_a7_evidence": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "old_a0_a7_results_are_reference_only": true,
+    "completion_requires_new_realistic_corpus_training_inference_and_a0_a7": true
+  },
+  "failure_basis": {
+    "shipped_policy_screen": {
+      "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_centerline_v12_development_matrix_v1/postrun_audit.json",
+      "sha256": "b314ec461799921c8c4a98b89fc8cb91c01d47bd4c552f7c6a0709ca2c3b8938",
+      "outcome": "fell_before_operator_contact"
+    },
+    "direct_velocity_policy_screen": {
+      "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_direct_velocity_v13_screen_v1/postrun_audit.json",
+      "sha256": "5112e499ad5a5afea027419313ac6f55012e8edcf970bf8be4147ea38eaa86a1",
+      "outcome": "stable_but_low_speed_nonresponse"
+    }
+  },
+  "source_freeze": {
+    "training_script": {
+      "path": "scripts/train_locomotion.py",
+      "sha256": "ca36762dbb5eeec642c1bc12baf4f6bcfc178d0e51ed609cd91e48fa3eccf2f5"
+    },
+    "training_config": {
+      "path": "configs/locomotion/go2_realistic_route_ppo_v1.yaml",
+      "sha256": "0041599954fc0476451619bba8a445d9d8a64039695e17a7adbe36eb2f5933ca"
+    }
+  },
+  "preserved_legacy_artifacts": {
+    "shipped_policy": {
+      "path": "outputs/locomotion/policy.pt",
+      "sha256": "167633df29b6c29db8864869338dc829249be60665d598bb206354bd1daca3f3"
+    },
+    "direct_velocity_policy": {
+      "path": "outputs/locomotion/policy.pt.yaw_retrain",
+      "sha256": "730a57fb0ea53ab35e63d2bf37cac59789756a6bfdfcda00300b87895e258490"
+    }
+  },
+  "training_contract": {
+    "task": "Isaac-Velocity-Flat-Unitree-Go2-v0",
+    "num_envs": 4096,
+    "max_iterations": 1200,
+    "seed": 20261130,
+    "direct_velocity_commands": true,
+    "forward_speed_range_mps": [0.12, 0.4],
+    "lateral_speed_range_mps": [-0.22, 0.22],
+    "yaw_rate_range_radps": [-0.5, 0.5],
+    "standing_fraction": 0.0,
+    "friction_domain_randomization": true,
+    "mass_domain_randomization": true,
+    "small_push_domain_randomization": true,
+    "post_training_route_gates_required": true
+  },
+  "planned_output_dir": "outputs/locomotion/realistic_route_v1",
+  "planned_policy": "outputs/locomotion/realistic_route_v1/policy.pt",
+  "planned_manifest": "outputs/locomotion/realistic_route_v1/training_manifest.json"
+}

@@ -1,0 +1,354 @@
+# Frozen, confirmation-only CC0 terrain appearance catalog.
+#
+# All 30 ambientCG source assets are disjoint from the material sources used by
+# the development/replication corpora.  Metric dimensions were queried from the
+# official ambientCG v2 metadata API on 2026-07-25.  DiamondPlate009 reports
+# 0 x 0 cm upstream, so its metric UV basis is explicitly frozen to 1 x 1 m
+# instead of silently inferring scale from the rendered image.
+catalog_id: kinofail_confirmatory_terrain_pbr_v1
+schema_version: kinofail.terrain-material-catalog.v1
+status: frozen_before_confirmatory_scene_generation
+source_provider: ambientCG
+license: CC0
+resolution: 1K-JPG
+required_maps: [color, displacement, normal, roughness]
+domain_material_count: 10
+total_material_count: 30
+
+materials:
+  # Everyday/life environments.
+  - id: confirm_v1_life_pbr_00
+    source_asset_id: Tiles144
+    semantic_family: square_ceramic_tile
+    source: https://ambientcg.com/a/Tiles144
+    archive_url: https://ambientcg.com/get?file=Tiles144_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.0, 2.0]
+    source_dimension_cm: [200, 200]
+    creation_method: PBRProcedural
+    split: confirmatory
+    domains: [life]
+  - id: confirm_v1_life_pbr_01
+    source_asset_id: Tiles143
+    semantic_family: patterned_ceramic_tile
+    source: https://ambientcg.com/a/Tiles143
+    archive_url: https://ambientcg.com/get?file=Tiles143_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.0, 2.0]
+    source_dimension_cm: [200, 200]
+    creation_method: PBRProcedural
+    split: confirmatory
+    domains: [life]
+  - id: confirm_v1_life_pbr_02
+    source_asset_id: Tiles142
+    semantic_family: grouted_indoor_tile
+    source: https://ambientcg.com/a/Tiles142
+    archive_url: https://ambientcg.com/get?file=Tiles142_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.0, 2.0]
+    source_dimension_cm: [200, 200]
+    creation_method: PBRProcedural
+    split: confirmatory
+    domains: [life]
+  - id: confirm_v1_life_pbr_03
+    source_asset_id: Tiles131
+    semantic_family: worn_stone_tile
+    source: https://ambientcg.com/a/Tiles131
+    archive_url: https://ambientcg.com/get?file=Tiles131_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.5, 1.5]
+    source_dimension_cm: [150, 150]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [life]
+  - id: confirm_v1_life_pbr_04
+    source_asset_id: Tiles130
+    semantic_family: rectangular_stone_tile
+    source: https://ambientcg.com/a/Tiles130
+    archive_url: https://ambientcg.com/get?file=Tiles130_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.3, 1.15]
+    source_dimension_cm: [230, 115]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [life]
+  - id: confirm_v1_life_pbr_05
+    source_asset_id: WoodFloor060
+    semantic_family: fine_plank_floor
+    source: https://ambientcg.com/a/WoodFloor060
+    archive_url: https://ambientcg.com/get?file=WoodFloor060_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.0, 1.0]
+    source_dimension_cm: [100, 100]
+    creation_method: PBRProcedural
+    split: confirmatory
+    domains: [life]
+  - id: confirm_v1_life_pbr_06
+    source_asset_id: WoodFloor059
+    semantic_family: staggered_plank_floor
+    source: https://ambientcg.com/a/WoodFloor059
+    archive_url: https://ambientcg.com/get?file=WoodFloor059_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.4, 2.4]
+    source_dimension_cm: [240, 240]
+    creation_method: PBRProcedural
+    split: confirmatory
+    domains: [life]
+  - id: confirm_v1_life_pbr_07
+    source_asset_id: WoodFloor058
+    semantic_family: parquet_plank_floor
+    source: https://ambientcg.com/a/WoodFloor058
+    archive_url: https://ambientcg.com/get?file=WoodFloor058_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.4, 2.4]
+    source_dimension_cm: [240, 240]
+    creation_method: PBRProcedural
+    split: confirmatory
+    domains: [life]
+  - id: confirm_v1_life_pbr_08
+    source_asset_id: WoodFloor057
+    semantic_family: broad_plank_floor
+    source: https://ambientcg.com/a/WoodFloor057
+    archive_url: https://ambientcg.com/get?file=WoodFloor057_1K-JPG.zip
+    license: CC0
+    physical_size_m: [3.2, 3.2]
+    source_dimension_cm: [320, 320]
+    creation_method: PBRProcedural
+    split: confirmatory
+    domains: [life]
+  - id: confirm_v1_life_pbr_09
+    source_asset_id: WoodFloor056
+    semantic_family: weathered_plank_floor
+    source: https://ambientcg.com/a/WoodFloor056
+    archive_url: https://ambientcg.com/get?file=WoodFloor056_1K-JPG.zip
+    license: CC0
+    physical_size_m: [3.2, 3.2]
+    source_dimension_cm: [320, 320]
+    creation_method: PBRProcedural
+    split: confirmatory
+    domains: [life]
+
+  # Production/industrial environments.
+  - id: confirm_v1_production_pbr_00
+    source_asset_id: PavingStones150
+    semantic_family: compact_industrial_pavers
+    source: https://ambientcg.com/a/PavingStones150
+    archive_url: https://ambientcg.com/get?file=PavingStones150_1K-JPG.zip
+    license: CC0
+    physical_size_m: [0.9, 0.9]
+    source_dimension_cm: [90, 90]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+  - id: confirm_v1_production_pbr_01
+    source_asset_id: PavingStones140
+    semantic_family: rough_factory_pavers
+    source: https://ambientcg.com/a/PavingStones140
+    archive_url: https://ambientcg.com/get?file=PavingStones140_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.8, 1.8]
+    source_dimension_cm: [180, 180]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+  - id: confirm_v1_production_pbr_02
+    source_asset_id: PavingStones139
+    semantic_family: worn_loading_pavers
+    source: https://ambientcg.com/a/PavingStones139
+    archive_url: https://ambientcg.com/get?file=PavingStones139_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.55, 1.55]
+    source_dimension_cm: [155, 155]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+  - id: confirm_v1_production_pbr_03
+    source_asset_id: PavingStones138
+    semantic_family: rectangular_yard_pavers
+    source: https://ambientcg.com/a/PavingStones138
+    archive_url: https://ambientcg.com/get?file=PavingStones138_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.25, 2.5]
+    source_dimension_cm: [125, 250]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+  - id: confirm_v1_production_pbr_04
+    source_asset_id: PavingStones137
+    semantic_family: weathered_service_pavers
+    source: https://ambientcg.com/a/PavingStones137
+    archive_url: https://ambientcg.com/get?file=PavingStones137_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.8, 1.8]
+    source_dimension_cm: [180, 180]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+  - id: confirm_v1_production_pbr_05
+    source_asset_id: PavingStones135
+    semantic_family: uneven_workyard_pavers
+    source: https://ambientcg.com/a/PavingStones135
+    archive_url: https://ambientcg.com/get?file=PavingStones135_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.9, 1.9]
+    source_dimension_cm: [190, 190]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+  - id: confirm_v1_production_pbr_06
+    source_asset_id: Concrete038
+    semantic_family: weathered_cast_concrete
+    source: https://ambientcg.com/a/Concrete038
+    archive_url: https://ambientcg.com/get?file=Concrete038_1K-JPG.zip
+    license: CC0
+    physical_size_m: [0.6, 0.6]
+    source_dimension_cm: [60, 60]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+  - id: confirm_v1_production_pbr_07
+    source_asset_id: Asphalt030
+    semantic_family: coarse_service_asphalt
+    source: https://ambientcg.com/a/Asphalt030
+    archive_url: https://ambientcg.com/get?file=Asphalt030_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.2, 2.2]
+    source_dimension_cm: [220, 220]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+  - id: confirm_v1_production_pbr_08
+    source_asset_id: Gravel039
+    semantic_family: compact_service_gravel
+    source: https://ambientcg.com/a/Gravel039
+    archive_url: https://ambientcg.com/get?file=Gravel039_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.4, 2.4]
+    source_dimension_cm: [240, 240]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+  - id: confirm_v1_production_pbr_09
+    source_asset_id: DiamondPlate009
+    semantic_family: industrial_diamond_plate
+    source: https://ambientcg.com/a/DiamondPlate009
+    archive_url: https://ambientcg.com/get?file=DiamondPlate009_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.0, 1.0]
+    source_dimension_cm: [0, 0]
+    physical_size_basis: frozen_fallback_upstream_dimension_unavailable
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [production]
+
+  # Wild/outdoor environments.
+  - id: confirm_v1_wild_pbr_00
+    source_asset_id: Rock054
+    semantic_family: exposed_rock_surface
+    source: https://ambientcg.com/a/Rock054
+    archive_url: https://ambientcg.com/get?file=Rock054_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.4, 1.4]
+    source_dimension_cm: [140, 140]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]
+  - id: confirm_v1_wild_pbr_01
+    source_asset_id: Ground075
+    semantic_family: fine_forest_ground
+    source: https://ambientcg.com/a/Ground075
+    archive_url: https://ambientcg.com/get?file=Ground075_1K-JPG.zip
+    license: CC0
+    physical_size_m: [0.9, 0.9]
+    source_dimension_cm: [90, 90]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]
+  - id: confirm_v1_wild_pbr_02
+    source_asset_id: Ground074
+    semantic_family: damp_leaf_ground
+    source: https://ambientcg.com/a/Ground074
+    archive_url: https://ambientcg.com/get?file=Ground074_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.8, 1.8]
+    source_dimension_cm: [180, 180]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]
+  - id: confirm_v1_wild_pbr_03
+    source_asset_id: Ground072
+    semantic_family: mixed_woodland_soil
+    source: https://ambientcg.com/a/Ground072
+    archive_url: https://ambientcg.com/get?file=Ground072_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.75, 1.75]
+    source_dimension_cm: [175, 175]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]
+  - id: confirm_v1_wild_pbr_04
+    source_asset_id: Ground070
+    semantic_family: coarse_woodland_ground
+    source: https://ambientcg.com/a/Ground070
+    archive_url: https://ambientcg.com/get?file=Ground070_1K-JPG.zip
+    license: CC0
+    physical_size_m: [2.6, 2.6]
+    source_dimension_cm: [260, 260]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]
+  - id: confirm_v1_wild_pbr_05
+    source_asset_id: Ground065
+    semantic_family: mineral_rich_ground
+    source: https://ambientcg.com/a/Ground065
+    archive_url: https://ambientcg.com/get?file=Ground065_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.1, 1.1]
+    source_dimension_cm: [110, 110]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]
+  - id: confirm_v1_wild_pbr_06
+    source_asset_id: Ground062S
+    semantic_family: short_scale_muddy_ground
+    source: https://ambientcg.com/a/Ground062S
+    archive_url: https://ambientcg.com/get?file=Ground062S_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.6, 1.6]
+    source_dimension_cm: [160, 160]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]
+  - id: confirm_v1_wild_pbr_07
+    source_asset_id: Ground062L
+    semantic_family: long_scale_muddy_ground
+    source: https://ambientcg.com/a/Ground062L
+    archive_url: https://ambientcg.com/get?file=Ground062L_1K-JPG.zip
+    license: CC0
+    physical_size_m: [3.0, 3.0]
+    source_dimension_cm: [300, 300]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]
+  - id: confirm_v1_wild_pbr_08
+    source_asset_id: Ground059
+    semantic_family: twig_litter_ground
+    source: https://ambientcg.com/a/Ground059
+    archive_url: https://ambientcg.com/get?file=Ground059_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.8, 1.8]
+    source_dimension_cm: [180, 180]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]
+  - id: confirm_v1_wild_pbr_09
+    source_asset_id: Ground056
+    semantic_family: compact_earth_ground
+    source: https://ambientcg.com/a/Ground056
+    archive_url: https://ambientcg.com/get?file=Ground056_1K-JPG.zip
+    license: CC0
+    physical_size_m: [1.6, 1.6]
+    source_dimension_cm: [160, 160]
+    creation_method: PBRPhotogrammetry
+    split: confirmatory
+    domains: [wild]

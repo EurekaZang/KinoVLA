@@ -1,0 +1,79 @@
+{
+  "schema_version": "kinofail.realistic-scale-scene-registry.v1",
+  "created_utc": "2026-07-23T10:45:00Z",
+  "status": "frozen_for_396_episode_scale_collection",
+  "selection_policy": {
+    "purpose": "Bind the existing 396-episode realistic pilot design to nine already-built, route-audited scene packages without generating more O4 development scenes.",
+    "domains": 3,
+    "scenes_per_domain": 3,
+    "splits_per_domain": ["train", "val", "test"],
+    "operator_capabilities": ["O1", "O2", "O3", "O4", "O5", "O6", "O7", "O8", "O9", "O10", "O11"],
+    "blocking_bug_policy": "Block only corrupt scene hashes, invalid route geometry, missing front RGB/proprioception, inactive anomaly physics, nominal/anomaly parameter mismatch, or counterfactual leakage. Per-scene non-catastrophic effect variation is retained and reported, not tuned away.",
+    "a8_in_scope": false
+  },
+  "scenes": [
+    {
+      "scene_id": "indoor_bedroom_118", "domain": "life", "split": "train", "room_family": "Bedroom", "source": "EmbodiedGen-v2",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20261393/route_surface_o4_v33_development_stream/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "episode_sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20261393/route_surface_o4_v33_development_stream/val_concrete045/terrain_route_v2/compiled_scene_audit.json",
+      "compiled_audit_sha256": "ea32c485d863242981471a1614c43ccc8386e99ed4922d34bc8cb7db92e7f535"
+    },
+    {
+      "scene_id": "indoor_livingroom_139", "domain": "life", "split": "val", "room_family": "LivingRoom", "source": "EmbodiedGen-v2",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261435/route_surface_o4_v34_heldout_stream/val_tiles139/terrain_route_v2/episode_terrain_v2.usda",
+      "episode_sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261435/route_surface_o4_v34_heldout_stream/val_tiles139/terrain_route_v2/compiled_scene_audit.json",
+      "compiled_audit_sha256": "006df32beb4f14a5646a5867a807149f9a5fab053f3c82aab089c17512dddfe6"
+    },
+    {
+      "scene_id": "indoor_kitchen_140", "domain": "life", "split": "test", "room_family": "Kitchen", "source": "EmbodiedGen-v2",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261437/route_surface_o4_v34_heldout_stream/test_tiles140/terrain_route_v2/episode_terrain_v2.usda",
+      "episode_sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261437/route_surface_o4_v34_heldout_stream/test_tiles140/terrain_route_v2/compiled_scene_audit.json",
+      "compiled_audit_sha256": "8bbde4a80294a95871cdc1bf756df1f49ceb4ad99aa3fb8aac8d30434372661b"
+    },
+    {
+      "scene_id": "indoor_office_162", "domain": "production", "split": "train", "room_family": "Office", "source": "EmbodiedGen-v2",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261481/route_surface_o4_v36_development_stream/train_tiles141/terrain_route_v2/episode_terrain_v2.usda",
+      "episode_sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261481/route_surface_o4_v36_development_stream/train_tiles141/terrain_route_v2/compiled_scene_audit.json",
+      "compiled_audit_sha256": "29cb1400a8f8bfff2066b60ff4d58f5fff6cf4b2dad95207c6d80b97d6af18df"
+    },
+    {
+      "scene_id": "indoor_office_168", "domain": "production", "split": "val", "room_family": "Office", "source": "EmbodiedGen-v2",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261493/route_surface_o4_v36_development_stream/train_road007/terrain_route_v2/episode_terrain_v2.usda",
+      "episode_sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261493/route_surface_o4_v36_development_stream/train_road007/terrain_route_v2/compiled_scene_audit.json",
+      "compiled_audit_sha256": "cb4c19584af7408e1714a3249ad3aff6bf1645550ca4e7e2c6ecb0f5d77a0423"
+    },
+    {
+      "scene_id": "indoor_office_186", "domain": "production", "split": "test", "room_family": "Office", "source": "EmbodiedGen-v2",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261529/route_surface_o4_v38_development_stream/train_tiles141/terrain_route_v2/episode_terrain_v2.usda",
+      "episode_sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261529/route_surface_o4_v38_development_stream/train_tiles141/terrain_route_v2/compiled_scene_audit.json",
+      "compiled_audit_sha256": "d4cafd560882dcc371e9be5db9f99657232157d7f7a86c783aa0f0214cd82485"
+    },
+    {
+      "scene_id": "forest_trail_metric_g03", "domain": "wild", "split": "train", "room_family": "ForestTrail", "source": "PolyHaven-hybrid",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g03_dev01/isaac_hybrid_composition_dev_v20/episode.usda",
+      "episode_sha256": "abeaf7609c6f891f5e2fa29b080ba3affbc6c215238eb0e599145eccb6011add",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g03_dev01/isaac_hybrid_composition_dev_v20/compiled_scene_audit.json",
+      "compiled_audit_sha256": "9ae21d4197c7f37332fce41bdbf5e2050393972c198e160892fd731de57220d3"
+    },
+    {
+      "scene_id": "forest_slope_metric_g06", "domain": "wild", "split": "val", "room_family": "ForestSlope", "source": "PolyHaven-hybrid",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_slope_metric_g06_confirmation/isaac_hybrid_composition_dev_v23/episode.usda",
+      "episode_sha256": "abeaf7609c6f891f5e2fa29b080ba3affbc6c215238eb0e599145eccb6011add",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_slope_metric_g06_confirmation/isaac_hybrid_composition_dev_v23/compiled_scene_audit.json",
+      "compiled_audit_sha256": "a0d450593527b317eb659dfa09c4b20f77491dd3765cb7c57d414eaf578a536b"
+    },
+    {
+      "scene_id": "forest_river_walk_metric_g07", "domain": "wild", "split": "test", "room_family": "ForestRiverWalk", "source": "PolyHaven-hybrid",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_river_walk_metric_g07_confirmation/isaac_hybrid_composition_dev_v24/episode.usda",
+      "episode_sha256": "abeaf7609c6f891f5e2fa29b080ba3affbc6c215238eb0e599145eccb6011add",
+      "compiled_audit": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_river_walk_metric_g07_confirmation/isaac_hybrid_composition_dev_v24/compiled_scene_audit.json",
+      "compiled_audit_sha256": "7b1f9063a128ff4e8c4c90d3a3ddfd8e684edcc64cdceaedbd0756bfd07eedac"
+    }
+  ]
+}

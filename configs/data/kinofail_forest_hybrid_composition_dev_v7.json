@@ -1,0 +1,37 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v5-development",
+  "iteration_id": "forest-photographic-hdri-polyhaven-pbr-v7",
+  "status": "development_realistic_pbr_iteration_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v6.json",
+    "sha256": "c6db4363641c824fb85eb33b37db6cf88900e1ebd7da880f7d7d24b72f082e95"
+  },
+  "overrides": {
+    "appearance": {
+      "material_lock": {
+        "path": "outputs/assets/forest_textures_polyhaven_v1/terrain_assets.lock.json",
+        "sha256": "d70dbc79827fc3c7ad87a804c8bb8b8c5a088037b5432f8b40ccc9dbbeb578d7"
+      },
+      "route_material_id": "train_polyhaven_dirt_2k",
+      "surrounding_material_id": "train_polyhaven_forrest_ground03_2k"
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v7"
+    }
+  },
+  "appearance_randomization_contract": {
+    "physical_operator_parameters_unchanged": true,
+    "train_route_material": "train_polyhaven_dirt_2k",
+    "train_bank_material": "train_polyhaven_forrest_ground03_2k",
+    "reserved_validation_material": "val_polyhaven_forest_leaves04_2k",
+    "validation_material_not_used_in_this_development_render": true,
+    "material_selection_precedes_model_evaluation": true
+  },
+  "quality_policy": {
+    "source_texture_inspection_passed": true,
+    "body_fixed_go2_rtx_review_required": true,
+    "operator_geometry_leak_review_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

@@ -32,6 +32,11 @@ class Primitive:
 
 
 @dataclass(frozen=True)
+class Continue(Primitive):
+    """Explicit non-intervention: keep the nominal policy in control."""
+
+
+@dataclass(frozen=True)
 class Backstep(Primitive):
     distance_m: float
 
@@ -99,6 +104,15 @@ class PrimitiveCompiler:
         self._shield = shield
         self._backstep_speed = float(backstep_speed_mps)
 
+    @property
+    def shield(self) -> CbfShield:
+        """The CBF shield this compiler admits against — the SAME instance the loop filters with
+        (rollout wires one shield into both). The planner reads it to ENACT an admitted mode switch
+        via :meth:`CbfShield.set_mode` (spec §6.7): admission alone leaves the shield's active mode
+        unchanged, so without this the VLA's chosen gait/posture would never reach the support
+        polygon. ``compile`` stays side-effect-free; the planner performs the switch on accept."""
+        return self._shield
+
     def _nearest_mode(self, z_c: float) -> str:
         """Map a requested CoM height to the closest configured posture mode."""
         modes = self._shield.modes_table()
@@ -111,6 +125,9 @@ class PrimitiveCompiler:
 
     def compile(self, prim: Primitive, obs: Obs) -> CompiledCommand:
         """Compile one primitive into an executable command (or a rejection code)."""
+        if isinstance(prim, Continue):
+            return CompiledCommand(True, "OK: continue")
+
         if isinstance(prim, Backstep):
             if not prim.distance_m > 0.0:
                 return CompiledCommand(False, f"REJECT: Backstep.distance_m={prim.distance_m} ≤ 0")

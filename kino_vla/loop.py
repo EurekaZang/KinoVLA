@@ -19,7 +19,7 @@ from typing import Protocol
 
 import numpy as np
 
-from kino_vla.monitor.rule_monitor import MonitorEvent, RuleMonitor
+from kino_vla.monitor.event import Monitor, MonitorEvent
 from kino_vla.shield.passthrough import ShieldDecision
 from kino_vla.sim.backend import LocomotionBackend
 from kino_vla.sim.operators.base import OperatorStack
@@ -49,7 +49,7 @@ class Coupler(Protocol):
     CI/demo path untouched (the shield runs on nominal μ).
     """
 
-    def step(self, obs: Obs, monitor: RuleMonitor) -> object: ...
+    def step(self, obs: Obs, monitor: Monitor) -> object: ...
 
 
 class NavMap(Protocol):
@@ -63,7 +63,9 @@ class NavMap(Protocol):
 
     def observe(self, pose_xy: np.ndarray, heading: float) -> int: ...
 
-    def mark_failure(self, world_xy: np.ndarray, embedding: object = None) -> dict: ...
+    def mark_failure(
+        self, world_xy: np.ndarray, embedding: object = None, radius_m: float | None = None
+    ) -> dict: ...
 
     def nav_hazards(self) -> list[tuple[np.ndarray, float]]: ...
 
@@ -87,7 +89,7 @@ class EpisodeResult:
 def run_episode(
     backend: LocomotionBackend,
     operators: OperatorStack,
-    monitor: RuleMonitor,
+    monitor: Monitor,
     policy: RecoveryPolicy,
     shield: Shield,
     *,
@@ -98,6 +100,8 @@ def run_episode(
     on_step: Callable[[Obs, MonitorEvent | None, np.ndarray, ShieldDecision], None] | None = None,
     coupler: Coupler | None = None,
     nav_map: NavMap | None = None,
+    perceive_every: int = 1,
+    deep_reset: bool = False,
 ) -> EpisodeResult:
     """Run one seeded episode to goal, fall, or timeout.
 
@@ -105,10 +109,22 @@ def run_episode(
     and before the backend steps, with ``(obs_measured, event, cmd, decision)`` — a
     non-invasive hook for telemetry recording (scripts/record_demo.py). Default None
     keeps the demo/CI path untouched.
-    """
+
+    ``perceive_every`` throttles the live semantic-map ``nav_map.observe`` (the RTX render +
+    CLIP segmentation, the per-step cost) to every Nth step. Default 1 = unchanged (every step) so
+    every existing caller/gate/demo is byte-identical; the DAgger collector sets it >1 to render
+    the perception camera at ~2 Hz instead of 50 Hz (≈25x fewer renders) — quality-neutral, since
+    the costmap only needs to be fresh at the ~1 Hz reflections and the VLA reads its own RGB via
+    the recorder, while hazard MARKING is monitor-fire-driven (independent of observe)."""
     wall_start = time.perf_counter()
     goal_xy = np.asarray(goal_xy, dtype=np.float64)
-    obs = backend.reset(seed)
+    # A0.1 determinism: deep_reset scrubs the operator-ORDER PhysX residue so a reused-app closed
+    # loop is order-independent (default False ⇒ the walking skeleton / all existing callers are
+    # byte-identical; only the A0 determinism harness + A4/A6 collection opt in).
+    if deep_reset and hasattr(backend, "deep_reset"):
+        obs = backend.deep_reset(seed)
+    else:
+        obs = backend.reset(seed)
     operators.on_reset(backend)
     monitor.reset()
     if hasattr(shield, "reset"):
@@ -122,12 +138,19 @@ def run_episode(
     velocities: list[np.ndarray] = [obs.vel_body.copy()]
     goal_reached = False
     max_steps = int(round(max_time_s / backend.dt))
+    perceive_every = max(1, int(perceive_every))
 
-    for _ in range(max_steps):
+    for _step in range(max_steps):
         obs_measured = operators.transform_obs(obs)
         # M5 semantic map: paint the visual prior from the current view (persistent in the
         # odometry frame, so a later turn-around cannot erase a marked region, spec §7).
-        if nav_map is not None:
+        # Throttled by perceive_every (default 1 = every step ⇒ unchanged for all existing callers).
+        if nav_map is not None and _step % perceive_every == 0:
+            # Egocentric roll for long-distance / multi-patch courses (#47): keep the costmap window
+            # on the robot BEFORE observing/marking. No-op unless the map is configured ``rolling``,
+            # so fixed-grid scenarios + the pinned demo are byte-identical.
+            if hasattr(nav_map, "recenter"):
+                nav_map.recenter(obs_measured.pos)
             nav_map.observe(obs_measured.pos, obs_measured.heading)
         event = monitor.step(obs_measured)
         if event is not None:
@@ -154,7 +177,19 @@ def run_episode(
         # backends without a Reflex hook.
         if hasattr(backend, "set_reflex"):
             backend.set_reflex(
-                any(c.startswith(("INFEASIBLE_FALLBACK", "HALT")) for c in decision.codes)
+                any(
+                    c.startswith(("INFEASIBLE_FALLBACK", "HALT", "RECOVER_BRACE"))
+                    for c in decision.codes
+                )
+            )
+        # Forward the planner's commanded BODY POSTURE (Switch_Gait/Adjust_Posture/Set_Constraint)
+        # to the backend's closed-loop height controller, so each posture/gait primitive produces a
+        # real, distinct, dog-executed physical response — not just a speed cap (#41). getattr-
+        # guarded so the FsmRecovery stub (no posture) and hook-less backends are unaffected.
+        if hasattr(backend, "set_posture"):
+            backend.set_posture(
+                getattr(policy, "posture_height", None),
+                float(getattr(policy, "posture_stiffness", 1.0)),
             )
         if on_step is not None:
             on_step(obs_measured, event, cmd, decision)

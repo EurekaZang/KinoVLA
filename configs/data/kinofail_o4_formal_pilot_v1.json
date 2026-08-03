@@ -1,0 +1,58 @@
+{
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "protocol_id": "o4_indoor_workstudio_formal_pilot_v1",
+  "status": "frozen",
+  "frozen_utc": "2026-07-21T08:25:00Z",
+  "benchmark_id": "kinofail_realistic_v1",
+  "scope": "first formal paired subset; not a publication freeze and not evidence for other scenes or operators",
+  "schedule_path": "outputs/kinofail_realistic/design_v1/pilot_schedule.jsonl",
+  "schedule_sha256": "986841fd623b0f9ac4fd0bcdc37f30c7168746c374cb76d86f26e6a661aab7b2",
+  "collector_components": {
+    "scripts/isaac_collect_realistic_o4_pilot.py": "a7d47b092235be2abba9917600160be5b93e40d7442b4e9b70d0b7fbc219adbe",
+    "scripts/isaac_collect_realistic_smoke_pair.py": "0ed0e1e1d12cfb868abfb31483e215538940112f82742edec660979fec5449f1"
+  },
+  "collector_sha256": "fa4a1241e473537a6011fdb4fcb215bf1f722547d3a933d44468e475ab7451bf",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "allowed": {
+    "counterfactual_group_ids": [
+      "cf_00d435bc72ce675a9958",
+      "cf_60af49542f6b99525038"
+    ],
+    "target_operators": [
+      "O4_tether"
+    ],
+    "scene_families": [
+      "indoor_workstudio_01"
+    ],
+    "physical_realizations": [
+      "adhesive_foot_contact"
+    ],
+    "geometry_profiles": [
+      "irregular_protective_film"
+    ],
+    "severity_ids": [
+      "moderate",
+      "severe"
+    ],
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ]
+  },
+  "collection_contract": {
+    "physical_episodes": 4,
+    "counterfactual_pairs": 2,
+    "appearance_views_per_episode": 3,
+    "camera_profile": "go2_front_calib_c",
+    "body_fixed_camera": true,
+    "control_dt_s": 0.02,
+    "capture_stride_control_steps": 5,
+    "forward_s": 4.7,
+    "reverse_recovery_s": 2.2,
+    "stop_s": 0.4,
+    "same_physics_state_texture_swaps": true,
+    "formal_collection_status": "formal_pilot",
+    "runtime_schema": "kinofail.realistic-runtime.v5"
+  }
+}

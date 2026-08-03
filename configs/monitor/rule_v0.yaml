@@ -7,7 +7,9 @@ ema_alpha: 0.3
 debounce_steps: 5        # consecutive steps above threshold before firing
 arm_delay_s: 0.5         # ignore the initial acceleration transient
 cooldown_s: 1.5          # suppress repeat events while recovery is in flight
+tilt_arm_delay_s: 0.5    # imminent-fall channel arms early (a tilt is not a startup transient)
 thresholds:
   slip_ratio: 0.4
   tracking_error: 0.35   # [m/s]
   effort_ratio: 0.25     # actuator-effort saturation (O5 overload / O10 decay)
+  tilt: 0.5              # rad (~29°): genuine loss of balance (flat surrogate has tilt≡0 ⇒ inert)

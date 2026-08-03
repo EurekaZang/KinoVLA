@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import numpy as np
 
+from kino_vla.monitor.event import MonitorEvent
 from kino_vla.monitor.reflex import (
     Reflex,
     run_push_recovery_sweep,
     run_survival_episode,
 )
-from kino_vla.monitor.rule_monitor import MonitorEvent
 from kino_vla.sim.surrogate import SurrogateBackend
 from kino_vla.utils.config import load_config
 
@@ -83,3 +83,40 @@ def test_survival_is_deterministic():
     b = run_survival_episode(SIM_CFG, REFLEX_CFG, seed=1, use_reflex=True)
     assert a.survived_s == b.survived_s
     assert a.pushes_applied == b.pushes_applied
+
+
+def test_active_probe_decel_then_accel_then_yield():
+    """The probe state machine: forward brake (lo) → sharp re-accel (hi) → yield (None) (Gap-3)."""
+    from kino_vla.monitor.reflex import ActiveProbe
+    from kino_vla.sim.types import Obs
+
+    def _obs(t):
+        return Obs(
+            t=t,
+            pos=np.zeros(2),
+            heading=0.0,
+            vel_body=np.zeros(2),
+            yaw_rate=0.0,
+            cmd_prev=np.zeros(3),
+            slip_ratio=0.0,
+            base_height=0.32,
+            tilt=0.0,
+            fallen=False,
+        )
+
+    probe = ActiveProbe(decel_s=0.1, accel_s=0.1, lo_mps=0.1, hi_mps=0.8, settle_window_ms=0.0)
+    assert probe.command(_obs(0.0)) is None  # not started yet
+    probe.start(1.0)
+    assert probe.active
+    assert probe.command(_obs(1.02))[0] == 0.1  # decel phase: brake toward lo
+    assert probe.command(_obs(1.12))[0] == 0.8  # accel phase: sharp re-accel to hi
+    assert probe.command(_obs(1.25)) is None  # past total_s ⇒ yield
+    assert not probe.active
+
+
+def test_active_probe_from_config_enabled_only_on_isaac():
+    from kino_vla.monitor.reflex import ActiveProbe
+
+    assert ActiveProbe.from_config(load_config("recovery/fsm_v0.yaml")) is None  # surrogate: off
+    p = ActiveProbe.from_config(load_config("recovery/fsm_isaac.yaml"))  # isaac: on
+    assert p is not None and p.hi_mps == 0.8 and p.lo_mps == 0.1

@@ -42,7 +42,7 @@ def main() -> int:
     if backend == "auto":
         backend = "isaac" if _isaac_available() else "surrogate"
 
-    parser = argparse.ArgumentParser(description="Kino-VLA walking skeleton demo")
+    parser = argparse.ArgumentParser(description="KiNO walking skeleton demo")
     parser.add_argument("--backend", choices=["auto", "surrogate", "isaac"], default="auto")
     parser.add_argument("--seed", type=int, default=None, help="override configs/default.yaml")
 

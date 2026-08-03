@@ -20,14 +20,22 @@ Usage (GPU machine, headless):
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
+import json
 import os
 import shutil
 import sys
+from datetime import UTC, datetime
+from pathlib import Path
 
 
 def _isaac_available() -> bool:
     return importlib.util.find_spec("isaaclab") is not None
+
+
+def _sha256(path: str | Path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def main() -> int:
@@ -70,10 +78,14 @@ def main() -> int:
     )
     from rsl_rl.runners import OnPolicyRunner
 
-    from kino_vla.utils.config import REPO_ROOT, load_config
+    from kino_vla.utils.config import CONFIGS_DIR, REPO_ROOT, load_config
     from kino_vla.utils.seeding import seed_everything
 
     cfg = load_config(args.config)
+    config_path = Path(args.config)
+    if not config_path.is_absolute():
+        config_path = CONFIGS_DIR / config_path
+    config_path = config_path.resolve()
     num_envs = args.num_envs if args.num_envs is not None else int(cfg.num_envs)
     max_iter = args.max_iterations if args.max_iterations is not None else int(cfg.max_iterations)
     seed = args.seed if args.seed is not None else int(cfg.seed)
@@ -117,6 +129,37 @@ def main() -> int:
         },
     )
     env_cfg.rewards.feet_air_time.weight = float(cfg.rewards.feet_air_time_weight)
+    optional_reward_weights = {
+        "track_lin_vel_xy_exp": cfg.rewards.get("track_lin_vel_xy_weight", None),
+        "track_ang_vel_z_exp": cfg.rewards.get("track_ang_vel_z_weight", None),
+        "lin_vel_z_l2": cfg.rewards.get("lin_vel_z_weight", None),
+        "ang_vel_xy_l2": cfg.rewards.get("ang_vel_xy_weight", None),
+        "action_rate_l2": cfg.rewards.get("action_rate_weight", None),
+        "flat_orientation_l2": cfg.rewards.get("flat_orientation_weight", None),
+    }
+    for term_name, weight in optional_reward_weights.items():
+        if weight is not None:
+            getattr(env_cfg.rewards, term_name).weight = float(weight)
+
+    # In-place yaw-turn command curriculum (user directive): train the SUSTAINED yaw command the
+    # deployed backend issues. heading_command=False ⇒ ang_vel_z is sampled and HELD across the
+    # resample window (the stock heading_command=True decays it to ~0 as the base aligns, so a
+    # sustained in-place spin was never trained); widen ang_vel_z to the backend yaw clamp
+    # (max_yaw_rate_radps=1.5). No obs-shape change (the command stays a 3-vector), so the trained
+    # actor is drop-in for the inference backend. configs/locomotion/go2_flat_ppo.yaml :: command.
+    cmdc = cfg.get("command", None)
+    if cmdc is not None:
+        bv = env_cfg.commands.base_velocity
+        bv.heading_command = bool(cmdc.heading_command)
+        bv.rel_standing_envs = float(cmdc.rel_standing_envs)
+        bv.ranges.lin_vel_x = tuple(cmdc.lin_vel_x)
+        bv.ranges.lin_vel_y = tuple(cmdc.lin_vel_y)
+        bv.ranges.ang_vel_z = tuple(cmdc.ang_vel_z)
+        print(
+            f"[train] cmd curriculum: heading_command={bv.heading_command} "
+            f"ang_vel_z={tuple(cmdc.ang_vel_z)} lin_x={tuple(cmdc.lin_vel_x)} "
+            f"lin_y={tuple(cmdc.lin_vel_y)} rel_standing={bv.rel_standing_envs}"
+        )
 
     # --- agent cfg ---------------------------------------------------------------
     agent_cfg = UnitreeGo2FlatPPORunnerCfg()
@@ -129,6 +172,10 @@ def main() -> int:
     out_dir = REPO_ROOT / str(cfg.out_dir)
     log_dir = out_dir / f"{cfg.experiment_name}_seed{seed}"
     os.makedirs(log_dir, exist_ok=True)
+    config_snapshot = log_dir / "config_snapshot.yaml"
+    if config_snapshot.exists():
+        raise FileExistsError(f"refusing to overwrite training config snapshot: {config_snapshot}")
+    shutil.copyfile(config_path, config_snapshot)
 
     # --- build, train ------------------------------------------------------------
     env = gym.make(str(cfg.task), cfg=env_cfg, render_mode=None)
@@ -151,11 +198,70 @@ def main() -> int:
     export_policy_as_onnx(policy_nn, normalizer=normalizer, path=export_dir, filename="policy.onnx")
     # Stable path the backend loads regardless of run/seed.
     stable_policy = out_dir / str(cfg.export_filename)
+    if stable_policy.exists():
+        raise FileExistsError(f"refusing to overwrite stable policy: {stable_policy}")
     shutil.copyfile(os.path.join(export_dir, "policy.pt"), stable_policy)
+
+    reward_contract = {
+        "feet_slide": float(env_cfg.rewards.feet_slide.weight),
+        "feet_air_time": float(env_cfg.rewards.feet_air_time.weight),
+    }
+    for term_name in optional_reward_weights:
+        reward_contract[term_name] = float(getattr(env_cfg.rewards, term_name).weight)
+    training_manifest = {
+        "schema_version": "kinovla.locomotion-training-manifest.v1",
+        "created_utc": datetime.now(UTC).isoformat(),
+        "passed": True,
+        "task": str(cfg.task),
+        "experiment_name": str(cfg.experiment_name),
+        "seed": seed,
+        "num_envs": num_envs,
+        "max_iterations": max_iter,
+        "device": device,
+        "command_contract": cfg.command.to_dict() if cfg.get("command", None) is not None else None,
+        "domain_randomization": cfg.dr.to_dict(),
+        "reward_contract": reward_contract,
+        "artifacts": {
+            "config_snapshot": {
+                "path": str(config_snapshot.resolve()),
+                "sha256": _sha256(config_snapshot),
+            },
+            "training_script": {
+                "path": str(Path(__file__).resolve()),
+                "sha256": _sha256(Path(__file__).resolve()),
+            },
+            "final_checkpoint": {
+                "path": str(Path(final_ckpt).resolve()),
+                "sha256": _sha256(final_ckpt),
+            },
+            "exported_policy": {
+                "path": str(Path(export_dir, "policy.pt").resolve()),
+                "sha256": _sha256(Path(export_dir, "policy.pt")),
+            },
+            "exported_onnx": {
+                "path": str(Path(export_dir, "policy.onnx").resolve()),
+                "sha256": _sha256(Path(export_dir, "policy.onnx")),
+            },
+            "stable_policy": {
+                "path": str(stable_policy.resolve()),
+                "sha256": _sha256(stable_policy),
+            },
+        },
+        "evidence_boundary": {
+            "counts_as_a0_a7_evidence": False,
+            "realistic_a0_a7_readiness": "0/8",
+            "requires_post_training_route_gates": True,
+        },
+    }
+    training_manifest_path = out_dir / "training_manifest.json"
+    training_manifest_path.write_text(
+        json.dumps(training_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
     print(f"[train] final checkpoint: {final_ckpt}")
     print(f"[train] exported JIT policy: {os.path.join(export_dir, 'policy.pt')}")
     print(f"[train] stable policy path: {stable_policy}")
+    print(f"[train] manifest: {training_manifest_path}")
     print("PASS: locomotion training")
 
     # Isaac Sim 5.1 close() busy-spins on this headless setup; the artifacts above

@@ -1,0 +1,243 @@
+{
+  "schema_version": "kinofail.o4-action-consequence-v27-phase-conditioned-development-freeze.v1",
+  "created_utc": "2026-07-23T04:07:26Z",
+  "freeze_status": "frozen_before_first_anomaly_execution",
+  "purpose": "Test, on three previously exposed v16 development scenes, whether a phase-conditioned decision trigger and closed-loop Backstep clearance remove the cross-scene timing failure observed in sealed v26. This is architecture development only and cannot count as realistic corpus or A0-A7 evidence.",
+  "evidence_policy": {
+    "development_recalibration_only": true,
+    "counts_as_a0_a7_evidence": false,
+    "counts_as_realistic_corpus_evidence": false,
+    "counts_as_realistic_o4_operator_confirmation": false,
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "a8_in_scope": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "one_attempt_per_case": true,
+    "all_attempts_retained": true,
+    "v26_heldout_scene_reuse_forbidden": true,
+    "successful_development_result_authorizes_only_new_never_calibrated_heldout_confirmation": true
+  },
+  "diagnosis_from_sealed_v26": {
+    "source": "outputs/kinofail_realistic/operator_confirmation/o4_action_v26_heldout_confirmation/postrun_audit.json",
+    "observed_result": "3/6 scenes passed while all six matched-state pairs retained exact predecision equality.",
+    "failure_mode": "The fixed first-attachment-plus-25-step decision arrived after substantial height loss and tilt in two scenes, while a fixed 75-step reverse was too short for one upright scene.",
+    "development_hypothesis": "Triggering the branch early when both tilt and height-drop urgency persist, then reversing until physical adhesion clearance and a target retreat are achieved, should generalize better than fixed elapsed durations.",
+    "anti_leakage": "No v26 held-out scene is used in v27 development, and no v27 output existed when this config was frozen."
+  },
+  "design_change_from_v21": {
+    "changed": [
+      "decision timing: bounded phase-conditioned trigger instead of a single fixed 25-step dwell",
+      "Backstep termination: closed-loop physical clearance plus target retreat instead of a single fixed 75-step duration"
+    ],
+    "unchanged": [
+      "command-agnostic O4 adhesion physics",
+      "Go2 locomotion policy",
+      "route controller and controller gains",
+      "forward and Backstep command speeds",
+      "force caps and physical peel thresholds",
+      "0.15 m acceptance threshold",
+      "300-step fixed evaluation horizon",
+      "0.30 m route-containment threshold"
+    ],
+    "bounded_trigger": {
+      "minimum_decision_dwell_steps": 5,
+      "maximum_decision_dwell_steps": 25,
+      "urgent_if": "tilt >= 0.08 rad AND height drop >= 0.02 m for 2 consecutive steps"
+    },
+    "bounded_recovery": {
+      "maximum_backstep_steps": 120,
+      "target_recovery_distance_m": 0.2,
+      "adhesion_clearance_dwell_steps": 5,
+      "acceptance_distance_unchanged_m": 0.15
+    }
+  },
+  "architecture_contract": {
+    "operator_subtype": "adhesive_contact",
+    "operator_mode": "command_agnostic_contact_surface_adhesion_v3",
+    "release_inputs": [
+      "measured_foot_contact_force",
+      "measured_foot_height",
+      "measured_foot_velocity",
+      "unload_dwell"
+    ],
+    "forbidden_release_inputs": [
+      "high_level_action",
+      "command_direction",
+      "take_identity"
+    ],
+    "branching_contract": "Continue and Backstep have byte-equivalent telemetry through the registered decision step and may diverge only on the following step."
+  },
+  "runtime": {
+    "camera_profile": "go2_front_calib_b",
+    "horizon_steps": 300,
+    "minimum_decision_dwell_steps": 5,
+    "maximum_decision_dwell_steps": 25,
+    "decision_tilt_urgency_rad": 0.08,
+    "decision_height_drop_urgency_m": 0.02,
+    "decision_urgency_dwell_steps": 2,
+    "maximum_backstep_steps": 120,
+    "target_recovery_distance_m": 0.2,
+    "minimum_recovery_distance_m": 0.15,
+    "adhesion_clearance_dwell_steps": 5,
+    "forward_speed_mps": 0.32,
+    "backstep_speed_mps": 0.24,
+    "maximum_route_deviation_m": 0.3,
+    "tangential_force_cap_n": 18.0,
+    "normal_force_cap_n": 8.0,
+    "peel_height_m": 0.025,
+    "unload_steps_to_peel": 3,
+    "reattach_cooldown_steps": 2,
+    "max_active_feet": 2,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.2,
+    "yaw_rate_limit_radps": 0.6,
+    "collector_sha256": "38777bd099549346f550ada4acc176f75d30cf3552942ebb306d0d7dee3561a6",
+    "surface_interface_sha256": "9ca3b51941ff878f8762e5c2a3b1e121c396b4aea01e86f97065d0a0778282db",
+    "surface_model_sha256": "a634078b425a336be6a0fca67e3df6434ea1fa3d24e43187ec9c559447984fea",
+    "backend_adapter_sha256": "d7ba7375acb9a0290ad2e5a8810198f2fb55fdb9e476939bdad61e88d68e7481",
+    "parent_backend_adapter_sha256": "954a27cc79ae42c32f2ab13dee1f3aff5d383b8f44ecff572fb09ff352a172a1"
+  },
+  "operator_output_root": "outputs/kinofail_realistic/operator_development/o4_action_v27_phase_conditioned",
+  "cases": [
+    {
+      "scene_id": "indoor_livingroom_45",
+      "room_family": "LivingRoom",
+      "runtime_seed": 20261238,
+      "material_id": "val_concrete045",
+      "operator": "o4_adhesive_contact_action_branch_v27_phase_conditioned",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "terrain_compiled_audit": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/compiled_scene_audit.json",
+          "sha256": "e58e35533b31f62d9ed04970c8ffc7e548f7ff201614103ce29bb8c6998b837c",
+          "json_passed": true
+        },
+        "stack_v16_admission": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261237/route_surface_v16_unseen_confirmation/val_concrete045/terrain_route_v2/realistic_stack_v16_admission.json",
+          "sha256": "cf7cd6434011902dfddaa110baa2544e82bec2688db9370cd32e1ea9b5259138",
+          "json_passed": true
+        }
+      },
+      "output": "outputs/kinofail_realistic/operator_development/o4_action_v27_phase_conditioned/indoor_livingroom_45/attempt1"
+    },
+    {
+      "scene_id": "indoor_kitchen_46",
+      "room_family": "Kitchen",
+      "runtime_seed": 20261240,
+      "material_id": "test_asphalt031",
+      "operator": "o4_adhesive_contact_action_branch_v27_phase_conditioned",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261239/route_surface_v16_unseen_confirmation/test_asphalt031/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "terrain_compiled_audit": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261239/route_surface_v16_unseen_confirmation/test_asphalt031/terrain_route_v2/compiled_scene_audit.json",
+          "sha256": "ed8e806529baa279d856e3bbdcf15da27a54377bd607d447ca078554f3c55e99",
+          "json_passed": true
+        },
+        "stack_v16_admission": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261239/route_surface_v16_unseen_confirmation/test_asphalt031/terrain_route_v2/realistic_stack_v16_admission.json",
+          "sha256": "b21470171651aa13c867db2e7bf7c37411c1d6dea9b3c9dd988a8c8d86cb600d",
+          "json_passed": true
+        }
+      },
+      "output": "outputs/kinofail_realistic/operator_development/o4_action_v27_phase_conditioned/indoor_kitchen_46/attempt1"
+    },
+    {
+      "scene_id": "indoor_bathroom_49",
+      "room_family": "Bathroom",
+      "runtime_seed": 20261246,
+      "material_id": "test_gravel022",
+      "operator": "o4_adhesive_contact_action_branch_v27_phase_conditioned",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261245/route_surface_v16_unseen_confirmation/test_gravel022/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "terrain_compiled_audit": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261245/route_surface_v16_unseen_confirmation/test_gravel022/terrain_route_v2/compiled_scene_audit.json",
+          "sha256": "4f273b3156d8928cca1275532c228733672ac08c7018d02a9c6f807219c990cb",
+          "json_passed": true
+        },
+        "stack_v16_admission": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261245/route_surface_v16_unseen_confirmation/test_gravel022/terrain_route_v2/realistic_stack_v16_admission.json",
+          "sha256": "d8071091226ccb73c649a10a33f3588089b0ebcfecdd473082281b05ae1872b5",
+          "json_passed": true
+        }
+      },
+      "output": "outputs/kinofail_realistic/operator_development/o4_action_v27_phase_conditioned/indoor_bathroom_49/attempt1"
+    }
+  ],
+  "execution_policy": {
+    "attempt_budget_per_case": 1,
+    "execute_only_if_preflight_passes": true,
+    "execute_every_case_regardless_of_prior_outcome": true,
+    "fresh_isaac_process_per_scene": true,
+    "retain_failed_output": true,
+    "scene_removal_after_outcome_forbidden": true,
+    "parameter_edits_after_preflight_forbidden": true,
+    "postrun_audit_required": true,
+    "if_any_case_fails": "seal all results and diagnose without rerunning or retuning these scenes",
+    "if_all_cases_pass": "freeze a new never-calibrated realistic scene cohort before any held-out v27 execution"
+  },
+  "locked_files": [
+    {
+      "path": "scripts/isaac_collect_o4_action_consequence_v27.py",
+      "sha256": "38777bd099549346f550ada4acc176f75d30cf3552942ebb306d0d7dee3561a6"
+    },
+    {
+      "path": "scripts/audit_o4_action_consequence_v27_development_postrun.py",
+      "sha256": "3b28ffdb2e44bd6e84c922e933fd48a2866be199a4c985f9aac44dbe88f2a1d9"
+    },
+    {
+      "path": "tests/test_o4_action_consequence_v27.py",
+      "sha256": "2b933fbfc549bbde0e99f5ee9a855f416d0ffc568d623dd77832a3078a88d7f4"
+    },
+    {
+      "path": "scripts/audit_operator_recalibration_preflight.py",
+      "sha256": "2392a9493b5198f68e707ca0d00f770c6810ff7ec29c9a0e1660da78cca72acd"
+    },
+    {
+      "path": "kino_vla/sim/adhesion_v3.py",
+      "sha256": "9ca3b51941ff878f8762e5c2a3b1e121c396b4aea01e86f97065d0a0778282db"
+    },
+    {
+      "path": "kino_vla/sim/isaac_o4_v3_backend.py",
+      "sha256": "d7ba7375acb9a0290ad2e5a8810198f2fb55fdb9e476939bdad61e88d68e7481"
+    },
+    {
+      "path": "kino_vla/sim/adhesion_v2.py",
+      "sha256": "a634078b425a336be6a0fca67e3df6434ea1fa3d24e43187ec9c559447984fea"
+    },
+    {
+      "path": "kino_vla/sim/isaac_o4_v2_backend.py",
+      "sha256": "954a27cc79ae42c32f2ab13dee1f3aff5d383b8f44ecff572fb09ff352a172a1"
+    },
+    {
+      "path": "kino_vla/sim/isaac_policy_backend.py",
+      "sha256": "95d43c4afcf2963e5defbd18c6a4663177cae83cb2f2bc2241faff46a7c79502"
+    },
+    {
+      "path": "kino_vla/sim/adhesion.py",
+      "sha256": "3a6d7232c2186087bde15b72b39907b0b32197ad141ac06816f19a2e148e636e"
+    },
+    {
+      "path": "kino_vla/sim/realistic_route_controller_v3.py",
+      "sha256": "7e0f8281cd394cf6faa57bfc49aedc29444c1928358a8a7bf033b5499f12bf8d"
+    },
+    {
+      "path": "outputs/locomotion/policy.pt",
+      "sha256": "167633df29b6c29db8864869338dc829249be60665d598bb206354bd1daca3f3"
+    },
+    {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    },
+    {
+      "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_realistic_route_policy_v16_unseen_batch_v1/postrun_audit.json",
+      "sha256": "3da7c1f674d29888dae492ed621fe07dcd1262c65aa26e1225d8c1571144e53b",
+      "json_passed": true
+    },
+    {
+      "path": "outputs/kinofail_realistic/operator_confirmation/o4_action_v26_heldout_confirmation/postrun_audit.json",
+      "sha256": "ed66bdbdc375a04abf3a3f15c2d08b7e661f6344b595a2035d450379d28fc3dd",
+      "json_passed": false
+    }
+  ]
+}

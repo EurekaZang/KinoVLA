@@ -34,3 +34,19 @@ modes:
   # ω·(lx−delta_u) = 7.00·0.24 ≈ 1.68 m/s stays below the surrogate's *braced*
   # capture speed (1.2·1.6 = 1.92), so the fallback + Reflex stance is self-consistent.
   brace:     {z_c: 0.20, lx: 0.28, ly: 0.24, delta: 0.06, delta_u: 0.04}
+
+# Reactive brace (#42) — the fix for the reduced-LIP CBF's anti-protection on the FULL-ORDER Go2
+# (#13/#23). A reduced-LIP velocity clamp on a push SUPPRESSES the policy's own recovery STEP and
+# topples it. Instead, on an UNCOMMANDED velocity jump (a physical push — distinct from a hostile
+# command, which tracks gradually under slew), brace: defend the WIDER/LOWER brace polygon (so the
+# recovery step is PERMITTED, not over-braked) and signal the physical brace reflex (lower CoM).
+# DEFAULT OFF so the surrogate adversarial zero-fall gate + the §6.6 property tests are byte-
+# identical (no spurious brace on the oscillating command profiles); the real-Go2 deployment
+# (scripts/isaac_cbf_pushfall.py, the closed loop) enables it via shield.enable_reactive_brace().
+# This is NOT constraint softening: it selects which CONFIGURED mode's polygon defends the step (a
+# §6.8-style reflex on a measured danger); the CBF-QP math within each mode is unchanged.
+reactive_brace:
+  enabled: false
+  mode: brace            # the configured mode whose (wider/lower) polygon defends a detected push
+  push_jump_mps: 0.6     # one-step |Δv| above which an external push is declared (slew ≪ this)
+  hold_steps: 60         # brace window after a push (~1.2 s at 50 Hz) before returning to trot

@@ -10,7 +10,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = [
-    "numpy>=1.24",
+    # Isaac Sim 5.1 / Isaac Lab 2.3 require NumPy 1.x (kernel pins 1.26.0).
+    "numpy==1.26.0",
     "pyyaml>=6.0",
 ]
 

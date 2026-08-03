@@ -9,12 +9,22 @@ can never silently regress.
 
 from __future__ import annotations
 
+import pytest
+
 from kino_vla.eval.ambiguity import build_matched_pair, match_ambiguity_pair
 from kino_vla.utils.config import load_config
 
 TOL = load_config("operators/apply_tolerances.yaml").ambiguity_o4_o2
 
+# §6 #38: O2 is now a physically-faithful soft-ground DRAG field, not the O2↔O4-matched elastic
+# SPRING. So mud and the O4 tether are no longer proprioceptively identical (their resistance
+# curves diverge by design). The "matched-proprioception → vision-irreplaceable" P4 artifact is
+# RETIRED pending a human decision on a redesigned vision-necessary pair. These two assertions
+# protected that retired artifact, so they are skipped (not deleted — the intent is on record).
+_RETIRED = "O2↔O4 matched-proprioception retired: O2 is now a drag field, not a spring (§6 #38)"
 
+
+@pytest.mark.skip(reason=_RETIRED)
 def test_matched_pair_proprioception_indistinguishable():
     o2, o4 = build_matched_pair()
     result = match_ambiguity_pair(o2, o4)
@@ -35,6 +45,7 @@ def test_appearance_classes_differ():
     assert o2.scene_region().appearance_class != o4.scene_region().appearance_class
 
 
+@pytest.mark.skip(reason=_RETIRED)
 def test_match_script_runs_and_passes():
     import subprocess
     import sys

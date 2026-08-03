@@ -1,0 +1,55 @@
+{
+  "case_count": 50,
+  "collector": "scripts/isaac_collect_kinofail_realistic_a4_action_v1.py",
+  "collector_sha256": "e65114068df6d32548a35c56566643c5b97eedbe48aa051e9a68f3e1796bd9d4",
+  "created_utc": "2026-07-23T16:38:17.259241+00:00",
+  "excluded_preflight_roots": [
+    "outputs/kinofail_realistic/corpus_a4_actual_action_v1",
+    "outputs/kinofail_realistic/corpus_a4_actual_action_v2",
+    "outputs/kinofail_realistic/corpus_a4_actual_action_v3"
+  ],
+  "launcher": "scripts/isaac_collect_kinofail_realistic_a4_action_v4.py",
+  "launcher_sha256": "6206a9835bead84f02827788e531ea6c674593822d697674062fb1e6488ad871",
+  "minimum_episode_seeds_per_action_cell": 10,
+  "o5_amendment": "scripts/isaac_collect_kinofail_realistic_a4_action_v2.py",
+  "o5_amendment_sha256": "f7dbfae000bb2b842a5cab72fc8e47244387d86af609706e9e8e553664dfbda6",
+  "o5_trigger": "0.5 s with payload readback active",
+  "operators": [
+    "O2_compliance",
+    "O4_tether",
+    "O5_payload",
+    "O8_invisible_collider",
+    "O9_high_centering"
+  ],
+  "outcome_policy": "retain weak, null, and unfavorable cells; no further tuning",
+  "physical_episode_count": 100,
+  "postrun_pair_gate": {
+    "action_onset": "strictly after decision step",
+    "failure_policy": "exclude only the failing pair; do not tune or recollect",
+    "maximum_absolute_state_or_command_difference": 0.001,
+    "source": "all unquantized raw telemetry rows through decision step"
+  },
+  "protocol_id": "kinofail-realistic-a4-actual-action-v4",
+  "runtime_pair_gate": "same operator-independent decision step",
+  "scene_clusters": [
+    "forest_river_walk_metric_g07",
+    "forest_trail_metric_g03",
+    "indoor_livingroom_139",
+    "indoor_office_162",
+    "indoor_office_186"
+  ],
+  "schedule": "outputs/kinofail_realistic/design_a4_actual_action_v1/schedule.jsonl",
+  "schedule_sha256": "c90593c5a680a58cc5a2b29275bbdd9152acbea9616d05968df67305cf795e9a",
+  "schema_version": "kinofail.realistic-a4-actual-action-protocol.v4",
+  "statistics": "scene-cluster paired bootstrap with case-level paired differences",
+  "status": "final_nonblocking_scale_freeze_before_any_v4_outcome",
+  "supersedes": "configs/data/kinofail_realistic_a4_actual_action_formal_v3.json",
+  "unchanged": [
+    "scene clusters",
+    "reset seeds",
+    "operator severity",
+    "action definitions",
+    "outcome rules",
+    "statistics"
+  ]
+}

@@ -27,12 +27,25 @@ class Push(FailureOperator):
         impulse_xy_ns: np.ndarray,
         t_push_s: float,
         yaw_impulse_nms: float = 0.0,
+        duration_s: float = 0.0,
+        application_point_body_m: np.ndarray | None = None,
     ) -> None:
         self._impulse = np.asarray(impulse_xy_ns, dtype=np.float64).copy()
         if self._impulse.shape != (2,):
             raise ValueError(f"impulse must have shape (2,), got {self._impulse.shape}")
         self._t_push = float(t_push_s)
         self._yaw_impulse = float(yaw_impulse_nms)
+        self._duration_s = float(duration_s)
+        if self._duration_s < 0.0:
+            raise ValueError("push duration must be non-negative")
+        self._application_point_body_m = np.asarray(
+            (0.0, 0.0, 0.0)
+            if application_point_body_m is None
+            else application_point_body_m,
+            dtype=np.float64,
+        ).copy()
+        if self._application_point_body_m.shape != (3,):
+            raise ValueError("application point must have shape (3,)")
         self._fired = False
 
     @property
@@ -44,7 +57,15 @@ class Push(FailureOperator):
 
     def on_step(self, backend: LocomotionBackend, t: float) -> None:
         if not self._fired and t >= self._t_push:
-            backend.apply_push(self._impulse, self._yaw_impulse)
+            if self._duration_s > 0.0:
+                backend.start_push_pulse(
+                    self._impulse,
+                    self._yaw_impulse,
+                    self._duration_s,
+                    self._application_point_body_m,
+                )
+            else:
+                backend.apply_push(self._impulse, self._yaw_impulse)
             self._fired = True
 
     def get_privileged_state(self) -> dict[str, float]:
@@ -53,4 +74,8 @@ class Push(FailureOperator):
             "impulse_dir_rad": math.atan2(float(self._impulse[1]), float(self._impulse[0])),
             "yaw_impulse_nms": self._yaw_impulse,
             "t_push_s": self._t_push,
+            "duration_s": self._duration_s,
+            "application_point_body_x_m": float(self._application_point_body_m[0]),
+            "application_point_body_y_m": float(self._application_point_body_m[1]),
+            "application_point_body_z_m": float(self._application_point_body_m[2]),
         }

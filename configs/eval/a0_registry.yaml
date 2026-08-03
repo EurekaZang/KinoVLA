@@ -1,0 +1,252 @@
+# =============================================================================================
+# A0.5 — Per-scenario success-criterion + admissible-recovery-set registry (Paper-A).
+#
+# PRE-REGISTERED (R5) and FROZEN (R4): this file is committed BEFORE any A4 agent is evaluated,
+# so "which recovery is correct / what counts as success" is fixed independently of any agent's
+# behaviour. The headline metric (R6) is the attribution-gated correct-recovery rate: a decision
+# is correct iff (attribution == true_category) AND (chosen primitive ∈ admissible_recovery_set of
+# the TRUE cause). The admissible sets here are cross-checked at load against the taxonomy
+# (configs/data/hindsight.yaml recovery.feasible) so they can never silently drift — see
+# kino_vla/eval/registry.py::Registry.validate. Canonical recoveries are the scripted controllers
+# on the frozen base policy that A4's label-swap matrix executes for each forced label.
+#
+# Spec: experiments_design.md §2 (A0.5), §3 (taxonomy T1–T5), §4 (A4 matrix), §1 rules R4/R5/R6.
+# =============================================================================================
+
+meta:
+  binding_rules: [R4, R5, R6]
+  taxonomy_source: data/hindsight.yaml          # feasible/canonical cross-checked against this
+  # geometry shared by the closed-loop A4/A6 scenarios (matches kino_vla/vla/scenarios.py)
+  geometry: { start_x: 0.0, hazard_x: [2.0, 4.0], goal_x: 6.0, goal_tol_m: 0.6, max_time_s: 40.0 }
+
+# --- Success-criterion vocabulary (R5): how a rollout counts as success given the TRUE cause. ---
+# A criterion is evaluated from the closed-loop RolloutResult (reached / fell / halted /
+# final_dist_m / peak_omega) — never from the agent's own attribution.
+success_criteria:
+  reach:
+    desc: "reached goal (within goal_tol_m) before max_time_s, and did not fall"
+    predicate: "reached and not fell"
+  safe_halt:
+    desc: "reached OR deliberately halted (Hold_and_Request) without falling — the load/limit makes
+           proceeding unsafe, so a safe stop is the correct outcome (O5 overload, spec §2.5/§5)"
+    predicate: "(reached or halted) and not fell"
+  escape:
+    desc: "left the hazard region with net forward progress, no fall, and no catapult/immobilization
+           event — used where reach-in-time conflicts with a legitimately slow recovery (O4 adhesion,
+           deep mud); the escape+progress form is R5's answer to the E4 §6.4 reach-vs-slow tension"
+    predicate: "left_hazard and forward_progress and not fell and not catapult and not immobilized"
+  continue:
+    desc: "the benign/nominal answer: reached the goal WITHOUT an unnecessary semantic intervention;
+           a spurious intervention is a calibration failure (strands / wastes time) even if no fall.
+           Abstention (correctly choosing 'continue') is scored against this (T5, A5.5, A6)"
+    predicate: "reached and not fell and n_semantic_interventions == 0"
+
+# --- Forced-label vocabulary for the A4 label-swap matrix (the columns of M(s, ℓ)). ---
+# Each maps to a scripted canonical controller on the frozen base policy (validated once, frozen).
+forced_labels:
+  continue:        { controller: nominal_cruise,  desc: "no override; base policy cruises through" }
+  backstep_detour: { controller: backstep,         primitive: Backstep,        desc: "escape then route around" }
+  high_step:       { controller: high_step_gait,   primitive: Switch_Gait,     desc: "high-step traverse (mud)" }
+  slow_low:        { controller: slow_low_posture,  primitive: Set_Constraint,  desc: "slow + low posture (ice)" }
+  crawl:           { controller: crawl_gait,        primitive: Switch_Gait,     desc: "low-effort crawl (decay)" }
+  hold_request:    { controller: hold,              primitive: Hold_and_Request, desc: "safe stop + request help" }
+  detour_replan:   { controller: detour_replan,     primitive: Update_Topology, desc: "mark blocked + replan around" }
+
+# --- Per-scenario registry. taxonomy_cell/true_category/ab_class are the privileged ground truth;
+#     admissible_recovery_set MUST equal taxonomy.feasible[true_category] (validated at load), except
+#     nominal rows whose correct answer is `continue` (admissible = [continue]). ---
+scenarios:
+
+  # ---- T1 Agree (vision & proprio consistent) --------------------------------------------------
+  matched_O2:
+    builder: o2_compliance_matched
+    operator: O2_compliance
+    theta: { k_c: 14.0, c_c: 6.0, d_sink: 0.08 }
+    taxonomy_cell: T1
+    true_category: compliant_terrain
+    ab_class: A
+    appearance_class: brown_mud
+    success_criterion: reach
+    admissible_recovery_set: [Set_Constraint, Switch_Gait]
+    canonical_recovery: { primitive: Switch_Gait, params: { mode: high_step } }
+    used_by: [A2, A3, A4]
+    note: "the T2 control — mud that LOOKS like mud; proprio+vision agree, everyone with a channel solves it"
+
+  O1_ice:
+    builder: o1_ice
+    operator: O1_mu_field
+    theta: { mu_s: 0.10, mu_d: 0.08 }
+    taxonomy_cell: T1
+    true_category: low_friction
+    ab_class: A
+    appearance_class: ice_sheet
+    success_criterion: reach
+    admissible_recovery_set: [Set_Constraint, Adjust_Posture]
+    canonical_recovery: { primitive: Set_Constraint, params: { max_speed: 0.3 } }
+    used_by: [A2, A3, A4]
+
+  # ---- T2 Conflict, vision-true (proprio misleading, vision decisive) ---------------------------
+  matched_O4:
+    builder: o4_tether_matched
+    operator: O4_tether
+    theta: { k: 14.0, c: 6.0, f_break: 1.0e9 }
+    o4_preset: { force_cap_n: 0.0, force_offset_n: 14.0, peel_factor: 0.3 }   # #49 matched (byte-identical to matched_O2)
+    taxonomy_cell: T2
+    true_category: adhesion
+    ab_class: B
+    appearance_class: yellow_adhesive
+    success_criterion: escape
+    admissible_recovery_set: [Backstep, Update_Topology]
+    canonical_recovery: { primitive: Backstep, params: { distance_m: 0.5 } }
+    certificate: "A1.1 byte-identity max|Δ|=0.0 vs matched_O2 (C2ST 0.5); certification travels with this config hash (A1.3/R7)"
+    used_by: [A2, A3, A4]
+    note: "adhesion that LOOKS like adhesive board but is proprioceptively identical to mud — only vision separates it"
+
+  matched_O4_twophase:
+    builder: o4_tether_twophase          # A4.1 consequence-grade two-phase (delayed-divergence) O4
+    operator: O4_tether
+    theta: { k_c: 14.0, c_c: 6.0, p0_m: 0.30, k2: 60.0, f_break: 1.0e9 }   # IMMOBILIZATION preset (inf break, ramp stalls push-through)
+    taxonomy_cell: T2
+    true_category: adhesion
+    ab_class: B
+    appearance_class: yellow_adhesive
+    success_criterion: escape            # escape+progress (R5: a legitimately slow peel-out+detour)
+    admissible_recovery_set: [Backstep, Update_Topology]
+    canonical_recovery: { primitive: Backstep, params: { distance_m: 0.5 } }
+    certificate: "A1.3 re-certifies C2ST on pen<p0_m windows (plateau ≡ matched_O2 by construction)"
+    used_by: [A4]
+    note: "A4's consequence-grade O4: plateau (≡mud) for pen≤p0_m, then a steep ramp (k2=60, no break)
+           ⇒ push-through STALLS in-hazard (immobilization) while back-out escapes. The matched_O4
+           attribution pair (above) is unchanged; this is the consequence-phase operator (R7). A
+           finite-f_break variant (catapult) is documented but the immobilization preset is the
+           robust headline (clean sustained-stall detection, no early benign break)."
+
+  # ---- T3 Conflict, proprio-true (vision misleading/deceptive, proprio decisive) ---------------
+  O7_looks_safe:
+    builder: o7_visual_remap        # (A3.1 will add the scenario builder; θ mirrors hindsight.yaml lanes)
+    operator: O7_visual_remap
+    theta: { mu_s: 0.09, mu_d: 0.09, depth_bias_m: 0.6 }
+    taxonomy_cell: T3
+    true_category: low_friction
+    ab_class: A                         # taxonomy default for low_friction (the T3 crux is proprio-decides, not A/B)
+    appearance_class: solid_ground      # deceptive: looks like safe dry ground, is slippery
+    success_criterion: reach
+    admissible_recovery_set: [Set_Constraint, Adjust_Posture]
+    canonical_recovery: { primitive: Set_Constraint, params: { max_speed: 0.3 } }
+    certificate: "A1.4 T3 — proprio C2ST 1.0 (decisive) / CLIP 0.31 on same-appearance pair (vision blind)"
+    used_by: [A3, A4]
+
+  O7_reverse:
+    builder: o7_visual_remap_reverse    # (A3.2 reverse probe: hazard-coloured decal on nominal floor)
+    operator: O7_visual_remap
+    theta: { mu_s: 0.8, mu_d: 0.8, depth_bias_m: 0.0 }   # physics is NOMINAL; only the appearance alarms
+    taxonomy_cell: T3
+    true_category: nominal
+    ab_class: A
+    appearance_class: hazard_decal_benign
+    success_criterion: continue
+    admissible_recovery_set: [continue]
+    canonical_recovery: { primitive: continue, params: {} }
+    used_by: [A3, A4]
+    note: "vision says hazard, proprio says nominal → correct answer is continue; an agent that learned
+           'conflict ⇒ trust camera' backsteps around paint (the A3.2 shortcut probe)"
+
+  O8_invisible:
+    builder: o8_invisible
+    operator: O8_invisible_collider
+    theta: {}
+    taxonomy_cell: T3
+    true_category: invisible_obstacle
+    ab_class: B
+    appearance_class: solid_ground
+    success_criterion: reach
+    admissible_recovery_set: [Backstep, Replan_Waypoint, Update_Topology]
+    canonical_recovery: { primitive: Update_Topology, params: { status: blocked } }
+    used_by: [A3, A4]
+
+  # ---- T4 Fine-structure, proprio-sufficient (no terrain-visual signal) -------------------------
+  O5_payload_B:
+    builder: o5_payload
+    operator: O5_payload
+    theta: { mass_kg: 16.0 }
+    taxonomy_cell: T4
+    true_category: overload
+    ab_class: B
+    appearance_class: solid_ground
+    success_criterion: safe_halt
+    admissible_recovery_set: [Hold_and_Request, Set_Constraint]
+    canonical_recovery: { primitive: Hold_and_Request, params: { reason: "payload exceeds safe capacity" } }
+    used_by: [A2, A4]
+
+  O10_decay_B:
+    builder: o10_effort_decay
+    operator: O10_effort_decay
+    theta: { floor: 0.15, decay_rate_per_s: 0.6, t_start_s: 2.0 }
+    taxonomy_cell: T4
+    true_category: effort_decay
+    ab_class: B
+    appearance_class: solid_ground
+    success_criterion: reach
+    admissible_recovery_set: [Set_Constraint, Switch_Gait]
+    canonical_recovery: { primitive: Switch_Gait, params: { mode: crawl } }
+    used_by: [A2, A4, A6]
+    note: "severe decay (floor 0.15 < θ*≈0.3): in A4 all scripted recoveries immobilize (the gait-
+           speed controllers cannot save startup-paralysis-level decay) — the below-θ* boundary
+           datum (consistent with A6); the T4 attribution⇒consequence diagonal is carried by O5."
+
+  # ---- T5 Nominal / mild (benign anomaly; correct answer is `continue`) -------------------------
+  O10_A_nominal:
+    builder: o10_effort_decay      # floor=0.9 nominal row (E4 §3.7: hardened monitor silent, base reach 1.00)
+    operator: O10_effort_decay
+    theta: { floor: 0.9, decay_rate_per_s: 0.6, t_start_s: 2.0 }
+    taxonomy_cell: T5
+    true_category: effort_decay
+    ab_class: A
+    appearance_class: solid_ground
+    success_criterion: continue
+    admissible_recovery_set: [continue]
+    canonical_recovery: { primitive: continue, params: {} }
+    used_by: [A4, A6]
+    note: "the validated clean nominal row — the left endpoint of the A6 O10 severity axis"
+
+  O1_A_nominal:
+    builder: o1_ice_A
+    operator: O1_mu_field
+    theta: { mu_s: 0.35, mu_d: 0.30 }
+    taxonomy_cell: T5
+    true_category: low_friction
+    ab_class: A
+    appearance_class: ice_sheet
+    success_criterion: continue
+    admissible_recovery_set: [continue]
+    canonical_recovery: { primitive: continue, params: {} }
+    used_by: [A4]
+
+  O2_A_nominal:
+    builder: o2_compliance_A
+    operator: O2_compliance
+    theta: { k_c: 6.0, c_c: 3.0, d_sink: 0.03 }
+    taxonomy_cell: T5
+    true_category: compliant_terrain
+    ab_class: A
+    appearance_class: brown_mud
+    success_criterion: continue
+    admissible_recovery_set: [continue]
+    canonical_recovery: { primitive: continue, params: {} }
+    used_by: [A4, A6]
+    note: "mild mud carrying the certified proprio ambiguity even at nominal θ (E4 §3.6 / A6 O2 panel);
+           the proprio-only detector cannot be silenced here without violating R8 — a cross-modal
+           `continue` boundary"
+
+  O6_push_A:
+    builder: o6_push_A
+    operator: O6_push
+    theta: { impulse_ns: 8.0, t_push_s: 2.0 }
+    taxonomy_cell: T5
+    true_category: external_push
+    ab_class: A
+    appearance_class: solid_ground
+    success_criterion: reach
+    admissible_recovery_set: [Set_Constraint, Adjust_Posture, Hold_and_Request]
+    canonical_recovery: { primitive: Set_Constraint, params: { max_speed: 0.4 } }
+    used_by: [A4]

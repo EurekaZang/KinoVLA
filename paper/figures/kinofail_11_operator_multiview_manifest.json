@@ -1,0 +1,267 @@
+{
+  "schema_version": "kinofail.11-operator-multiview-gallery.v4",
+  "created_utc": "2026-07-21T10:10:54.233921+00:00",
+  "layout": {
+    "operators": 11,
+    "views_per_operator": 3,
+    "canvas_px": [
+      5800,
+      12024
+    ],
+    "view_px": [
+      1920,
+      1080
+    ],
+    "style": "full_width_rows_in_image_labels_only"
+  },
+  "generated_imagery": false,
+  "deterministic_compositing_only": true,
+  "cards": [
+    {
+      "operator": "O1",
+      "title": "O1  Low friction",
+      "description": "Surface friction changes while appearance is controlled",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/terrain_pbr_gate/01_life_train_tiles141_nominal.png",
+          "sha256": "c06d5dc58c84a1836a1cbc7955c0d5fc0d9d84a8831c2d0ba07079572da04b7d",
+          "caption": "Nominal physics"
+        },
+        {
+          "path": "outputs/kinofail_realistic/terrain_pbr_gate/01_life_train_tiles141_anomaly.png",
+          "sha256": "8028ff950317bc61162c5027bb127ff27b76927fcbc5e8e96c9d6f0ba93e2fc2",
+          "caption": "Low-friction pair"
+        },
+        {
+          "path": "outputs/kinofail_realistic/terrain_pbr_gate/03_wild_train_ground054_anomaly.png",
+          "sha256": "be4064b840a76e0f37b1e914f4a6c87aad1852d503ffe6209e5bcf65f228071e",
+          "caption": "Cross-material view"
+        }
+      ]
+    },
+    {
+      "operator": "O2",
+      "title": "O2  Deformable terrain",
+      "description": "Contact-driven sinkage and resistance on disturbed soil",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/o2_o3_visual_evidence/O2_disturbed_soil_overview.png",
+          "sha256": "44721ef3489105e897402a219fb6b9ccd6e8d0209701a4c5dc3b50fab79c1c86",
+          "caption": "Overview"
+        },
+        {
+          "path": "outputs/kinofail_realistic/o2_o3_visual_evidence/O2_disturbed_soil_side_close.png",
+          "sha256": "ab43ec4016fd34ad0e6128a6b366552aff14ccd667f352505aa92b0a3a92a047",
+          "caption": "Side close-up"
+        },
+        {
+          "path": "outputs/kinofail_realistic/o2_o3_visual_evidence/O2_disturbed_soil_top_oblique.png",
+          "sha256": "ef25ca3051338ef2db08322495a71ac0ceb23f4e563d09bf035f9d94ab277b55",
+          "caption": "Top oblique"
+        }
+      ]
+    },
+    {
+      "operator": "O3",
+      "title": "O3  Triggered collapse",
+      "description": "Load-triggered fracture changes support topology",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/o2_o3_visual_evidence/O3_fractured_surface_overview.png",
+          "sha256": "d0bf1ed49a2334ed14722d66ccfea6e6783d0215c3b92ee0fe722a3ee196bd38",
+          "caption": "Overview"
+        },
+        {
+          "path": "outputs/kinofail_realistic/o2_o3_visual_evidence/O3_fractured_surface_side_close.png",
+          "sha256": "cbf909af5e26db085752e15641597f9a95b64730cd0eca99bbb31b930f897827",
+          "caption": "Side close-up"
+        },
+        {
+          "path": "outputs/kinofail_realistic/o2_o3_visual_evidence/O3_fractured_surface_top_oblique.png",
+          "sha256": "52b59fe19650c1fe4891ed4d91d4acd7d5f823106540113332eff722f348cc4f",
+          "caption": "Top oblique"
+        }
+      ]
+    },
+    {
+      "operator": "O4",
+      "title": "O4  Foot adhesion",
+      "description": "Foot attachment resists commanded locomotion",
+      "views": [
+        {
+          "path": "outputs/demos/indoor_adhesion_icra/multiview_peak/01_room_overview_left.png",
+          "sha256": "3d358f60dc82ddd6dc4775f2199b44a94c0a6c055947edc62697c4beca12f613",
+          "caption": "Room overview"
+        },
+        {
+          "path": "outputs/demos/indoor_adhesion_icra/multiview_peak/03_left_side_low.png",
+          "sha256": "a237c66f8827d5e50f2cae409fe75ca47fc2af57d90b5b2b5a1ff7b11f71620c",
+          "caption": "Side close-up"
+        },
+        {
+          "path": "outputs/demos/indoor_adhesion_icra/multiview_peak/07_top_down.png",
+          "sha256": "44a726778f72dd47a25901daa68ebd39331046d938b1cf4e683c621cdd91fc79",
+          "caption": "Top-down"
+        }
+      ]
+    },
+    {
+      "operator": "O5",
+      "title": "O5  Rigid payload",
+      "description": "Visible overload modifies mass, CoM, and load transfer",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O5/01_overview_left.png",
+          "sha256": "7f899642c4255de9ce3df92b644ce9c308c1550510188307708cd9e91b771207",
+          "caption": "Overview"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O5/02_side_low.png",
+          "sha256": "c9f5eb3dd3e6be8f1f59e09f837f5e0014ec5f55f71533472d507991833a131e",
+          "caption": "Side close-up"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O5/03_front_oblique.png",
+          "sha256": "b6f41aeaa30a44cfada4940cbdabb4d4bf77db21ee4140bcb746f9417b3429b7",
+          "caption": "Front oblique"
+        }
+      ]
+    },
+    {
+      "operator": "O6",
+      "title": "O6  Lateral impulse",
+      "description": "Finite body-frame wrench perturbs the walking state",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O6/01_overview_left.png",
+          "sha256": "e3586427e3ce6f892fbdd629a3926b893079428ee18e8b581d3e1bdedefa2a4d",
+          "caption": "Overview"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O6/02_side_low.png",
+          "sha256": "35ed1f404d5bd3a6564ec4c2ca67ce790a18880b894fc77254f0b90d5f619594",
+          "caption": "Side close-up"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O6/03_front_oblique.png",
+          "sha256": "8298a968de2180ece8e699ea90216dd709328948ee5964711b64cce3dfa20129",
+          "caption": "Front oblique"
+        }
+      ]
+    },
+    {
+      "operator": "O7",
+      "title": "O7  Visual-physics remap",
+      "description": "Appearance is decoupled from depth/geometry evidence",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/o7_rtx_depth_gate/seed_42_val_tiles139_nominal.png",
+          "sha256": "840ea2bf358ccc96c8b946f0bf685a668e07d832f267fb46e31ea6c6a25d66c4",
+          "caption": "Nominal mapping"
+        },
+        {
+          "path": "outputs/kinofail_realistic/o7_rtx_depth_gate/seed_42_val_tiles139_severe.png",
+          "sha256": "c39386c7fc598ed941fc66f53a4d605ac238530980d2bf77c6c926210672bda2",
+          "caption": "Severe remap"
+        },
+        {
+          "path": "outputs/kinofail_realistic/o7_rtx_depth_gate/seed_59_test_concrete039_severe.png",
+          "sha256": "389a47b92fffe8bd5ac3c626c0677093bb7f156c030fe4a4e1ecb87462da674b",
+          "caption": "Cross-material view"
+        }
+      ]
+    },
+    {
+      "operator": "O8",
+      "title": "O8  Transparent obstacle",
+      "description": "High-transmission geometry blocks forward progress",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O8/01_overview_left.png",
+          "sha256": "552ab2c2a85745ea29ee33f0170d5036c25270ad585853620b302233319b3e79",
+          "caption": "Overview"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O8/02_side_low.png",
+          "sha256": "6d9fc830cf9c41ef68ec70337e482cc4bd73fce847a81267af2a0d05219949b1",
+          "caption": "Side close-up"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O8/03_front_oblique.png",
+          "sha256": "c229f798cfded6aa361368d2a1765f8fd6bb46cedcb31ba0d8dc1bc15d562c6d",
+          "caption": "Front oblique"
+        }
+      ]
+    },
+    {
+      "operator": "O9",
+      "title": "O9  High-centering",
+      "description": "Belly contact on a central runner removes foot authority",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O9/01_overview_left.png",
+          "sha256": "383279620f2ab7063600bc241d7d4f7f5e32e12db21fb2ab21f4db02520e7ac3",
+          "caption": "Overview"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O9/02_side_low.png",
+          "sha256": "cdcb038ad2e7d1ce0e0014295701990d5e1086ad513b90e4b847108519a6d718",
+          "caption": "Side close-up"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O9/03_front_oblique.png",
+          "sha256": "2951aa96861ba0ec124727296f11655091bb1c02adb0f77bb69cc3f12c483f4a",
+          "caption": "Front oblique"
+        }
+      ]
+    },
+    {
+      "operator": "O10",
+      "title": "O10  Actuator derating",
+      "description": "Reduced torque limits cause saturation and loss of mobility",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O10/01_overview_left.png",
+          "sha256": "2efb953be82848ad146824a64d1d19f318ebebfaf3fead2a9ed7d5bb5d506e32",
+          "caption": "Overview"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O10/02_side_low.png",
+          "sha256": "2dc1363367f7d82d031e974a5c0b106d05ddd94c42bed4c277c0628b161d9a10",
+          "caption": "Side close-up"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O10/03_front_oblique.png",
+          "sha256": "b7b744fdd5f419241dca012e69ca5ec298affac5ca71ad03c506930f7adf41f7",
+          "caption": "Front oblique"
+        }
+      ]
+    },
+    {
+      "operator": "O11",
+      "title": "O11  Sensor bias",
+      "description": "Bias, random walk, and latency corrupt proprioception",
+      "views": [
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O11/01_overview_left.png",
+          "sha256": "18ab73b0bb0dd6dfe18443931b14ed4f844ebba67cc75c2134b222e63e0c70e6",
+          "caption": "Overview"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O11/02_side_low.png",
+          "sha256": "8b1fe92d9d8f7824c833a193e91ba0c1f613ac0757e1950f0010f4cde3a36086",
+          "caption": "Side close-up"
+        },
+        {
+          "path": "outputs/kinofail_realistic/operator_gallery/source/O11/03_front_oblique.png",
+          "sha256": "a446be92183fd2f47ea243cc0f2ccb7bddeab3587bbe6194f749bc618df84acf",
+          "caption": "Front oblique"
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "paper/figures/kinofail_11_operator_multiview.png": "d755b19517be6d6742b623569e6b41bcd68909e0100abedebae51d8c39afb4ff",
+    "paper/figures/kinofail_11_operator_multiview_preview.jpg": "bd316edb90eb2c6aa643d17fe65dc3b41db5e5a3a647ecff9a4ee9eb7e84aaab"
+  }
+}

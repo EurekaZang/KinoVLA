@@ -2,13 +2,38 @@
 # (CLAUDE.md deviation #16): CLIP/SAM stand-ins, costmap geometry, propagation/hazard
 # thresholds. No magic numbers in module code (QA 5.5) — all map behaviour is here.
 
+# Perception front-end (clip | rgbd | surrogate). The CODE DEFAULT is real CLIP
+# (TraversabilityMap.DEFAULT_SEGMENTER, spec §7). This is the SHARED config loaded by the CI fast
+# tests, the surrogate walking-skeleton demo (scripts/run_demo.py / tests/test_demo.py) and
+# tests/test_map.py — none of which have a GPU / HF-model budget — so it pins 'surrogate' to keep
+# the demo gate green (CLAUDE.md QA 5.1). The Isaac CLIP demos load this config with a
+# {'segmenter': 'clip'} override (real open-vocab CLIP, 512-d features).
+segmenter: surrogate
+
 costmap:
   resolution_m: 0.25      # grid cell size
   extent: [16.0, 10.0]    # odometry-frame walkable area (matches demo terrain extent)
 
+# Rolling (egocentric) costmap for long-distance / multi-patch courses (#47). OFF by default ⇒ a
+# fixed world-frame grid of `extent` centred at the origin (the demo / existing single-patch
+# scenarios stay byte-identical). ON ⇒ the `extent`-sized grid follows the robot (re-centres when
+# within `roll_margin_m` of an edge) so distant patches/goal beyond the start-centred extent become
+# representable; marks persist in world coords, cells far behind scroll off. Long-distance gates set
+# `rolling: true` (and a wider `extent` for the local route window).
+rolling: false
+roll_margin_m: 2.0
+
 camera:
   fov_rad: 1.5708         # 90° horizontal field of view
-  max_range_m: 5.0        # back-projection range gate
+  max_range_m: 5.0        # back-projection range gate (SurrogateSegmenter centre-in-cone gate)
+  # Real RGB-D pinhole back-projection (kino_vla/map/rgbd.py, RgbdSegmenter — spec §7).
+  # Live RTX camera is hardware-blocked here (CLAUDE.md §6 #24/#26), so the same intrinsics
+  # drive a procedural ground-plane RGB-D render; a working-RTX camera feed is a drop-in.
+  image_width: 96         # render/intrinsics resolution
+  image_height: 72
+  mount_height_m: 0.45    # camera height over the body (≈ Go2 trunk-mounted RGB-D)
+  pitch_rad: 0.6          # downward tilt so the ground ahead fills the frame (~34°)
+  encoder_bins: 4         # PixelAppearanceEncoder bins; bins**3 must equal costmap EMBED_DIM (64)
 
 # Physical-failure overwrite (high-confidence, sticky):
 failure_cost: 1.0         # cost stamped at an attributed failure site

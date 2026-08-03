@@ -1,0 +1,43 @@
+# Embodied DPO config (spec §11 Stage 2; M7). DPO-train the SFT planner on physical-outcome
+# preference pairs from closed-loop rollouts. Inherits the model/projector/route from the SFT run
+# (the DPO policy is initialized from the SFT adapter). The adapter-toggle reference (LoRA off) is
+# the πref — no second model is loaded (CLAUDE.md §6 #33).
+
+route: latent
+
+model:
+  model_id: Qwen/Qwen3-VL-4B-Instruct
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.05
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+projector:
+  conv_channels: [48, 48]
+  conv_kernels: [5, 3]
+  latent_dim: 96
+  n_latents: 6
+  n_heads: 4
+  mlp_hidden: 96
+  proj_hidden: 512
+  std_eps: 1.0e-3
+
+data:
+  n_images: 1
+
+# Closed-loop rollout sampler (spec §11 multi-temperature). Multiple temperatures at each failure
+# node yield diverse decisions; the physical outcome (escape-to-goal vs fall/dead-loop) labels them.
+rollout:
+  temperatures: [0.0, 0.7, 1.0, 1.2]
+  max_pairs_per_node: 4
+  backend: surrogate    # the deliverable run overrides to isaac (the real Go2, spec §1/§8.1)
+
+train:
+  seed: 0
+  beta: 0.1            # DPO temperature (Rafailov et al.)
+  lr: 5.0e-6
+  weight_decay: 0.0
+  epochs: 3
+  grad_accum: 8
+  grad_clip: 1.0

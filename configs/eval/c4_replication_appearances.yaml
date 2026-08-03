@@ -1,0 +1,69 @@
+experiment: A5.6-C4-confirmatory-replication
+purpose: six-appearance-cluster replication of the frozen positive C4 final-v2 endpoint
+frozen_before_collection: true
+frozen_date: 2026-07-19
+gate_config: eval/c4_structured_gate_v2.yaml
+appearance_split: final
+seed_base: 1500
+replication_of:
+  result: outputs/eval/a5/a5_6_c4_final_v2.json
+  result_sha256: 9e9d24fe938ca17b1d677becb8f2ce6ba7962fc4ec49ab607a2d9d390c73114b
+  unchanged_gate_sha256: 1d538a3119c96079d41a5abb1aff3068005794aefdb4b071f3ac4b6499287bbd
+
+# Six new appearances per semantic family.  Compliant colours are deterministic points spanning
+# the two frozen calibration-prototype neighbourhoods; all other families are outside the frozen
+# support radius.  Selection uses the already-frozen support definition only, never VLA outputs or
+# A4 costs.  Fewer seeds per appearance keep the total comparable while tripling independent
+# appearance clusters relative to final-v2.
+classes:
+  adhesion:
+    - {id: c4r_saffron_film, rgb: [0.84, 0.72, 0.22], base_material: adhesive}
+    - {id: c4r_ochre_tape, rgb: [0.76, 0.61, 0.20], base_material: adhesive}
+    - {id: c4r_pearl_epoxy, rgb: [0.72, 0.69, 0.61], base_material: adhesive}
+    - {id: c4r_copper_resin, rgb: [0.69, 0.48, 0.24], base_material: adhesive}
+    - {id: c4r_lilac_glue, rgb: [0.62, 0.50, 0.70], base_material: adhesive}
+    - {id: c4r_teal_bond, rgb: [0.25, 0.63, 0.62], base_material: adhesive}
+  compliant_terrain:
+    - {id: c4r_brown_loam, rgb: [0.40, 0.27, 0.14], base_material: mud}
+    - {id: c4r_cocoa_mud, rgb: [0.43, 0.29, 0.15], base_material: mud}
+    - {id: c4r_rust_silt, rgb: [0.46, 0.31, 0.17], base_material: mud}
+    - {id: c4r_graphite_mud, rgb: [0.30, 0.28, 0.25], base_material: mud}
+    - {id: c4r_slate_clay, rgb: [0.33, 0.30, 0.27], base_material: mud}
+    - {id: c4r_gray_umber, rgb: [0.36, 0.32, 0.27], base_material: mud}
+  low_friction:
+    - {id: c4r_powder_ice, rgb: [0.72, 0.84, 0.95], base_material: ice}
+    - {id: c4r_silver_frost, rgb: [0.72, 0.76, 0.82], base_material: ice}
+    - {id: c4r_blue_glaze, rgb: [0.48, 0.70, 0.91], base_material: ice}
+    - {id: c4r_violet_ice, rgb: [0.67, 0.61, 0.86], base_material: ice}
+    - {id: c4r_white_rime, rgb: [0.86, 0.88, 0.91], base_material: ice}
+    - {id: c4r_cyan_crust, rgb: [0.48, 0.82, 0.84], base_material: ice}
+  solid_ground:
+    - {id: c4r_neutral_concrete, rgb: [0.52, 0.52, 0.51], base_material: solid_ground}
+    - {id: c4r_warm_paver, rgb: [0.56, 0.50, 0.44], base_material: solid_ground}
+    - {id: c4r_cool_paver, rgb: [0.43, 0.47, 0.53], base_material: solid_ground}
+    - {id: c4r_blue_asphalt, rgb: [0.35, 0.42, 0.50], base_material: solid_ground}
+    - {id: c4r_pale_stone, rgb: [0.66, 0.63, 0.58], base_material: solid_ground}
+    - {id: c4r_dark_stone, rgb: [0.38, 0.39, 0.42], base_material: solid_ground}
+
+collection:
+  main_seed_counts:
+    matched_O4: 8
+    matched_O2: 10
+    O1_A_nominal: 4
+    O2_A_nominal: 4
+    O5_payload_B: 4
+    O10_decay_B: 4
+    O8_invisible: 4
+  o7_mu_sweep: [0.6, 0.3, 0.15, 0.09]
+  o7_seeds_per_cell: 3
+  expected_main_snapshots: 228
+  expected_t3_snapshots: 72
+  expected_total_snapshots: 300
+
+statistics:
+  primary_comparator: always_safe
+  minimum_coverage: 0.10
+  minimum_released_appearance_clusters: 6
+  paired_two_stage_bootstrap_reps: 5000
+  success_gate: ci_upper_lt_zero
+

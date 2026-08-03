@@ -1,0 +1,291 @@
+{
+  "allowed": {
+    "camera_profiles": [
+      "go2_front_calib_a",
+      "go2_front_calib_b",
+      "go2_front_calib_c"
+    ],
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_073986c105277723f35d",
+      "cf_0794376c1852a73c66ba",
+      "cf_0872d6613640168f9629",
+      "cf_091f6a0a9457a975163e",
+      "cf_0a28a1cea130b19ac36c",
+      "cf_139c67dd02a8f5c33053",
+      "cf_15486b273c55bf59631b",
+      "cf_15832c4d8ac790a69264",
+      "cf_16e966930daf79b6e6a8",
+      "cf_1854b706f6ee2e45e078",
+      "cf_19585c6c19e9a3ab2d7f",
+      "cf_219fcdb92b29b28e008b",
+      "cf_25f446a9013d974e3c70",
+      "cf_26edbd30dae2283d4f64",
+      "cf_293a99486076da9460f5",
+      "cf_296df24b8c847ea588f2",
+      "cf_29e2a23b9d1230462a57",
+      "cf_2aa3f4eb20e634cf02ae",
+      "cf_2b188e60179e65570dca",
+      "cf_2d2c258f7c24d3f59c2c",
+      "cf_2db9c13ce63629427717",
+      "cf_31e32d243671678cdc35",
+      "cf_3209752dd77e585be370",
+      "cf_321d48ce625bccd6395b",
+      "cf_3609428793ab101b765b",
+      "cf_399dfae2f8bcff05bb98",
+      "cf_3cadf8dfd724c93a9c06",
+      "cf_3ecbaf1da262934627b7",
+      "cf_3f2147475d85edb55f1f",
+      "cf_3f9366d6b20c5d8a65a1",
+      "cf_3fb4ef3d654b0aed0815",
+      "cf_4071efc1c4fc195acce6",
+      "cf_40c08c29c9cd31b944c1",
+      "cf_42d2cd2e63eaa6b6bcb2",
+      "cf_42e5ee9c31f31038ae2c",
+      "cf_437738087702d59d2b58",
+      "cf_445e2ba042a33d96da70",
+      "cf_46bb55813abc3d7d4483",
+      "cf_46ea41ff580a007d08ca",
+      "cf_49086157f12f126810e5",
+      "cf_4ad7acf04ed5c2713009",
+      "cf_4d3c55fa8f2dff86a0d2",
+      "cf_4d3cf86554a2fac42dc6",
+      "cf_4e072fa2fc06aaf33542",
+      "cf_50c00d71f44fb57360ed",
+      "cf_52a5236e279e33e06476",
+      "cf_5a040e73e1034f9ef85f",
+      "cf_5c1faca0b71e788a273c",
+      "cf_5d1269267996bc5e547e",
+      "cf_603cc88415516cc212db",
+      "cf_6219e8fa01fbab0367b7",
+      "cf_62a6479ab8bf75d403f9",
+      "cf_67c868765802360b4caa",
+      "cf_6c1357f714382d853ba5",
+      "cf_6e8f318d09b9cf177484",
+      "cf_6ec476261c74b7f0117c",
+      "cf_710a8743fbc39ce6499b",
+      "cf_726aa765217c136dd2ce",
+      "cf_72aeb330a288fdc96cb0",
+      "cf_72bf9c84200c312ed449",
+      "cf_73720cfd2ddea143d8e5",
+      "cf_749af2432912d05a7ea7",
+      "cf_765e901868e69ddfa58d",
+      "cf_7760d0e6167928d8d19a",
+      "cf_79e0ab77244cab218ada",
+      "cf_7a23a2cfa868b91fb20e",
+      "cf_7be8af0173f6d7197fa6",
+      "cf_7c54a6bfacb1b140f3fd",
+      "cf_7ee3ee620a8dc9fb0f94",
+      "cf_7fca894c71b7bd71f7a0",
+      "cf_8096f58ee8745144a63b",
+      "cf_81f463114719065d23f6",
+      "cf_82c613bb7178c0bb55fd",
+      "cf_83548e13028de5b3bea4",
+      "cf_8504371ea1a2ac0a5b65",
+      "cf_86d6a628036fa2ae1cab",
+      "cf_88c0e771a597f6c38018",
+      "cf_8940fcf6237233828203",
+      "cf_8cec1af7472cb2f44c8b",
+      "cf_8e16e60de893e142256e",
+      "cf_8fd24c8c33c23a353e36",
+      "cf_9075e44840fbe04d1631",
+      "cf_9085dc086c998ff1c633",
+      "cf_919dd40debde603266a0",
+      "cf_959ad02cfd722777f2c9",
+      "cf_95fd653f6e4a10a9e7c2",
+      "cf_97aa001526be3c41e2dc",
+      "cf_9a342607cd4b8017b748",
+      "cf_9a93ce7dea88890f94d5",
+      "cf_9d4c8f48f343235ddf99",
+      "cf_9ec914aaf6c999921864",
+      "cf_a24952e200d5ec6a5478",
+      "cf_a5329c42ef0c3d7d0f1b",
+      "cf_a87cc0285f841c33510b",
+      "cf_a8b189a94fdbc5762cfd",
+      "cf_a8f4ffc9d09bf77dd1be",
+      "cf_a8f8419f24e7f2015c1c",
+      "cf_abc406af5406dd11dfad",
+      "cf_af0aa70b80e39313d36a",
+      "cf_b1a53a0a7b6bd4f8441d",
+      "cf_b25f91fd92b294e74e5c",
+      "cf_b384d58a3c7685043126",
+      "cf_b433b25072edb8afec49",
+      "cf_b70350661f367cee7ba4",
+      "cf_bac1c22896231bc9f0c7",
+      "cf_bcb3d79b8da7249666b6",
+      "cf_bd9b7cae81141682fc28",
+      "cf_bde4e8a583eca8509327",
+      "cf_c033aed42859e7205c7a",
+      "cf_c2cdcfc31275aac4c90f",
+      "cf_c3bc53918ce77da821d3",
+      "cf_c636a3e894ef86c10ee0",
+      "cf_ca76e13234c65ed55091",
+      "cf_cad00082cacd146adf24",
+      "cf_cadec27a31d401d53e4f",
+      "cf_d0b3bee24b7a54377ef2",
+      "cf_d26fce7f564c08df186a",
+      "cf_d2e76fd33e07b401f6dd",
+      "cf_d34c7c08157969dd162f",
+      "cf_d4fbadcfe18d25d6ee89",
+      "cf_d5bb0bbdabd0fafc69a4",
+      "cf_d7def3a9c8b1097b0d86",
+      "cf_d7e9956203cccc170e01",
+      "cf_d9e3d14a3bb51a099a43",
+      "cf_e58cc91aeca8263c1099",
+      "cf_e6b97b55f4cd469fcf7b",
+      "cf_e8ccdbefae66c143cdf6",
+      "cf_eb2d4e3f13e79f4d1db3",
+      "cf_f6e55349455a0da4328f",
+      "cf_f70ee89f8448e2eac1d6",
+      "cf_f8bb985271838f35349b",
+      "cf_fa29aec732a31376f4d5",
+      "cf_fcab4029b5cf39948ffd",
+      "cf_fe3cc75c4e55acd6bf14",
+      "cf_ffaebd9e8dc48fe9502e"
+    ],
+    "design_blocks": [
+      {
+        "physical_nuisance_profile_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "severity_ids": [
+          "severe"
+        ],
+        "target_operator": "O3_collapse"
+      },
+      {
+        "physical_nuisance_profile_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "severity_ids": [
+          "moderate",
+          "severe"
+        ],
+        "target_operator": "O8_invisible_collider"
+      }
+    ],
+    "geometry_profiles": [
+      "hidden_support_cells",
+      "transparent_panel"
+    ],
+    "physical_nuisance_profile_indices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "physical_realizations": [
+      "impulse_triggered_support_tile",
+      "transparent_acrylic"
+    ],
+    "scene_families": [
+      "forest_river_walk_metric_g07",
+      "forest_slope_metric_g06",
+      "forest_trail_metric_g03",
+      "indoor_bedroom_118",
+      "indoor_kitchen_140",
+      "indoor_livingroom_139",
+      "indoor_office_162",
+      "indoor_office_168",
+      "indoor_office_186"
+    ],
+    "severity_ids": [
+      "moderate",
+      "severe"
+    ],
+    "target_operators": [
+      "O3_collapse",
+      "O8_invisible_collider"
+    ]
+  },
+  "amendment": {
+    "changed": "Install O3-severe and every O8 instance after the same recorded 30-control-step (0.6 s) pre-roll.",
+    "model_predictions_available_at_freeze": false,
+    "pair_selection_is_complete_design_blocks_not_outcome_cherry_picking": true,
+    "selection_basis": {
+      "all_unobserved_block_members_included_prospectively": true,
+      "complete_design_blocks": [
+        "O3_collapse / severe / all five profiles / all nine scenes",
+        "O8_invisible_collider / moderate+severe / all five profiles / all nine scenes"
+      ],
+      "observed_before_freeze": {
+        "O3_collapse/severe": {
+          "finished_pairs": 6,
+          "observed_too_short_profiles": [
+            1,
+            2,
+            3
+          ],
+          "too_short_pairs": 6
+        },
+        "O8_invisible_collider/moderate": {
+          "finished_pairs": 1,
+          "observed_too_short_profiles": [
+            4
+          ],
+          "too_short_pairs": 1
+        },
+        "O8_invisible_collider/severe": {
+          "finished_pairs": 4,
+          "observed_too_short_profiles": [
+            2,
+            3
+          ],
+          "too_short_pairs": 3
+        }
+      }
+    },
+    "unchanged": [
+      "all scheduled O3 and O8 physical parameters",
+      "five-profile route-entry nuisance definition and balance",
+      "scene geometry and operator region",
+      "controller and commanded speed",
+      "body-fixed Go2 front camera",
+      "three synchronized PBR appearance views",
+      "counterfactual pairing",
+      "10 Hz RGB capture",
+      "runtime quality gates"
+    ]
+  },
+  "base_protocol": "configs/data/kinofail_realistic_scale_v8_replication_formal_v3.json",
+  "benchmark_id": "kinofail_realistic_scale_v8_replication_v1",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "counterfactual_pairs": 135,
+    "physical_episodes": 270,
+    "pre_operator_control_steps": 30,
+    "pre_operator_duration_s": 0.6,
+    "separate_repair_root_required": true
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_temporal_repair_v4.py",
+  "collector_sha256": "0595bb3b30e507f32d75d4a47f320b979305aed73ba5436a7e4d8803a58d440f",
+  "frozen_utc": "2026-07-23T19:38:02.429008+00:00",
+  "protocol_id": "kinofail_realistic_scale_v8_temporal_repair_v4",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule_path": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+  "schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "Uniform all-scene, all-profile repair of O3-severe and the complete O8 operator block at both severities; no other pair is admitted.",
+  "status": "frozen",
+  "supersedes": {
+    "protocol": "configs/data/kinofail_realistic_temporal_repair_formal_v3.json",
+    "protocol_sha256": "a69e33ddd7d2573def0abf27b9f5309022c8a259620797f14c89c0b869947365",
+    "reason": "O8 immediate collision was observed at moderate as well as severe strength before any scale-v8 model training or prediction."
+  }
+}

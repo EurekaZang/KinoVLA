@@ -1,0 +1,59 @@
+{
+  "schema_version": "kinofail.forest-hdri-assets.v1",
+  "status": "development_synchronized_appearance_extension_lock_input",
+  "provider": {
+    "name": "Poly Haven",
+    "api": "https://api.polyhaven.com",
+    "license": "CC0",
+    "license_url": "https://polyhaven.com/license",
+    "api_terms_url": "https://polyhaven.com/our-api"
+  },
+  "selection_policy": {
+    "purpose": "Two additional photographic distant backgrounds for physics-identical forest appearance families.",
+    "resolution": "4k",
+    "format": "hdr",
+    "selection_uses_model_results": false,
+    "candidate_reason": "Whipple Creek supplies a cool overcast green path and Hochsal supplies an autumn muddy trail, increasing illumination and season diversity before any realistic A0-A7 model evaluation."
+  },
+  "assets": [
+    {
+      "id": "whipple_creek_regional_park_04",
+      "display_name": "Whipple Creek Regional Park 04",
+      "asset_page": "https://polyhaven.com/a/whipple_creek_regional_park_04",
+      "metadata_api": "https://api.polyhaven.com/info/whipple_creek_regional_park_04",
+      "files_api": "https://api.polyhaven.com/files/whipple_creek_regional_park_04",
+      "author": "Philip Modin",
+      "categories": ["outdoor", "nature", "midday", "overcast", "medium contrast", "natural light"],
+      "tags": ["tree", "path", "park", "forest"],
+      "file": {
+        "relative_path": "whipple_creek_regional_park_04/whipple_creek_regional_park_04_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/whipple_creek_regional_park_04_4k.hdr",
+        "bytes": 29699763,
+        "md5": "fc6019bdb810e17bcfee8e70d5108840"
+      }
+    },
+    {
+      "id": "hochsal_forest",
+      "display_name": "Hochsal Forest",
+      "asset_page": "https://polyhaven.com/a/hochsal_forest",
+      "metadata_api": "https://api.polyhaven.com/info/hochsal_forest",
+      "files_api": "https://api.polyhaven.com/files/hochsal_forest",
+      "author": "Adrian Kubasa",
+      "categories": ["overcast", "low contrast", "midday", "natural light", "nature", "outdoor"],
+      "tags": ["tree", "forest", "autumn", "leaves", "mud", "trail"],
+      "file": {
+        "relative_path": "hochsal_forest/hochsal_forest_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/hochsal_forest_4k.hdr",
+        "bytes": 28994884,
+        "md5": "e8e81d96315d28ccec374c854db2d398"
+      }
+    }
+  ],
+  "interpretation_policy": {
+    "photographic_hdri_is_not_embodiedgen_output": true,
+    "kino_fail_owns_metric_near_field_collision_and_operators": true,
+    "appearance_family_changes_do_not_count_as_independent_physical_scenes": true,
+    "splits_are_frozen_before_model_evaluation": true,
+    "counts_as_a0_a7_evidence": false
+  }
+}

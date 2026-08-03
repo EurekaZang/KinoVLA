@@ -1,0 +1,86 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v2-development",
+  "status": "development_only_not_scene_registry_not_a0_a7_evidence",
+  "scene_id": "forest_trail_01",
+  "source_scene_id": "forest_trail_shell_dev01",
+  "domain": "wild",
+  "split": "train",
+  "background": {
+    "type": "embodiedgen_equirectangular_infinite_background",
+    "panorama": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/pano_image.png",
+      "sha256": "ddd9f5690838e00e90bd96cad864795036a18abde0f100a8454081ca336e50b5"
+    },
+    "preflight": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/panorama_preflight.json",
+      "sha256": "769f6b3d9e7fbe29144b217656cc67276f641a510a44c78236c9a1986512f50c"
+    },
+    "use_reconstructed_mesh": false,
+    "rationale": "The single-panorama mesh was only translated-view validated to 0.35 m and failed a 2.4 m body-fixed camera trajectory. It is replaced by an infinite background plus metric near-field geometry.",
+    "intensity": 420.0,
+    "rotation_xyz_deg": [0.0, 0.0, 0.0]
+  },
+  "near_field": {
+    "extent_xy_m": [[-3.0, -8.0], [10.0, 8.0]],
+    "route_hole_margin_m": 0.0,
+    "ground_z_m": -0.002,
+    "prop_asset_lock": {
+      "path": "outputs/assets/forest_props_polyhaven_v1/forest_props.lock.json",
+      "sha256": "5df3b61c50ab60b9bcd23acfb9706800e85ebe22bf50ff13cc7d56cb58a24488"
+    },
+    "instances": [
+      {"id": "fir_left_00", "asset_id": "fir_sapling", "xyz_m": [-1.4, 3.0, 0.0], "rotation_xyz_deg": [0.0, 0.0, 18.0], "scale": 1.15},
+      {"id": "fir_right_00", "asset_id": "fir_sapling", "xyz_m": [0.2, -3.3, 0.0], "rotation_xyz_deg": [0.0, 0.0, 201.0], "scale": 1.30},
+      {"id": "fir_left_01", "asset_id": "fir_sapling", "xyz_m": [3.2, 3.4, 0.0], "rotation_xyz_deg": [0.0, 0.0, 151.0], "scale": 1.05},
+      {"id": "fir_right_01", "asset_id": "fir_sapling", "xyz_m": [5.3, -3.2, 0.0], "rotation_xyz_deg": [0.0, 0.0, 322.0], "scale": 1.25},
+      {"id": "roots_left_00", "asset_id": "pine_roots", "xyz_m": [0.4, 1.55, 0.0], "rotation_xyz_deg": [0.0, 0.0, 31.0], "scale": 0.78},
+      {"id": "roots_right_00", "asset_id": "pine_roots", "xyz_m": [3.7, -1.65, 0.0], "rotation_xyz_deg": [0.0, 0.0, 214.0], "scale": 0.66},
+      {"id": "rocks_left_00", "asset_id": "rock_moss_set_01", "xyz_m": [2.0, 2.3, 0.08], "rotation_xyz_deg": [0.0, 0.0, 9.0], "scale": 0.22},
+      {"id": "rocks_right_00", "asset_id": "rock_moss_set_01", "xyz_m": [6.4, -2.4, 0.08], "rotation_xyz_deg": [0.0, 0.0, 173.0], "scale": 0.20},
+      {"id": "stump_left_00", "asset_id": "tree_stump_01", "xyz_m": [4.5, 1.55, 0.10], "rotation_xyz_deg": [0.0, 0.0, 47.0], "scale": 0.82},
+      {"id": "stump_right_00", "asset_id": "tree_stump_01", "xyz_m": [-0.7, -1.7, 0.10], "rotation_xyz_deg": [0.0, 0.0, 249.0], "scale": 0.70},
+      {"id": "fern_left_00", "asset_id": "fern_02", "xyz_m": [1.1, 1.25, 0.02], "rotation_xyz_deg": [0.0, 0.0, 82.0], "scale": 0.48},
+      {"id": "fern_right_00", "asset_id": "fern_02", "xyz_m": [2.6, -1.25, 0.02], "rotation_xyz_deg": [0.0, 0.0, 271.0], "scale": 0.44},
+      {"id": "shrub_left_00", "asset_id": "shrub_03", "xyz_m": [5.6, 1.15, 0.0], "rotation_xyz_deg": [0.0, 0.0, 110.0], "scale": 0.75},
+      {"id": "shrub_right_00", "asset_id": "shrub_03", "xyz_m": [1.5, -1.15, 0.0], "rotation_xyz_deg": [0.0, 0.0, 286.0], "scale": 0.70}
+    ],
+    "visual_only": true,
+    "collision_policy": "Kino-owned route collision only in this development slice; prop collision proxies remain a registry blocker"
+  },
+  "route": {
+    "waypoints_xy_m": [[0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [3.0, 0.0], [4.0, 0.0]],
+    "surface_width_m": 1.4,
+    "endpoint_margin_m": 0.75,
+    "floor_top_z_m": 0.0,
+    "floor_thickness_m": 0.08,
+    "appearance_lift_m": 0.003,
+    "required_clearance_m": 0.55,
+    "nominal_static_friction": 0.8,
+    "nominal_dynamic_friction": 0.6
+  },
+  "appearance": {
+    "material_lock": {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    },
+    "route_material_id": "train_ground037",
+    "route_material_is_operator_independent": true,
+    "distant_light_intensity": 1400.0,
+    "distant_light_angle_deg": 3.0,
+    "distant_light_rotation_xyz_deg": [35.0, -25.0, -20.0]
+  },
+  "output": {
+    "directory": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_hybrid_composition_dev_v2"
+  },
+  "admission_policy": {
+    "body_fixed_go2_front_rtx_required": true,
+    "full_route_visual_coverage_required": true,
+    "articulated_go2_route_qa_required": true,
+    "operator_pair_required": true,
+    "prop_collision_proxy_audit_required": true,
+    "physical_camera_calibration_required": true,
+    "independent_human_review_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

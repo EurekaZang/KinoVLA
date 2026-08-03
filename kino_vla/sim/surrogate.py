@@ -70,6 +70,10 @@ class SurrogateBackend:
         self._payload_com_demand = 0.0
         self._reflex_active = False
         self._base_height_offset = 0.0  # O2 compliance sink (lowers measured base height)
+        # Commanded body posture (the closed-loop height controller, #41). None ⇒ nominal trot.
+        self._posture_target: float | None = None
+        self._posture_stiffness = 1.0
+        self._posture_height = float(self._cfg.base_height_m)  # current tracked body height [m]
         for state in self._resistance:
             state.reset()
 
@@ -94,16 +98,28 @@ class SurrogateBackend:
     def add_blocking_regions(self, regions: list[BlockingRegion]) -> None:
         self._blocking.extend(regions)
 
-    def add_support_loss_regions(self, regions: list[SupportLossRegion]) -> None:
+    def add_support_loss_regions(
+        self,
+        regions: list[SupportLossRegion],
+        height_m: float | None = None,
+        geometry_kind: str = "box_ridge",
+    ) -> None:
+        del height_m, geometry_kind  # geometry is outside the planar surrogate's scope
         self._support.extend(regions)
 
     def add_resistance_regions(self, regions: list[ResistanceRegion]) -> None:
         """Append tangential-resistance regions (operators O2 compliance / O4 tether)."""
         self._resistance.extend(_ResistanceState(region=r) for r in regions)
 
-    def add_payload(self, mass_kg: float, com_offset_m: np.ndarray) -> None:
+    def add_payload(
+        self,
+        mass_kg: float,
+        com_offset_m: np.ndarray,
+        size_m: np.ndarray | None = None,
+    ) -> None:
+        del size_m
         self.mass_kg = self.mass_kg + float(mass_kg)
-        offset = float(np.linalg.norm(np.asarray(com_offset_m, dtype=np.float64)))
+        offset = float(np.linalg.norm(np.asarray(com_offset_m, dtype=np.float64)[:2]))
         self._payload_com_demand += float(self._cfg.payload_com_demand_gain) * offset
 
     def set_effort_scale(self, scale: float) -> None:
@@ -112,6 +128,15 @@ class SurrogateBackend:
     def set_reflex(self, active: bool) -> None:
         """Engage the Reflex damping/widen/lower stance (spec §6.8 fallback)."""
         self._reflex_active = bool(active)
+
+    def set_posture(self, height_m: float | None, stiffness: float = 1.0) -> None:
+        """Command a body-height posture the model tracks closed-loop (#41), so a Switch_Gait /
+        Adjust_Posture / Set_Constraint primitive produces a real, measurable body-height response
+        here too (the scaffolding mirror of the Isaac articulation controller). ``None`` ⇒ release
+        to the nominal trot. ``stiffness`` sets the convergence rate (a stiffer hold tracks faster).
+        """
+        self._posture_target = None if height_m is None else float(height_m)
+        self._posture_stiffness = float(stiffness)
 
     def friction_at(self, pos: np.ndarray) -> float:
         for region in self._regions:
@@ -149,6 +174,21 @@ class SurrogateBackend:
         )
         self._yaw_rate += float(yaw_impulse_nms) / float(self._cfg.yaw_inertia_kgm2)
 
+    def start_push_pulse(
+        self,
+        impulse_xy_ns: np.ndarray,
+        yaw_impulse_nms: float,
+        duration_s: float,
+        application_point_body_m: np.ndarray,
+    ) -> None:
+        """CPU fallback preserves total impulse; point/duration fidelity is Isaac-only."""
+        if duration_s <= 0.0:
+            raise ValueError("push-pulse duration must be positive")
+        point = np.asarray(application_point_body_m, dtype=np.float64)
+        if point.shape != (3,):
+            raise ValueError("push-pulse application point must have shape (3,)")
+        self.apply_push(impulse_xy_ns, yaw_impulse_nms)
+
     # ------------------------------------------------------------ dynamics
 
     def step(self, cmd_vel: np.ndarray) -> Obs:
@@ -160,6 +200,18 @@ class SurrogateBackend:
         cmd[:2] = np.clip(cmd[:2], -max_v, max_v)
         cmd[2] = float(np.clip(cmd[2], -max_w, max_w))
         self._cmd_prev = cmd
+
+        # Closed-loop posture tracking (#41): drive the body height toward the commanded target
+        # (or relax to nominal when released), at a rate set by the hold stiffness.
+        target = (
+            self._posture_target
+            if self._posture_target is not None
+            else float(self._cfg.base_height_m)
+        )
+        rate = float(np.clip(self._posture_stiffness, 0.1, 1.0)) * float(
+            self._cfg.get("posture_track_rate", 0.5)
+        )
+        self._posture_height += rate * (target - self._posture_height)
 
         self._update_collapse_triggers()
         mu = self.friction_at(self._pos)
@@ -230,10 +282,12 @@ class SurrogateBackend:
         return self._obs()
 
     def _apply_resistance(self, vel_body: np.ndarray) -> np.ndarray:
-        """Decelerate by the tangential-resistance force of any region underfoot (O2/O4).
+        """Decelerate by the tangential resistance of any region underfoot (O2 mud / O4 tether).
 
-        Resistance grows with path length travelled inside the region: ``F = k*s + c*|v|``.
-        It opposes the current velocity (capped so a single step can't reverse it) and
+        O2 compliance is a soft-ground DRAG FIELD: ``F = drag + c*|v|`` — bounded, distance-
+        independent, crossable at reduced speed (real mud is drag, not an elastic trap). O4 tether
+        is the elastic spring ``F = k*(s−L_0) + c*|v|`` that grows with displacement and can snap.
+        The force opposes the current velocity (capped so a single step can't reverse it) and
         accumulates a sink offset (O2). On exit the per-region path/anchor state resets.
         """
         sink = 0.0
@@ -244,20 +298,47 @@ class SurrogateBackend:
                 state.reset()
                 continue
             speed = float(np.linalg.norm(vel_body))
-            s_eff = max(0.0, state.path_len - region.slack_length_m)
-            force = region.stiffness_n_per_m * s_eff + region.damping_ns_per_m * speed
-            if force > region.break_force_n:
-                state.broken = True
+            if region.kind == "compliance":
+                # Soft-ground drag field (mud): BOUNDED constant + viscous drag, NOT a spring; no
+                # penetration growth so it is crossable (§6 #38). stiffness_n_per_m is the drag [N].
+                force = region.stiffness_n_per_m + region.damping_ns_per_m * speed
+            else:
+                # O4 adhesive GRIP (Bug-1, entry-point form — HEADING-INDEPENDENT): the hold grows
+                # with the distance from where the dog ENTERED the patch (how deep). It resists
+                # motion that goes DEEPER (away from the entry) at full strength (STALLS), and
+                # peels (peel_factor) when the dog moves back TOWARD the entry — so back-off escapes
+                # whatever way the dog is facing (the body-frame form broke when it turned). A LOW-
+                # break tether still tears under forward load (distance==path_len there → M5 gate).
+                if state.entry is None:
+                    state.entry = self._pos.copy()
+                pen = float(np.linalg.norm(self._pos - state.entry))
+                moving_out = pen < state.pen_prev - 1.0e-4
+                state.pen_prev = pen
+                if region.p0_m > 0.0:
+                    # A4.1 two-phase delayed-divergence (mirrors IsaacPolicyBackend byte-for-byte):
+                    # plateau grip = force_offset_n (≡ O2 k_c drag) for pen≤p0, then a linear ramp
+                    # force_offset_n + k2·(pen−p0) beyond; f_break fires on the ramp grip
+                    # finite, immobilization if inf + high k2). Default 0/0 ⇒ the #49 path below.
+                    grip = region.force_offset_n + region.k2_n_per_m * max(0.0, pen - region.p0_m)
+                else:
+                    grip = region.stiffness_n_per_m * max(0.0, pen - region.slack_length_m)
+                    if grip > region.break_force_n:
+                        state.broken = True
+                    # #49 peel-plateau: bound the spring grip + constant pre-load (default inf/0 ⇒
+                    # unchanged). Break is on the RAW grip (a real tether tears under spring load).
+                    grip = min(grip, region.force_cap_n) + region.force_offset_n
+                if not state.broken and grip > region.break_force_n:
+                    state.broken = True
+                force = grip * (region.peel_factor if moving_out else 1.0)
+                force += region.damping_ns_per_m * speed
             if state.broken:
-                # Tether snapped (O4): no further resistance, but the region still "feels"
-                # different (sink persists for O2; O4 has none).
+                # Tether snapped under forward load (O4 low-break): no further resistance.
                 sink = max(sink, region.sink_depth_m)
                 continue
             if speed > 1e-9:
                 decel = force / self.mass_kg
                 dv = min(decel * self.dt, speed)
                 vel_body = vel_body - (vel_body / speed) * dv
-            state.path_len += float(np.linalg.norm(vel_body)) * self.dt
             sink = max(sink, region.sink_depth_m)
         self._base_height_offset = sink
         return vel_body
@@ -274,8 +355,15 @@ class SurrogateBackend:
             if state.collapsed:
                 continue
             if state.region.rect.contains(self._pos):
-                state.dwell += self.dt
-                if state.dwell >= state.region.trigger_dwell_s:
+                if state.region.damage_threshold_ns is not None:
+                    # CPU scaffolding has no feet.  Use total static support impulse as a monotonic
+                    # proxy; Isaac's publication path integrates measured per-foot normal forces.
+                    state.damage_ns += self.mass_kg * float(self._cfg.gravity) * self.dt
+                    threshold_reached = state.damage_ns >= state.region.damage_threshold_ns
+                else:
+                    state.dwell += self.dt
+                    threshold_reached = state.dwell >= state.region.trigger_dwell_s
+                if threshold_reached:
                     state.collapsed = True
 
     def _apply_blocking(self, cur: np.ndarray, proposed: np.ndarray) -> tuple[np.ndarray, bool]:
@@ -283,6 +371,8 @@ class SurrogateBackend:
         blocked = False
         out = proposed.copy()
         for region in self._blocking:
+            if not region.collision_enabled:
+                continue
             rect = region.rect
             if rect.contains(cur):
                 continue  # already inside (shouldn't happen): don't trap
@@ -332,7 +422,13 @@ class SurrogateBackend:
             yaw_rate=self._yaw_rate,
             cmd_prev=self._cmd_prev.copy(),
             slip_ratio=self._slip,
-            base_height=float(self._cfg.base_height_m) - self._base_height_offset,
+            # When a posture is actively commanded the height controller dominates (the dog holds
+            # the commanded height, #41); otherwise the passive O2 compliance sink applies.
+            base_height=(
+                self._posture_height
+                if self._posture_target is not None
+                else float(self._cfg.base_height_m) - self._base_height_offset
+            ),
             tilt=0.0,
             fallen=self._fallen,
             effort_ratio=self._effort,
@@ -341,26 +437,31 @@ class SurrogateBackend:
 
 
 class _CollapseState:
-    """Mutable per-region dwell/trigger state for O3 collapse regions."""
+    """Mutable legacy-dwell or load-damage trigger state for O3 collapse regions."""
 
-    __slots__ = ("region", "dwell", "collapsed")
+    __slots__ = ("region", "dwell", "damage_ns", "collapsed")
 
     def __init__(self, region: CollapseRegion) -> None:
         self.region = region
         self.dwell = 0.0
+        self.damage_ns = 0.0
         self.collapsed = False
 
 
 class _ResistanceState:
-    """Mutable per-region path-length / break state for O2/O4 resistance regions."""
+    """Mutable per-region state for O2/O4 resistance regions (Bug-1: entry-point grip)."""
 
-    __slots__ = ("region", "path_len", "broken")
+    __slots__ = ("region", "path_len", "broken", "entry", "pen_prev")
 
     def __init__(self, region: ResistanceRegion) -> None:
         self.region = region
         self.path_len = 0.0
         self.broken = False
+        self.entry = None  # world entry point into the patch (set on first contact)
+        self.pen_prev = 0.0  # last distance-from-entry (to detect backing-out vs going-deeper)
 
     def reset(self) -> None:
         self.path_len = 0.0
         self.broken = False
+        self.entry = None
+        self.pen_prev = 0.0

@@ -10,6 +10,7 @@ and the planner hand-off (crop + avoid discs).
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from kino_vla.map import (
     Costmap,
@@ -23,6 +24,40 @@ from kino_vla.utils.config import load_config
 from kino_vla.utils.geometry import Rect
 
 MAP_CFG = load_config("map/traversability_v0.yaml")
+
+
+# ------------------------------------------------------------ perception front-end selection
+
+
+def test_default_segmenter_is_clip_but_shared_config_pins_surrogate():
+    """The code default front-end is real CLIP (spec §7); the shared CI/demo config opts down to
+    the surrogate so the fast suite and the demo gate stay GPU/model-free (CLAUDE.md QA 5.1)."""
+    from kino_vla.map.traversability_map import DEFAULT_SEGMENTER
+
+    assert DEFAULT_SEGMENTER == "clip"
+    assert MAP_CFG.get("segmenter") == "surrogate"
+    # the shared config builds the cheap front-end (no torch/CLIP) ⇒ a 64-d costmap
+    assert type(TraversabilityMap(MAP_CFG).costmap.embed_dim) is int
+    assert TraversabilityMap(MAP_CFG).costmap.embed_dim == 64
+
+
+def test_make_segmenter_selects_front_end_lazily():
+    """make_segmenter maps the config string to the front-end class; the clip/rgbd imports are
+    lazy so *constructing* them does not load torch/CLIP (only .segment / .embed_dim would)."""
+    from kino_vla.map.clip_segmentation import ClipSegmenter
+    from kino_vla.map.rgbd import RgbdSegmenter
+    from kino_vla.map.traversability_map import make_segmenter
+
+    cam = MAP_CFG.camera
+    assert isinstance(make_segmenter("surrogate", cam), SurrogateSegmenter)
+    assert isinstance(make_segmenter("rgbd", cam), RgbdSegmenter)
+    assert isinstance(make_segmenter("clip", cam), ClipSegmenter)  # cheap: CLIP loads lazily
+    # a {'segmenter': 'clip'} override routes through the same selector (what the Isaac demo uses)
+    clip_cfg = load_config("map/traversability_v0.yaml", {"segmenter": "clip"})
+    seg = make_segmenter(str(clip_cfg.get("segmenter")), clip_cfg.camera)
+    assert isinstance(seg, ClipSegmenter)
+    with pytest.raises(ValueError):
+        make_segmenter("bogus", cam)
 
 
 # ------------------------------------------------------------ appearance embeddings
@@ -181,11 +216,11 @@ def test_o3_thin_ice_propagation_closed_loop():
     """Literal spec §3/§7 wording: stepping through one O3 thin-ice cell, in a sim rollout,
     down-weights the whole visually-homogeneous sheet (not just the broken cell)."""
     from kino_vla.loop import run_episode
-    from kino_vla.monitor.rule_monitor import RuleMonitor
     from kino_vla.shield.cbf_shield import CbfShield
     from kino_vla.sim.operators import Collapse, OperatorStack
     from kino_vla.sim.surrogate import SurrogateBackend
     from kino_vla.vla.fsm_recovery import FsmRecovery
+    from tests._monitor_stub import StubMonitor
 
     sim_cfg = load_config("sim/surrogate.yaml")
     goal = np.array([6.0, 0.0])
@@ -193,7 +228,7 @@ def test_o3_thin_ice_propagation_closed_loop():
     # O3 collapse on a sub-cell; the visually-homogeneous ice sheet is wider than it.
     ice = Collapse(region=Rect(3.0, 0.0, 0.8, 0.8), mu_collapsed=0.08, trigger_dwell_s=0.2)
     ops = OperatorStack([ice])
-    monitor = RuleMonitor(load_config("monitor/rule_v0.yaml"), dt=backend.dt)
+    monitor = StubMonitor()
     policy = FsmRecovery(load_config("recovery/fsm_v0.yaml"), goal_xy=goal, dt=backend.dt)
     shield = CbfShield(load_config("shield/cbf_v0.yaml"))
     scene = [SemanticRegion(Rect(3.0, 0.0, 1.5, 1.5), "ice_sheet")]
@@ -215,3 +250,36 @@ def test_o3_thin_ice_propagation_closed_loop():
     # A far corner of the SAME homogeneous sheet (never directly stepped) is down-weighted.
     far = nav_map.costmap.cost_at(np.array([3.9, 1.0]))
     assert far >= float(MAP_CFG.propagation_cost) - 1e-9
+
+
+# --- #47 rolling (egocentric) costmap for long-distance / multi-patch ------------------------
+def test_costmap_recenter_preserves_marks_in_world_frame():
+    """The egocentric roll moves the grid with the robot but a mark stays at its WORLD coordinate
+    (integer-cell shift, no resampling); a point beyond the start-centred grid becomes representable
+    once the window rolls forward (long-distance). It only rolls near an edge (hysteresis)."""
+    cm = Costmap(MAP_CFG.costmap)  # extent [16,10] ⇒ x∈[-8,8]
+    cm.overwrite_physical(np.array([6.0, 0.0]), 1.0, np.zeros(cm.embed_dim), 0.4)
+    n0 = cm.n_physical
+    assert cm.cost_at(np.array([6.0, 0.0])) == 1.0 and n0 > 0
+    assert cm.recenter(np.array([7.5, 0.0]), margin_m=2.0), "near the +x edge ⇒ rolls forward"
+    assert cm.cost_at(np.array([6.0, 0.0])) == 1.0, "mark invariant in world frame after the roll"
+    assert cm.n_physical == n0, "the on-window mark survived the roll"
+    assert cm.cost_at(np.array([10.0, 0.0])) == 0.0, "x=10 now representable (was off the old grid)"
+    assert not cm.recenter(np.array([7.5, 0.0]), margin_m=2.0), "no roll when comfortably inside"
+
+
+def test_costmap_recenter_drops_cells_far_behind():
+    cm = Costmap(MAP_CFG.costmap)  # x∈[-8,8]
+    cm.overwrite_physical(np.array([-7.0, 0.0]), 1.0, np.zeros(cm.embed_dim), 0.3)
+    assert cm.cost_at(np.array([-7.0, 0.0])) == 1.0
+    cm.recenter(np.array([7.5, 0.0]), margin_m=2.0)  # window jumps forward
+    assert cm.cost_at(np.array([-7.0, 0.0])) == 0.0, "the cell far behind left the window"
+
+
+def test_traversability_map_recenter_respects_rolling_flag():
+    """recenter is a no-op unless the map is configured ``rolling`` (default OFF ⇒ fixed grid)."""
+    tm_fixed = TraversabilityMap(MAP_CFG, scene=[])
+    assert tm_fixed.recenter(np.array([7.5, 0.0])) is False
+    rolling_cfg = load_config("map/traversability_v0.yaml", overrides={"rolling": True})
+    tm_roll = TraversabilityMap(rolling_cfg, scene=[])
+    assert tm_roll.recenter(np.array([7.5, 0.0])) is True

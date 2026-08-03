@@ -1,0 +1,55 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v7-development",
+  "iteration_id": "forest-hochsal-autumn-heldout-appearance-v16",
+  "status": "development_synchronized_heldout_appearance_family_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v14.json",
+    "sha256": "f1b60ae56f6a8e35ff7a2c977af6d7ea79dda4220c85b2be9e4f6b8f7fada824"
+  },
+  "overrides": {
+    "background": {
+      "panorama": {
+        "path": "outputs/assets/forest_hdri_polyhaven_extension_v2/hochsal_forest/hochsal_forest_4k.hdr",
+        "sha256": "ceeef8ec484a67d372f2028633f1ed28244b3f80850f40c8f1606e026855a56d"
+      },
+      "preflight": {
+        "path": "outputs/assets/forest_hdri_polyhaven_extension_v2/hochsal_forest/preflight.json",
+        "sha256": "c0169a65477d18f8b0db9e9a0c56f0fc586374182783b6d758fc6b7b8c4449c3"
+      },
+      "intensity": 150.0,
+      "rotation_xyz_deg": [0.0, 0.0, 180.0]
+    },
+    "appearance": {
+      "route_material_lock": {
+        "path": "outputs/assets/forest_textures_polyhaven_v2/terrain_assets.lock.json",
+        "sha256": "8e6e4263d80146c9210fc703b59224bd76f99ed35e42ef0d74f456ed8c74fc78"
+      },
+      "route_material_id": "train_polyhaven_dirt_2k",
+      "route_expected_split": "train",
+      "surrounding_material_lock": {
+        "path": "outputs/assets/forest_textures_polyhaven_v2/terrain_assets.lock.json",
+        "sha256": "8e6e4263d80146c9210fc703b59224bd76f99ed35e42ef0d74f456ed8c74fc78"
+      },
+      "surrounding_material_id": "val_polyhaven_forest_leaves04_2k",
+      "surrounding_expected_split": "val"
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_hochsal_dev01/isaac_hybrid_composition_dev_v16"
+    }
+  },
+  "appearance_family_contract": {
+    "family_id": "forest_hochsal_autumn_validation",
+    "family_role": "heldout_validation_randomization",
+    "physical_layout_source": "kinofail_forest_hybrid_composition_dev_v14.json",
+    "physical_operator_parameters_unchanged": true,
+    "camera_and_capture_protocol_unchanged": true,
+    "panorama_and_material_selection_frozen_before_model_evaluation": true,
+    "validation_bank_material_was_not_selected_from_model_results": true
+  },
+  "quality_policy": {
+    "body_fixed_go2_rtx_review_required": true,
+    "nominal_and_anomaly_pair_must_be_recollected": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

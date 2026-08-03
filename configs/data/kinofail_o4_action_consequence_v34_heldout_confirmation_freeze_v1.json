@@ -1,0 +1,370 @@
+{
+  "schema_version": "kinofail.o4-action-consequence-v34-heldout-confirmation-freeze.v1",
+  "created_utc": "2026-07-23T08:48:41Z",
+  "freeze_status": "frozen_before_first_v34_heldout_o4_execution",
+  "purpose": "Prospectively confirm the unchanged v32 early-clearance O4 Continue/Backstep architecture exactly once on every scene in the newly sealed operator-blind v34 realistic cohort, using the preregistered phase-aware nuisance-control audit.",
+  "cohort_postrun": {
+    "path": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_scene_stream/postrun_audit.json",
+    "sha256": "2501393ebc192caa444d89a5f78bcb62342b11d06298ef491ced455b60f7e108",
+    "json_passed": true,
+    "json_sealed": true
+  },
+  "runtime_source": {
+    "version": "v32_early_clearance_development_architecture",
+    "path": "configs/data/kinofail_o4_action_consequence_v32_development_freeze_v1.json",
+    "sha256": "1637f3856591881def98bef491551de442fde08ca35c1d4d78e91348b411aece",
+    "inheritance": "The complete v32 runtime and state-aware visual QA contract are inherited exactly; no action, physics, camera, horizon, or threshold parameter changes are permitted."
+  },
+  "phase_aware_route_contract": {
+    "route_budget_m": 0.3,
+    "matched_prefix_within_route_budget": true,
+    "backstep_full_horizon_within_route_budget": true,
+    "continue_through_physical_failure_onset_within_route_budget": true,
+    "physical_failure_onset": {
+      "tilt_rad_at_least": 0.08,
+      "height_drop_m_at_least": 0.02,
+      "conjunction_required": true,
+      "route_deviation_used_to_define_onset": false
+    },
+    "continue_post_onset_deviation_reported_not_gated": true,
+    "legacy_full_horizon_continue_deviation_retained": true
+  },
+  "visual_qa_contract": {
+    "strict_labels": [
+      "initial",
+      "decision",
+      "backstep_outcome"
+    ],
+    "strict_minimum_std_luminance": 0.025,
+    "strict_maximum_black_fraction": 0.95,
+    "strict_minimum_quantized_color_count_5bit": 32,
+    "minimum_mean_luminance": 0.02,
+    "maximum_mean_luminance": 0.98,
+    "fallen_continue_outcome_maximum_black_fraction": 0.98,
+    "fallen_continue_outcome_minimum_quantized_color_count_5bit": 16
+  },
+  "evidence_policy": {
+    "heldout_confirmation": true,
+    "counts_as_realistic_o4_operator_confirmation": true,
+    "counts_as_a0_a7_evidence": false,
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "a8_in_scope": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "successful_confirmation_authorizes_only_o5_o11_realistic_coverage": true
+  },
+  "execution_policy": {
+    "one_attempt_per_scene": true,
+    "execute_every_case_regardless_of_prior_outcome": true,
+    "scene_removal_after_outcome_forbidden": true,
+    "parameter_changes_after_preflight_forbidden": true,
+    "all_attempts_retained_and_sealed": true,
+    "rerun_on_v34_heldout_scenes_forbidden": true,
+    "unprocessed_v34_suffix_158_160_forbidden": true
+  },
+  "operator_output_root": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_heldout_confirmation",
+  "scene_exclusions": [
+    "indoor_livingroom_45",
+    "indoor_kitchen_46",
+    "indoor_bathroom_49",
+    "indoor_office_72",
+    "indoor_livingroom_73",
+    "indoor_kitchen_74",
+    "indoor_office_78",
+    "indoor_office_84",
+    "indoor_house_87",
+    "indoor_office_90",
+    "indoor_livingroom_91",
+    "indoor_office_96",
+    "indoor_bedroom_100",
+    "indoor_office_102",
+    "indoor_house_105",
+    "indoor_diningroom_113",
+    "indoor_office_114",
+    "indoor_livingroom_115",
+    "indoor_bedroom_118",
+    "indoor_kitchen_122"
+  ],
+  "runtime": {
+    "camera_profile": "go2_front_calib_b",
+    "horizon_steps": 300,
+    "minimum_decision_dwell_steps": 1,
+    "maximum_decision_dwell_steps": 1,
+    "decision_tilt_urgency_rad": 0.08,
+    "decision_height_drop_urgency_m": 0.02,
+    "decision_urgency_dwell_steps": 2,
+    "maximum_backstep_steps": 300,
+    "target_recovery_distance_m": 0.2,
+    "minimum_recovery_distance_m": 0.15,
+    "adhesion_clearance_dwell_steps": 5,
+    "forward_speed_mps": 0.32,
+    "backstep_speed_mps": 0.24,
+    "maximum_route_deviation_m": 0.3,
+    "tangential_force_cap_n": 18.0,
+    "normal_force_cap_n": 8.0,
+    "peel_height_m": 0.025,
+    "unload_steps_to_peel": 3,
+    "reattach_cooldown_steps": 2,
+    "max_active_feet": 2,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.2,
+    "yaw_rate_limit_radps": 0.6,
+    "collector_sha256": "38777bd099549346f550ada4acc176f75d30cf3552942ebb306d0d7dee3561a6",
+    "surface_interface_sha256": "9ca3b51941ff878f8762e5c2a3b1e121c396b4aea01e86f97065d0a0778282db",
+    "surface_model_sha256": "a634078b425a336be6a0fca67e3df6434ea1fa3d24e43187ec9c559447984fea",
+    "backend_adapter_sha256": "d7ba7375acb9a0290ad2e5a8810198f2fb55fdb9e476939bdad61e88d68e7481",
+    "parent_backend_adapter_sha256": "954a27cc79ae42c32f2ab13dee1f3aff5d383b8f44ecff572fb09ff352a172a1"
+  },
+  "locked_files": [
+    {
+      "path": "configs/data/kinofail_o4_action_consequence_v32_development_freeze_v1.json",
+      "sha256": "1637f3856591881def98bef491551de442fde08ca35c1d4d78e91348b411aece"
+    },
+    {
+      "path": "outputs/kinofail_realistic/operator_development/o4_action_v32_early_clearance/postrun_audit.json",
+      "sha256": "8d7f18ce12260eee212a928576b755f314b9f52290780d0ba7f0714720d4732e",
+      "json_passed": false,
+      "json_sealed": true
+    },
+    {
+      "path": "configs/data/kinofail_o4_scene_stream_v34_heldout_acquisition_freeze_v1.json",
+      "sha256": "0f8bf7daef1accde52c94c56137c855015674324f4b25af2b1e712acaeb2ef78"
+    },
+    {
+      "path": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_scene_stream/preflight_audit.json",
+      "sha256": "50dd02f177d32ea7cb34abdbc3ca903dc43aa50691d85b73b68c3a29a4b302d7",
+      "json_passed": true
+    },
+    {
+      "path": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_scene_stream/postrun_audit.json",
+      "sha256": "2501393ebc192caa444d89a5f78bcb62342b11d06298ef491ced455b60f7e108",
+      "json_passed": true,
+      "json_sealed": true
+    },
+    {
+      "path": "scripts/isaac_collect_o4_action_consequence_v27.py",
+      "sha256": "38777bd099549346f550ada4acc176f75d30cf3552942ebb306d0d7dee3561a6"
+    },
+    {
+      "path": "scripts/run_o4_heldout_confirmation_v31.py",
+      "sha256": "701fa8dc84472065ae3893d604fdfdd0689a944787de885853d073806bc7840a"
+    },
+    {
+      "path": "scripts/audit_o4_action_consequence_v27_development_postrun.py",
+      "sha256": "3b28ffdb2e44bd6e84c922e933fd48a2866be199a4c985f9aac44dbe88f2a1d9"
+    },
+    {
+      "path": "scripts/audit_o4_action_consequence_v32_development_postrun.py",
+      "sha256": "cd27095cf413b6631e5a16c277d0a1fbf8dbb77fe6b9113dcc82a0f49f620f8c"
+    },
+    {
+      "path": "scripts/audit_o4_action_consequence_v34_confirmation_preflight.py",
+      "sha256": "b4cca25185d98246f5dca6353514e7670360988757b7ee29a6b280110644254c"
+    },
+    {
+      "path": "scripts/audit_o4_action_consequence_v34_confirmation_postrun.py",
+      "sha256": "06ea47fd2ec7c3cf795b61a73317f600a08fd95b0c16285db2ca212e279ee672"
+    },
+    {
+      "path": "tests/test_o4_action_consequence_v34.py",
+      "sha256": "81707989e1d3b32768e48a08e66955665194eb2442af7bd61d19f6d22aff76d2"
+    },
+    {
+      "path": "scripts/audit_o4_scene_stream_v34.py",
+      "sha256": "58e50718b9c5b2f53aaa0c78412db600558cea072ced38b429974f5d131fdcfd"
+    },
+    {
+      "path": "tests/test_o4_scene_stream_v34.py",
+      "sha256": "65626906a8302b39cd202df12285360d2c3ca145674602e463eb0ad116ebe3a5"
+    },
+    {
+      "path": "kino_vla/sim/adhesion_v3.py",
+      "sha256": "9ca3b51941ff878f8762e5c2a3b1e121c396b4aea01e86f97065d0a0778282db"
+    },
+    {
+      "path": "kino_vla/sim/adhesion_v2.py",
+      "sha256": "a634078b425a336be6a0fca67e3df6434ea1fa3d24e43187ec9c559447984fea"
+    },
+    {
+      "path": "kino_vla/sim/isaac_o4_v3_backend.py",
+      "sha256": "d7ba7375acb9a0290ad2e5a8810198f2fb55fdb9e476939bdad61e88d68e7481"
+    },
+    {
+      "path": "kino_vla/sim/isaac_o4_v2_backend.py",
+      "sha256": "954a27cc79ae42c32f2ab13dee1f3aff5d383b8f44ecff572fb09ff352a172a1"
+    },
+    {
+      "path": "outputs/locomotion/policy.pt",
+      "sha256": "167633df29b6c29db8864869338dc829249be60665d598bb206354bd1daca3f3"
+    },
+    {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    }
+  ],
+  "cases": [
+    {
+      "scene_id": "indoor_livingroom_139",
+      "room_family": "LivingRoom",
+      "runtime_seed": 20261436,
+      "material_id": "val_tiles139",
+      "operator": "o4_adhesive_contact_action_branch_v32_early_clearance",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261435/route_surface_o4_v34_heldout_stream/val_tiles139/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v34_candidate_receipt": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261435_v30_candidate_receipt.json",
+          "sha256": "d2758829f08ae373072592fbe3ab052bf1b25f14006533b77436ac66b49aedb3",
+          "json_passed": true,
+          "json_sealed": true
+        },
+        "terrain_compiled_audit": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261435/route_surface_o4_v34_heldout_stream/val_tiles139/terrain_route_v2/compiled_scene_audit.json",
+          "sha256": "006df32beb4f14a5646a5867a807149f9a5fab053f3c82aab089c17512dddfe6",
+          "json_passed": true
+        },
+        "stack_v17_admission": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261435/route_surface_o4_v34_heldout_stream/val_tiles139/terrain_route_v2/realistic_stack_v17_admission.json",
+          "sha256": "14ed78f17c4097f23187e065d82e39a4c83d092a18cf9f286ff95f86de76f42b",
+          "json_passed": true
+        }
+      },
+      "output": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_heldout_confirmation/indoor_livingroom_139/attempt1"
+    },
+    {
+      "scene_id": "indoor_kitchen_140",
+      "room_family": "Kitchen",
+      "runtime_seed": 20261438,
+      "material_id": "test_tiles140",
+      "operator": "o4_adhesive_contact_action_branch_v32_early_clearance",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261437/route_surface_o4_v34_heldout_stream/test_tiles140/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v34_candidate_receipt": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261437_v30_candidate_receipt.json",
+          "sha256": "8e2f3ed2a2b00ae4f2e9263f4f4abeaad98fcafb0e017afa1ddd4d02c4a1ad3d",
+          "json_passed": true,
+          "json_sealed": true
+        },
+        "terrain_compiled_audit": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261437/route_surface_o4_v34_heldout_stream/test_tiles140/terrain_route_v2/compiled_scene_audit.json",
+          "sha256": "8bbde4a80294a95871cdc1bf756df1f49ceb4ad99aa3fb8aac8d30434372661b",
+          "json_passed": true
+        },
+        "stack_v17_admission": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20261437/route_surface_o4_v34_heldout_stream/test_tiles140/terrain_route_v2/realistic_stack_v17_admission.json",
+          "sha256": "77905fa48b4e837a09e679c491a7029a2a5f80d5935613f4dab2379022b7008d",
+          "json_passed": true
+        }
+      },
+      "output": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_heldout_confirmation/indoor_kitchen_140/attempt1"
+    },
+    {
+      "scene_id": "indoor_livingroom_151",
+      "room_family": "LivingRoom",
+      "runtime_seed": 20261460,
+      "material_id": "val_ground071",
+      "operator": "o4_adhesive_contact_action_branch_v32_early_clearance",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261459/route_surface_o4_v34_heldout_stream/val_ground071/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v34_candidate_receipt": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261459_v30_candidate_receipt.json",
+          "sha256": "dd5efc3e34e5036cdcec170977f068f870cb97add289c5f00a10c492607a40d8",
+          "json_passed": true,
+          "json_sealed": true
+        },
+        "terrain_compiled_audit": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261459/route_surface_o4_v34_heldout_stream/val_ground071/terrain_route_v2/compiled_scene_audit.json",
+          "sha256": "a2e8a521e18205b4c1aedbcab54720605cfcbfae4d8299c1aba278650f78c788",
+          "json_passed": true
+        },
+        "stack_v17_admission": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261459/route_surface_o4_v34_heldout_stream/val_ground071/terrain_route_v2/realistic_stack_v17_admission.json",
+          "sha256": "5fcd1f928002658e85f7cd40f4ecd138d6a1a9f859734a220702f77fec7d7fb5",
+          "json_passed": true
+        }
+      },
+      "output": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_heldout_confirmation/indoor_livingroom_151/attempt1"
+    },
+    {
+      "scene_id": "indoor_house_153",
+      "room_family": "House",
+      "runtime_seed": 20261464,
+      "material_id": "train_ground037",
+      "operator": "o4_adhesive_contact_action_branch_v32_early_clearance",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20261463/route_surface_o4_v34_heldout_stream/train_ground037/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v34_candidate_receipt": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20261463_v30_candidate_receipt.json",
+          "sha256": "8add3b2e291caee3b6f5142846aac3a116d217e594454e2016a561967da602fc",
+          "json_passed": true,
+          "json_sealed": true
+        },
+        "terrain_compiled_audit": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20261463/route_surface_o4_v34_heldout_stream/train_ground037/terrain_route_v2/compiled_scene_audit.json",
+          "sha256": "e778a10984b691619aeb936692dcf42a94675048554aca4a6d3398cba41e9fa7",
+          "json_passed": true
+        },
+        "stack_v17_admission": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20261463/route_surface_o4_v34_heldout_stream/train_ground037/terrain_route_v2/realistic_stack_v17_admission.json",
+          "sha256": "be79af21af8762dc2451c5094b994335e3e82c8998577c2ffc4526af63fcef4b",
+          "json_passed": true
+        }
+      },
+      "output": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_heldout_confirmation/indoor_house_153/attempt1"
+    },
+    {
+      "scene_id": "indoor_office_156",
+      "room_family": "Office",
+      "runtime_seed": 20261470,
+      "material_id": "train_tiles141",
+      "operator": "o4_adhesive_contact_action_branch_v32_early_clearance",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261469/route_surface_o4_v34_heldout_stream/train_tiles141/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v34_candidate_receipt": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261469_v30_candidate_receipt.json",
+          "sha256": "75c860e9108de798ce25b42828e0c59601f6727eb5a8f332b485aaf9deef26c3",
+          "json_passed": true,
+          "json_sealed": true
+        },
+        "terrain_compiled_audit": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261469/route_surface_o4_v34_heldout_stream/train_tiles141/terrain_route_v2/compiled_scene_audit.json",
+          "sha256": "e2af8ad3e24b7810673fa6c43fe49de70d8acb24421d318339f1876c472e34d5",
+          "json_passed": true
+        },
+        "stack_v17_admission": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20261469/route_surface_o4_v34_heldout_stream/train_tiles141/terrain_route_v2/realistic_stack_v17_admission.json",
+          "sha256": "2155cb90c75ea325ba92611a2b4a16240884c9bd0f586a456fcb415b0a21075d",
+          "json_passed": true
+        }
+      },
+      "output": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_heldout_confirmation/indoor_office_156/attempt1"
+    },
+    {
+      "scene_id": "indoor_livingroom_157",
+      "room_family": "LivingRoom",
+      "runtime_seed": 20261472,
+      "material_id": "val_tiles139",
+      "operator": "o4_adhesive_contact_action_branch_v32_early_clearance",
+      "episode_usd": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261471/route_surface_o4_v34_heldout_stream/val_tiles139/terrain_route_v2/episode_terrain_v2.usda",
+      "prerequisites": {
+        "v34_candidate_receipt": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261471_v30_candidate_receipt.json",
+          "sha256": "0afa83af8762b051dba8f013b72df8a1dce9dd3f6a7e8f5c3108b9d0568a308d",
+          "json_passed": true,
+          "json_sealed": true
+        },
+        "terrain_compiled_audit": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261471/route_surface_o4_v34_heldout_stream/val_tiles139/terrain_route_v2/compiled_scene_audit.json",
+          "sha256": "29e13c7168743688fa7a8d8a1439d9c0752da2d9094b9d9de4d40973f808f52a",
+          "json_passed": true
+        },
+        "stack_v17_admission": {
+          "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20261471/route_surface_o4_v34_heldout_stream/val_tiles139/terrain_route_v2/realistic_stack_v17_admission.json",
+          "sha256": "263410bb5a71ff5fb97a15ebe58c36e89857e7d66033e038c919c8b357c64820",
+          "json_passed": true
+        }
+      },
+      "output": "outputs/kinofail_realistic/operator_confirmation/o4_action_v34_heldout_confirmation/indoor_livingroom_157/attempt1"
+    }
+  ]
+}

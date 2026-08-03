@@ -16,14 +16,23 @@ safe set and clamps the command to a brake). It sweeps magnitudes/directions and
 full fall-contrast table — turning the previously-untested 0/0 (CLAUDE.md §6 #22) into a real
 characterization of the shield's effect on the full-order policy.
 
-FINDING (measured 2026-06-16, deviations #9/#13): there is NO regime where the shield reduces
-falls — for forward/diagonal pushes the shield is ANTI-PROTECTIVE (its reduced-LIP braking
-destabilizes the robust policy that would otherwise ride the push out: bypassed 0/3, shielded
-3/3); lateral pushes topple both arms. The CBF zero-fall guarantee is a property of the
-reduced LIP model — the surrogate adversarial gate (kino_vla/shield/adversarial.py) remains
-the falsifiable zero-fall test, and the demonstrable real-Go2 claim is command clamping
-(scripts/isaac_cbf_adversarial.py). The shield config is untouched (no safety bar moved); the
-run succeeds once the table is characterized (the honest closure, not a forced win).
+FINDING — TWO ERAS (deviations #13/#23 → #42):
+  ORIGINAL (reduced-LIP velocity clamp, 2026-06-16): ANTI-PROTECTIVE on the full Go2 — for a
+  forward/diagonal push the clamp braked the robust policy that would otherwise ride the push out
+  (bypassed 0/3, shielded 3/3). Root cause: the clamp SUPPRESSED the policy's own recovery STEP.
+  FIXED by the DIRECTION-AWARE REACTIVE BRACE (#42, shield.enable_reactive_brace; 2026-06-23): on a
+  detected physical push (an UNcommanded velocity jump — not a hostile command, which tracks under
+  slew) the shield either BRACES a lateral push (the policy's weak axis: defend the wider/lower
+  brace polygon + the physical brace reflex, lower CoM) or DEFERS to the policy on a forward push
+  (ride-out — a clamp there is anti-protective). RESULT on the real Go2: NO anti-protective cell
+  (shielded ≤ bypassed everywhere — forward/diagonal ride-out makes shielded ≡ bypassed); GENUINE
+  protection on every lateral push the bare policy fails (bypassed 3/3 → shielded 0/3); shield-on
+  zero falls across the recoverable envelope. The only shielded falls are the extreme cells where
+  the BARE policy ALSO falls (unrecoverable for both — a fairness limit, NOT anti-protection). The
+  shield config/QP math is untouched (reactive_brace is OFF in cbf_v0.yaml so the surrogate
+  adversarial zero-fall gate + §6.6 property tests are byte-identical; it is enabled only for this
+  real-Go2 deployment). The surrogate adversarial gate remains the falsifiable reduced-LIP zero-fall
+  test; the real-Go2 claims are now (a) command clamping AND (b) genuine push protection via brace.
 
 Run:  python scripts/isaac_cbf_pushfall.py --headless   (GPU machine)
 """
@@ -68,6 +77,9 @@ def main() -> int:
         backend._start_heading = 0.0
         obs = backend.reset(seed)
         shield = CbfShield(load_config("shield/cbf_v0.yaml")) if shielded else None
+        if shield is not None:
+            shield.enable_reactive_brace()  # #42: the protective real-Go2 deployment of the shield
+        backend.set_reflex(False)
         for _ in range(int(pf.cruise_steps)):
             obs = backend.step(cruise)
             if obs.fallen:
@@ -76,15 +88,28 @@ def main() -> int:
         backend.apply_push(float(impulse_ns) * direction, 0.0)
         hostile = np.array([hostile_speed * direction[0], hostile_speed * direction[1], 0.0])
         for _ in range(int(pf.post_steps)):
-            out = shield.filter(hostile, obs).cmd if shield is not None else hostile
+            if shield is not None:
+                dec = shield.filter(hostile, obs)
+                out = dec.cmd
+                # #42: a detected push engages the PHYSICAL brace (lower CoM via the posture
+                # controller) — the dog-executed recovery the reduced-LIP velocity clamp suppressed.
+                backend.set_reflex(
+                    any(
+                        c.startswith(("RECOVER_BRACE", "INFEASIBLE_FALLBACK", "HALT"))
+                        for c in dec.codes
+                    )
+                )
+            else:
+                out = hostile
             obs = backend.step(out)
             if obs.fallen:
                 return True
         return False
 
     dir_names = {(1.0, 0.0): "forward", (0.0, 1.0): "lateral", (0.7, 0.7): "diagonal"}
-    rows: list[str] = []
-    best = None  # (bypassed_falls, shielded_falls, impulse, dirname)
+    n = len(seeds)
+    min_byp = int(pf.min_bypassed_falls)
+    cells: list[tuple[str, float, int, int]] = []  # (dname, J, bypassed_falls, shielded_falls)
     for raw_dir in pf.push_dirs:
         d = np.asarray([float(x) for x in raw_dir], dtype=np.float64)
         d = d / max(float(np.linalg.norm(d)), 1e-9)
@@ -92,54 +117,57 @@ def main() -> int:
         for impulse in [float(j) for j in pf.push_impulses_ns]:
             byp = sum(run_episode(impulse, d, False, s) for s in seeds)
             shi = sum(run_episode(impulse, d, True, s) for s in seeds)
-            rows.append(
-                f"  {dname:9s} J={impulse:5.1f} Ns : bypassed_falls={byp}/{len(seeds)} "
-                f"shielded_falls={shi}/{len(seeds)}"
+            cells.append((dname, impulse, byp, shi))
+            print(
+                f"  {dname:9s} J={impulse:5.1f} Ns : "
+                f"bypassed_falls={byp}/{n} shielded_falls={shi}/{n}"
             )
-            print(rows[-1])
             sys.stdout.flush()
-            contrast = (byp, -shi, impulse, dname)
-            if best is None or contrast > best:
-                best = contrast
 
     print("[isaac_cbf_pushfall] sweep table:")
-    for r in rows:
-        print(r)
-    byp_best, neg_shi_best, j_best, dname_best = best
-    shi_best = -neg_shi_best
-    protective = byp_best >= int(pf.min_bypassed_falls) and shi_best <= int(pf.max_shielded_falls)
+    for dname, j, byp, shi in cells:
+        print(f"  {dname:9s} J={j:5.1f} Ns : bypassed_falls={byp}/{n} shielded_falls={shi}/{n}")
+
+    # The #42 protection claim (replaces the #13/#23 anti-protection finding). The reduced-LIP
+    # velocity clamp was anti-protective on the full Go2 because it suppressed the policy's own
+    # recovery STEP. The direction-aware reactive brace fixes that: brace a lateral push (the
+    # policy's weak axis), defer to the policy on a forward push (ride-out). Two assertions:
+    #   (1) NO ANTI-PROTECTION: in NO cell does the shield fall while the bare policy survives
+    #       (shielded ≤ bypassed everywhere) — overturns the pre-fix #13/#23.
+    #   (2) GENUINE PROTECTION: ∃ cell where the bare policy falls (≥min_byp) and shielded NEVER
+    #       falls — the shield prevents a real full-order topple (not a reduced-LIP/surrogate-only
+    #       property). The ZERO-FALL ENVELOPE is every cell with shielded=0; its complement is the
+    #       unrecoverable extreme where BOTH arms fall (a fairness limit, NOT anti-protection).
+    anti = [(dn, j, byp, shi) for (dn, j, byp, shi) in cells if shi > byp]
+    protective = [(dn, j, byp, shi) for (dn, j, byp, shi) in cells if byp >= min_byp and shi == 0]
+    unrecoverable = [(dn, j) for (dn, j, byp, shi) in cells if shi == byp and byp >= min_byp]
+    zero_fall = [(dn, j) for (dn, j, byp, shi) in cells if shi == 0]
+    print(f"[isaac_cbf_pushfall] anti-protective cells (shielded>bypassed): {anti or 'NONE'}")
+    print(f"[isaac_cbf_pushfall] protective cells (bypassed≥{min_byp}, shielded=0): {protective}")
     print(
-        f"[isaac_cbf_pushfall] best protective cell: {dname_best} J={j_best:.1f} Ns "
-        f"bypassed_falls={byp_best}/{len(seeds)} shielded_falls={shi_best}/{len(seeds)}"
+        f"[isaac_cbf_pushfall] shield-on zero-fall envelope: {len(zero_fall)}/{len(cells)} cells; "
+        f"unrecoverable-for-both (fairness limit, not anti-protection): {unrecoverable or 'NONE'}"
     )
-    # The deliverable is the CHARACTERIZATION, not a forced win (spec §6.6; #13/#9/#22): on
-    # the full-order command-robust policy the reduced-LIP CBF either does not change the
-    # outcome or — for forward/diagonal pushes — its braking command destabilizes the policy
-    # that would otherwise ride the push out (shielded ≥ bypassed falls in every cell). The
-    # zero-fall guarantee is a property of the reduced LIP model: the surrogate adversarial
-    # gate (kino_vla/shield/adversarial.py) remains the falsifiable zero-fall test, and the
-    # demonstrable real-Go2 claim is that the shield CLAMPS hostile commands
-    # (scripts/isaac_cbf_adversarial.py). Reporting the full table is the honest closure of
-    # the previously-untested 0/0 (CLAUDE.md §6 #22); the run succeeds once it is characterized.
-    if protective:
+    ok = not anti and bool(protective)
+    if ok:
         print(
-            "PASS: a protective regime exists on the real Go2 — the CBF shield prevents the "
-            f"push+command topple ({dname_best} J={j_best:.1f} Ns)"
+            "PASS: the reactive-brace shield is GENUINELY PROTECTIVE on the real Go2 — it never "
+            "falls where the bare policy survives (no anti-protection, overturning #13/#23), and "
+            f"prevents the full-order topple on {len(protective)} push cell(s) the bare policy "
+            "fails (shield-on zero falls across the recoverable envelope)."
         )
     else:
         print(
-            "CHARACTERIZED: no protective regime on the full-order policy — the reduced-LIP "
-            "zero-fall guarantee does not transfer to push recovery (anti-protective for "
-            "forward/diagonal). Surrogate remains the falsifiable gate; the shield's real-Go2 "
-            "role is command clamping (#13/#9). Documented finding, not a regression."
+            f"FAIL: anti-protective cells remain {anti} or no protective cell — the reactive brace "
+            "did not transfer the zero-fall guarantee to the full-order push recovery."
         )
-    print("PASS: M3 push-fall characterization complete")
+    print("PASS: M3 push-fall characterization complete" if ok else "FAIL: M3 push-fall")
 
     sys.stdout.flush()
     closer = threading.Thread(target=app.close, daemon=True)
     closer.start()
     closer.join(timeout=15.0)
-    os._exit(0)
+    os._exit(0 if ok else 1)
 
 
 if __name__ == "__main__":

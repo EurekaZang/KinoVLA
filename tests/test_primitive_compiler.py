@@ -14,6 +14,7 @@ from kino_vla.shield.cbf_shield import CbfShield
 from kino_vla.shield.primitive_compiler import (
     AdjustPosture,
     Backstep,
+    Continue,
     HoldAndRequest,
     PrimitiveCompiler,
     ReplanWaypoint,
@@ -50,6 +51,12 @@ def test_backstep_compiles_to_reverse_velocity():
     c = _compiler().compile(Backstep(distance_m=0.5), _obs())
     assert c.accepted and c.v_cmd is not None
     assert c.v_cmd[0] < 0.0 and c.backstep_m == 0.5
+
+
+def test_continue_compiles_to_explicit_noop():
+    c = _compiler().compile(Continue(), _obs())
+    assert c.accepted and c.code == "OK: continue"
+    assert c.v_cmd is None and c.target_mode is None and not c.halt
 
 
 def test_backstep_rejects_nonpositive_distance():

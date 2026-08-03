@@ -1,0 +1,52 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v5-development",
+  "status": "development_photographic_hdri_iteration_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v4.json",
+    "sha256": "52a3c58391fad3f5ad5a9f4dd1ff9b72c297eb6540f9695e39aebf5ac5cc6e09"
+  },
+  "overrides": {
+    "source_scene_id": "forest_hybrid_polyhaven_monks_dev01",
+    "background": {
+      "type": "polyhaven_cc0_photographic_hdri_infinite_background",
+      "source_label": "Poly Haven CC0 photographic HDRI monks_forest 4K; EmbodiedGen remains a separate appearance randomization source",
+      "panorama": {
+        "path": "outputs/assets/forest_hdri_polyhaven_v1/monks_forest/monks_forest_4k.hdr",
+        "sha256": "14ef403cdd49cabd346f5d72444594cd69ae484a41f925809ea69f8708e6e976"
+      },
+      "preflight": {
+        "path": "outputs/assets/forest_hdri_polyhaven_v1/monks_forest/preflight.json",
+        "sha256": "c85d7fd08dff38d08ee1a28f4317575aff388ff7f9ed7dcbe1a1497746283993"
+      },
+      "asset_lock": {
+        "path": "outputs/assets/forest_hdri_polyhaven_v1/forest_hdri.lock.json",
+        "sha256": "a120248111d77264177059351536189156f97f2eb4408c5ac8a908730446b2ee"
+      },
+      "intensity": 220.0,
+      "rotation_xyz_deg": [0.0, 0.0, 0.0]
+    },
+    "appearance": {
+      "distant_light_intensity": 80.0,
+      "distant_light_angle_deg": 6.0,
+      "distant_light_rotation_xyz_deg": [50.0, -20.0, -35.0]
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v5"
+    }
+  },
+  "provenance_policy": {
+    "photographic_hdri_is_not_mislabeled_as_embodiedgen": true,
+    "embodiedgen_is_retained_as_one_appearance_family": true,
+    "polyhaven_hdri_is_cc0_and_hash_locked": true,
+    "near_field_props_and_pbr_ground_remain_metric": true,
+    "kino_fail_owns_route_collision_and_operator_physics": true
+  },
+  "quality_policy": {
+    "hdri_preflight_does_not_admit_scene": true,
+    "body_fixed_go2_rtx_review_required": true,
+    "operator_geometry_leak_review_required": true,
+    "three_synchronized_appearance_views_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

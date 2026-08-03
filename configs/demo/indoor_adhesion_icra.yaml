@@ -1,0 +1,57 @@
+# ICRA-review vertical slice: realistic indoor scene + foot-local O4 adhesion.
+# This config is an engineering/demo gate, not a source of paper headline statistics.
+scene:
+  id: "indoor_workstudio_adhesion_v1"
+  source_kind: "kino_authored_fallback_embodiedgen_interface_ready"
+  seed: 42
+  usd_dir: "scene_usd"
+  corridor_y_half_width_m: 0.82
+
+start:
+  pos: [0.0, 0.0]
+  heading: 0.0
+
+adhesion:
+  surface_z_m: 0.0
+  attach_contact_force_n: 5.0
+  attach_height_tolerance_m: 0.08
+  stiffness_xy_n_per_m: 260.0
+  damping_xy_ns_per_m: 5.0
+  stiffness_z_n_per_m: 180.0
+  damping_z_ns_per_m: 3.0
+  force_cap_n: 55.0
+  break_force_n: 105.0
+  peel_release_force_n: 16.0
+  peel_velocity_threshold_mps: 0.03
+  progress_axis_xy: [1.0, 0.0]
+  max_active_feet: 2
+
+camera:
+  front_width: 640
+  front_height: 360
+  front_focal_mm: 19.0
+  front_aperture_mm: 24.0
+  mount_xyz_m: [0.335, 0.0, 0.065]
+  review_width: 960
+  review_height: 540
+  # Inside the room, diagonally framing the Go2 route and adhesive film.
+  review_eye_xyz: [1.25, -3.05, 1.85]
+  review_target_xyz: [2.65, 0.0, 0.28]
+  fps: 20
+
+motion:
+  control_hz: 50
+  forward_command_mps: 0.55
+  reverse_command_mps: -0.32
+  # Both takes use this identical forward -> intentional reverse-peel -> stop protocol.
+  adhesion_forward_s: 4.7
+  peel_duration_s: 3.0
+  stop_duration_s: 1.0
+
+review:
+  keyframe_times_s: [1.0, 4.2, 4.8, 7.5]
+  required_takes: [nominal, adhesion_peel]
+  operator_canonical: "O4_tether"
+  operator_subtype: "adhesive_contact"
+  fidelity_level: "foot_local_force_constraint_v1"
+  paper_status: "demo_only_pending_A0_determinism_and_formal_statistics"

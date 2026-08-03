@@ -1,0 +1,405 @@
+{
+  "schema_version": "kinofail.embodiedgen-o4-route-surface-v7-confirmation-batch.v1",
+  "batch_id": "embodiedgen-o4-route-surface-v7-confirmation-20260722-v1",
+  "status": "frozen_before_any_requested_scene_generation_or_heldout_rtx_inspection",
+  "objective": "Independently confirm the unchanged O4 adhesion consequence in new EmbodiedGen rooms while testing render-only terrain randomization on all twelve previously uninspected val/test materials.",
+  "sampling_frame": {
+    "room_families": [
+      "Office",
+      "Bedroom",
+      "Bathroom",
+      "LivingRoom",
+      "Kitchen",
+      "DiningRoom"
+    ],
+    "excluded_family": "House",
+    "exclusion_reason": "Development preflight exposed a RoomGen House world-transform failure near 1e23 m. The confirmation claim is explicitly restricted to the six stable room families rather than silently replacing failed House samples.",
+    "instances_per_room_family": 2,
+    "complexity_levels": [
+      "simple",
+      "minimalist"
+    ],
+    "complexity_balance": "Each room family contributes one simple and one minimalist instance; each material split contains three of each complexity.",
+    "material_assignment": "Each of the six val and six test material IDs in the frozen asset lock is assigned exactly once using metadata only, before any held-out RTX render or pixel inspection."
+  },
+  "new_scene_requests": [
+    {
+      "scene_id": "indoor_office_21",
+      "output_directory": "Office_seed20260841",
+      "room_type": "Office",
+      "complexity": "simple",
+      "source_scene_seed": 20260841,
+      "formal_episode_seed": 20260842,
+      "material_id": "val_tiles139",
+      "material_split": "val",
+      "formal_output_directory": "formal_seed20260842_route_surface_v7",
+      "planned_role": "confirmation_01_of_12"
+    },
+    {
+      "scene_id": "indoor_bedroom_22",
+      "output_directory": "Bedroom_seed20260843",
+      "room_type": "Bedroom",
+      "complexity": "minimalist",
+      "source_scene_seed": 20260843,
+      "formal_episode_seed": 20260844,
+      "material_id": "val_concrete045",
+      "material_split": "val",
+      "formal_output_directory": "formal_seed20260844_route_surface_v7",
+      "planned_role": "confirmation_02_of_12"
+    },
+    {
+      "scene_id": "indoor_bathroom_23",
+      "output_directory": "Bathroom_seed20260845",
+      "room_type": "Bathroom",
+      "complexity": "simple",
+      "source_scene_seed": 20260845,
+      "formal_episode_seed": 20260846,
+      "material_id": "val_asphalt023s",
+      "material_split": "val",
+      "formal_output_directory": "formal_seed20260846_route_surface_v7",
+      "planned_role": "confirmation_03_of_12"
+    },
+    {
+      "scene_id": "indoor_livingroom_24",
+      "output_directory": "LivingRoom_seed20260847",
+      "room_type": "LivingRoom",
+      "complexity": "minimalist",
+      "source_scene_seed": 20260847,
+      "formal_episode_seed": 20260848,
+      "material_id": "val_concrete040",
+      "material_split": "val",
+      "formal_output_directory": "formal_seed20260848_route_surface_v7",
+      "planned_role": "confirmation_04_of_12"
+    },
+    {
+      "scene_id": "indoor_kitchen_25",
+      "output_directory": "Kitchen_seed20260849",
+      "room_type": "Kitchen",
+      "complexity": "simple",
+      "source_scene_seed": 20260849,
+      "formal_episode_seed": 20260850,
+      "material_id": "val_ground071",
+      "material_split": "val",
+      "formal_output_directory": "formal_seed20260850_route_surface_v7",
+      "planned_role": "confirmation_05_of_12"
+    },
+    {
+      "scene_id": "indoor_diningroom_26",
+      "output_directory": "DiningRoom_seed20260851",
+      "room_type": "DiningRoom",
+      "complexity": "minimalist",
+      "source_scene_seed": 20260851,
+      "formal_episode_seed": 20260852,
+      "material_id": "val_gravel023",
+      "material_split": "val",
+      "formal_output_directory": "formal_seed20260852_route_surface_v7",
+      "planned_role": "confirmation_06_of_12"
+    },
+    {
+      "scene_id": "indoor_office_27",
+      "output_directory": "Office_seed20260853",
+      "room_type": "Office",
+      "complexity": "minimalist",
+      "source_scene_seed": 20260853,
+      "formal_episode_seed": 20260854,
+      "material_id": "test_tiles140",
+      "material_split": "test",
+      "formal_output_directory": "formal_seed20260854_route_surface_v7",
+      "planned_role": "confirmation_07_of_12"
+    },
+    {
+      "scene_id": "indoor_bedroom_28",
+      "output_directory": "Bedroom_seed20260855",
+      "room_type": "Bedroom",
+      "complexity": "simple",
+      "source_scene_seed": 20260855,
+      "formal_episode_seed": 20260856,
+      "material_id": "test_concrete039",
+      "material_split": "test",
+      "formal_output_directory": "formal_seed20260856_route_surface_v7",
+      "planned_role": "confirmation_08_of_12"
+    },
+    {
+      "scene_id": "indoor_bathroom_29",
+      "output_directory": "Bathroom_seed20260857",
+      "room_type": "Bathroom",
+      "complexity": "minimalist",
+      "source_scene_seed": 20260857,
+      "formal_episode_seed": 20260858,
+      "material_id": "test_pathway002",
+      "material_split": "test",
+      "formal_output_directory": "formal_seed20260858_route_surface_v7",
+      "planned_role": "confirmation_09_of_12"
+    },
+    {
+      "scene_id": "indoor_livingroom_30",
+      "output_directory": "LivingRoom_seed20260859",
+      "room_type": "LivingRoom",
+      "complexity": "simple",
+      "source_scene_seed": 20260859,
+      "formal_episode_seed": 20260860,
+      "material_id": "test_asphalt031",
+      "material_split": "test",
+      "formal_output_directory": "formal_seed20260860_route_surface_v7",
+      "planned_role": "confirmation_10_of_12"
+    },
+    {
+      "scene_id": "indoor_kitchen_31",
+      "output_directory": "Kitchen_seed20260861",
+      "room_type": "Kitchen",
+      "complexity": "minimalist",
+      "source_scene_seed": 20260861,
+      "formal_episode_seed": 20260862,
+      "material_id": "test_ground073",
+      "material_split": "test",
+      "formal_output_directory": "formal_seed20260862_route_surface_v7",
+      "planned_role": "confirmation_11_of_12"
+    },
+    {
+      "scene_id": "indoor_diningroom_32",
+      "output_directory": "DiningRoom_seed20260863",
+      "room_type": "DiningRoom",
+      "complexity": "simple",
+      "source_scene_seed": 20260863,
+      "formal_episode_seed": 20260864,
+      "material_id": "test_gravel022",
+      "material_split": "test",
+      "formal_output_directory": "formal_seed20260864_route_surface_v7",
+      "planned_role": "confirmation_12_of_12"
+    }
+  ],
+  "selection_policy": {
+    "generation_attempts_per_request": 1,
+    "replacement_seed_allowed": false,
+    "post_generation_source_repair_allowed": false,
+    "post_generation_material_reassignment_allowed": false,
+    "post_generation_route_lighting_or_camera_tuning_allowed": false,
+    "post_generation_threshold_change_allowed": false,
+    "all_twelve_requests_count_in_denominator": true,
+    "downstream_execution_after_failed_gate": false,
+    "formal_runs_per_admitted_scene": 1,
+    "stage_order": [
+      "source_generation_and_integrity",
+      "source_geometry_preflight_v1",
+      "base_v1_compile",
+      "corridor_v2_refinement",
+      "route_surface_v4_with_frozen_material_assignment",
+      "rtx_phase_aware_v5_qa",
+      "articulated_go2_v2_qa",
+      "heldout_route_surface_v7_admission",
+      "route_surface_v7_protocol_freeze",
+      "formal_o4_pair",
+      "phase_aware_v6_formal_adjudication",
+      "v6_native_independent_formal_admission"
+    ]
+  },
+  "scene_contract": {
+    "source_geometry_preflight": {
+      "minimum_visual_meshes": 5,
+      "minimum_visual_faces": 1000,
+      "maximum_absolute_indoor_coordinate_m": 100.0,
+      "metres_per_unit": 1.0
+    },
+    "corridor": {
+      "robot_radius_m": 0.34,
+      "physical_safety_margin_m": 0.1,
+      "maximum_tracking_error_m": 0.3,
+      "required_centerline_clearance_m": 0.74,
+      "corridor_length_m": 2.45,
+      "collector_start_waypoint_index": 2
+    },
+    "appearance": {
+      "visual_intervention_only": true,
+      "collision_authored": false,
+      "purpose": "render",
+      "material_splits": [
+        "val",
+        "test"
+      ],
+      "material_ids_inspected_before_freeze": false
+    },
+    "camera": {
+      "role": "actual body-fixed Go2 front RTX RGB",
+      "focal_length_mm": 19.0,
+      "near_clip_m": 0.01,
+      "rtx_views": 7,
+      "canonical_context_views": 4,
+      "body_pitch_sensor_views": 3
+    }
+  },
+  "run_contract": {
+    "forward_s": 2.4,
+    "peel_pulse_s": 0.1,
+    "recovery_s": 1.0,
+    "reverse_s": 3.0,
+    "stop_s": 1.0,
+    "rgb_fps": 5.0
+  },
+  "operator_contract": {
+    "id": "O4",
+    "name": "foot_adhesion",
+    "contact_scope": "named Go2 feet only",
+    "maximum_active_feet": 1,
+    "force_cap_n": 35.0,
+    "parameters_unchanged_from_frozen_calibration": true
+  },
+  "phase_aware_visual_contract": {
+    "thresholds": {
+      "context_min_std_luminance": 0.025,
+      "context_max_black_fraction": 0.9,
+      "context_min_quantized_colors_5bit": 32,
+      "sensor_min_mean_luminance": 0.005,
+      "sensor_min_std_luminance": 0.005,
+      "sensor_max_black_fraction": 0.995,
+      "sensor_min_quantized_colors_5bit": 8
+    }
+  },
+  "inference_scope": {
+    "requested_scene_instances": 12,
+    "minimum_formal_passes_for_primary_target": 8,
+    "minimum_passes_per_material_split": 3,
+    "minimum_room_families_among_passes": 4,
+    "minimum_distinct_materials_among_passes": 8,
+    "claim_if_primary_target_met": "The unchanged O4 consequence independently replicated in at least eight of twelve preregistered new room instances, including both held-out material splits, at least four room families, and eight distinct terrain appearances.",
+    "always_report": [
+      "all twelve requested instances and the first failed gate for each",
+      "formal passes over the full 12-request denominator",
+      "val and test split results separately",
+      "simple and minimalist generation yield separately",
+      "room-family and material-family coverage",
+      "the preceding v6-native 2/6 result and its four source/RTX failures"
+    ],
+    "not_authorized": [
+      "drop or replace a failed request",
+      "select held-out materials from their rendered appearance",
+      "claim a material causes a physical anomaly; appearance is render-only",
+      "claim all eleven operators are benchmark-ready from O4 evidence",
+      "claim real-Go2 sim-to-real validity",
+      "claim Kino-Fail is fully ICRA-ready from this batch alone"
+    ]
+  },
+  "calibration_exclusions": [
+    {
+      "scene_id": "indoor_office_05",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Office_seed20260805/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260809_v5/pair_manifest.json",
+      "sha256": "bcdab1e131f4934c0b4babd162f6a828295158eabdc321b6cbc872c10cd4c5a8"
+    },
+    {
+      "scene_id": "indoor_bedroom_06",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260807/kinofail_corridor_v2_tracking030/o4_pairs/development_forward240_seed20260810_v5/pair_manifest.json",
+      "sha256": "dfe021e86a2d74b3162ab48fc3625a77f20eecc9392f759d49e0081d92d4e47f"
+    }
+  ],
+  "development_evidence": {
+    "route_surface_material_v6_plan": {
+      "path": "configs/data/kinofail_embodiedgen_route_surface_material_v6_development_matrix_v1.json",
+      "sha256": "6bc213d8aaa38eca6f454a19ab91fa31eb2eda908188542e497c126c5384b157"
+    },
+    "route_surface_material_v6_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/route_surface_material_v6_development_matrix_v1_audit.json",
+      "sha256": "fc95c100ebc58c9e506d5fccdd9d3eba760b470b967bc154f786a526ae5ebd97"
+    },
+    "source_preflight_validation": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/source_geometry_preflight_v1_validation_audit.json",
+      "sha256": "bb9ec1dd5f85edb28404d04b17eb3cbc34951c061ee25936a5e8036c486964db"
+    },
+    "route_surface_go2_compatibility_pilot": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260837/route_surface_material_v6_development/train_ground037/route_surface_v7_compatibility_admission_audit.json",
+      "sha256": "761ce270fd143c47e554cfcd467aebef43b44ef885f6014bba4520bb167dc70c"
+    },
+    "preceding_v6_native_batch": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/o4_v6_native_confirmation_batch_v1_audit.json",
+      "sha256": "9f84ded5d2dc022379601e8fea146f3b92ee3cf22ef6d73878702ec95b0c3de8"
+    }
+  },
+  "frozen_code": {
+    "room_generator": {
+      "path": "scripts/generate_embodiedgen_room_source.py",
+      "sha256": "eee7a8deca19805793b26c2600364688ea52e94fb481affd87e7b7fc8c803140"
+    },
+    "source_preflight_logic": {
+      "path": "kino_vla/eval/embodiedgen_source_preflight_v1.py",
+      "sha256": "494419ebbf14ca662b8621014efb2cb9452385c3a6d50df7da90a4feae9b56cf"
+    },
+    "source_preflight_auditor": {
+      "path": "scripts/audit_embodiedgen_source_preflight_v1.py",
+      "sha256": "41114a2fa21292cba346c2380ecd7a457b72adc8fe13f59117637dcafe5335d0"
+    },
+    "base_scene_compiler": {
+      "path": "scripts/compile_embodiedgen_kinofail_scene.py",
+      "sha256": "a39ce1138cbdef9bb2ba9b0b52abd5ef8cb72e2e73633fadad2a2bdca3c61564"
+    },
+    "corridor_v2_refiner": {
+      "path": "scripts/refine_embodiedgen_kinofail_scene_v2.py",
+      "sha256": "b0cba713dde48c61b98e8a4610687f172e33ac2deb53976d18224131816a8304"
+    },
+    "route_surface_v4_contract": {
+      "path": "kino_vla/sim/embodiedgen_scene_v4.py",
+      "sha256": "2e4541d6cc6dcf07adf6c2e441e15c63c43490703b305728a9282827f9881dd3"
+    },
+    "route_surface_v4_refiner": {
+      "path": "scripts/refine_embodiedgen_kinofail_scene_v4.py",
+      "sha256": "4ece78e871242723b5bf4a83d1cf4b91ef56effec750def884593c0a2a6d99b9"
+    },
+    "rtx_v5_contract": {
+      "path": "kino_vla/eval/embodiedgen_visual_contract_v5.py",
+      "sha256": "be383b861a17ec7c27f12ffa690e28a054811aac8bdd270fb8491d538ace70ef"
+    },
+    "rtx_v5_renderer": {
+      "path": "scripts/isaac_render_embodiedgen_scene_qa_v5.py",
+      "sha256": "bd6db19ec7772ab0b7b28d63e909468777fc6189104784e7587e8badac15191f"
+    },
+    "articulated_go2_qa": {
+      "path": "scripts/isaac_embodiedgen_go2_scene_qa.py",
+      "sha256": "bf50c1d32584e87abdb2acf42dbefa850f1cb1049279e472034ef5de7ee8c593"
+    },
+    "route_surface_v7_admission_logic": {
+      "path": "kino_vla/eval/embodiedgen_route_surface_v7_admission.py",
+      "sha256": "41b415502b4841244b7a79b165e2a703eb924fe5b2d10734ad451b7c1fd67e55"
+    },
+    "route_surface_v7_admission_auditor": {
+      "path": "scripts/audit_embodiedgen_route_surface_v7_admission.py",
+      "sha256": "d8dfdb616f34e19580ac2983f4d57b6e4dc57f65546440025953791d0a520790"
+    },
+    "route_surface_v7_protocol_wrapper": {
+      "path": "scripts/freeze_embodiedgen_o4_route_surface_v7_protocol.py",
+      "sha256": "e8ae1853f0cdb687b9ffbf447280ce82b7085695f7b366ba70bac7173a0ca19e"
+    },
+    "protocol_freezer_base": {
+      "path": "scripts/freeze_embodiedgen_o4_protocol.py",
+      "sha256": "4749e326d4a868fd9b29be9019321b826e5a58a30e8914eb19ef4db55b98fb4c"
+    },
+    "pair_collector": {
+      "path": "scripts/isaac_collect_embodiedgen_o4_pair.py",
+      "sha256": "8fe8ab7e3b81ac640a7ca168742b74cfb23c98a3108775dbd222d66f1f4d7830"
+    },
+    "phase_aware_contract": {
+      "path": "kino_vla/eval/o4_phase_aware.py",
+      "sha256": "6026fc72244240a1a290fbe255058a129e778628e64a6cbbf5e876d9d6b5827b"
+    },
+    "phase_aware_v6_adjudicator": {
+      "path": "scripts/audit_embodiedgen_o4_pair_v6.py",
+      "sha256": "bfc169815daac2d910c4e8da56375f99f52f632f6c73502d3149d43ee485b63a"
+    },
+    "v6_native_independence_auditor": {
+      "path": "scripts/audit_embodiedgen_o4_independence_v6.py",
+      "sha256": "da96dcea7bc1d876c1822420e765ee882ea7045210aa51c2cd9ac3c6117a19c9"
+    },
+    "route_surface_v7_batch_auditor": {
+      "path": "scripts/audit_embodiedgen_o4_route_surface_v7_batch.py",
+      "sha256": "0087dff7a8a86f27a625ab3f55e79714b482c2db0c3e927075321d8c2aed998c"
+    },
+    "policy_backend": {
+      "path": "kino_vla/sim/isaac_policy_backend.py",
+      "sha256": "cb3a51fa1ef935388d184b609dc1b956c63f331851615ac26b895f5b5df2ed5b"
+    },
+    "adhesion_model": {
+      "path": "kino_vla/sim/adhesion.py",
+      "sha256": "3a6d7232c2186087bde15b72b39907b0b32197ad141ac06816f19a2e148e636e"
+    },
+    "terrain_asset_lock": {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    }
+  }
+}

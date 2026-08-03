@@ -1,0 +1,19 @@
+{
+  "schema_version": "kinofail.realistic-a1-diagnostic-protocol.v1",
+  "protocol_id": "kinofail_realistic_a1_scale_v7_diagnostic_v1",
+  "status": "frozen_before_feature_extraction",
+  "operators": ["O2_compliance", "O4_tether"],
+  "view": "primary",
+  "evaluation": "leave-one-scene-family-out predictions across all nine scene families",
+  "classifier": "class-balanced LogisticRegression(C=1) after StandardScaler",
+  "bootstrap": {"unit": "scene_family", "repetitions": 10000, "seed": 20260723},
+  "acceptance": {
+    "minimum_scene_clusters": 9,
+    "proprio_auc_equivalence_band": [0.4, 0.6],
+    "proprio_cluster_ci_inside_band": true,
+    "vision_auc_cluster_ci_lower": 0.8,
+    "matched_o2_o4_design_required": true
+  },
+  "known_design_limit": "Scale-v7 independently balances O2 and O4 but does not pair them into an explicitly proprio-matched cross-operator construct. Results are diagnostic until a frozen matched extension is collected.",
+  "a8_in_scope": false
+}

@@ -89,6 +89,263 @@ def test_m2_operators_isaac():
 
 @pytest.mark.sim
 @pytest.mark.slow
+def test_realistic_o3_topology_isaac():
+    """O3 must change support topology from measured foot load, not only swap friction."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_o3_topology_gate.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O3 topology gate" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o2_o3_visual_evidence_isaac():
+    """O2 measured contacts and the O3 impulse trigger must be inspectable in live RTX views."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "isaac_o2_o3_visual_evidence.py"),
+            "--headless",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O2/O3 terrain visual evidence bundle" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o3_dose_sweep_isaac():
+    """O3 post-collapse severity must produce an ordered, paired physical response."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_o3_dose_sweep.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O3 dose sweep" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o9_dose_sweep_isaac():
+    """O9 runner height must order measured belly-contact duration and motion loss."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_o9_dose_sweep.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O9 dose sweep" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o4_adhesion_dose_sweep_isaac():
+    """O4 must attach at named feet and order per-foot force and recovery consequence."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "isaac_o4_adhesion_dose_sweep.py"),
+            "--headless",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O4 adhesion dose sweep" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o5_payload_isaac():
+    """O5 must author visible load and change mass, CoM, inertia and foot loading."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_o5_payload_gate.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O5 payload gate" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o5_dose_sweep_isaac():
+    """O5 mass dose must order CoM, inertia and measured support load."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_o5_dose_sweep.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O5 dose sweep" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o6_force_pulse_dose_sweep_isaac():
+    """O6 must apply a finite off-center PhysX wrench with ordered motion response."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "isaac_o6_force_pulse_dose_sweep.py"),
+            "--headless",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O6 finite-wrench dose sweep" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o8_transparent_obstacle_isaac():
+    """O8 must preserve matched glass visuals while collision alone changes motion."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "isaac_o8_transparent_obstacle_gate.py"),
+            "--headless",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O8 transparent obstacle gate" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o10_dose_sweep_isaac():
+    """O10 cap dose must be read back and visible in joint-level torque telemetry."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_o10_dose_sweep.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O10 dose sweep" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o11_sensor_fault_isaac():
+    """O11 must corrupt timestamped raw Isaac IMU/odometry before one estimator."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "isaac_o11_sensor_fault_gate.py"),
+            "--headless",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O11 raw sensor fault gate" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o7_rtx_depth_isaac():
+    """O7 must corrupt real Go2-front RTX depth while preserving paired RGB/PBR appearance."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "isaac_o7_rtx_depth_gate.py"),
+            "--headless",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O7 Go2-front RTX depth gate" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o2_terramechanics_isaac():
+    """O2 must sink and dissipate shear at loaded feet without a trunk drag surrogate."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "isaac_o2_terramechanics_gate.py"),
+            "--headless",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O2 terramechanics gate" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o2_dose_sweep_isaac():
+    """O2 severity must produce paired monotone physical effects over repeated seeds."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_o2_dose_sweep.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O2 dose sweep" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_realistic_o9_high_centering_isaac():
+    """O9 must use real geometry plus measured foot-support and belly-contact evidence."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "isaac_o9_high_centering_gate.py"),
+            "--headless",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: O9 high-centering gate" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
 def test_m3_cbf_adversarial_isaac():
     """M3 CBF shield actively clamps hostile commands on the real Go2 (spec §6.6).
 
@@ -146,3 +403,62 @@ def test_m3_cbf_pushfall_isaac():
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "PASS: M3 push-fall characterization complete" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_m6_hindsight_isaac():
+    """M6 Hindsight-CoT pipeline on the REAL Go2 (spec §10; the data pipeline is Isaac-based,
+    §1/§8.1). Drives the physically-simulated Go2 into each operator's failure (lateral lanes),
+    intercepts with the collection monitor, and snapshots the REAL proprioception + privileged
+    θ — then runs the SAME Oracle + truth-consistency filter. Verifies all lanes intercept,
+    each snapshot's real θ confirms its operator (ice μ≈0.1, payload>0, effort<0.5), and the
+    filter keeps grounded reflections (closes the M6 surrogate gap on GPU, like M4/M5 #21/#23)."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_hindsight_check.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: M6 Hindsight on Isaac" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_posture_controller_isaac():
+    """M7 #41 body-posture controller on the REAL Go2: every posture/gait primitive lands a
+    distinct, precisely-tracked body height the dog physically executes (closes the §6 #40 residual
+    where Switch_Gait/Adjust_Posture/Set_Constraint changed only the shield polygon + a speed cap).
+    The closed-loop residual (kino_vla/sim/isaac_policy_backend.py) drives the measured trunk height
+    to a crawl/high_step/Adjust_Posture command — asserts the heights are ordered, distinct,
+    tracked, return to nominal, and never fall (the M2 Reflex made real; set_reflex was a no-op)."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_posture_check.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: posture controller" in proc.stdout
+
+
+@pytest.mark.sim
+@pytest.mark.slow
+def test_in_place_turn_isaac():
+    """IN-PLACE TURN on the REAL Go2 (user directive): the low-level policy executes a commanded yaw
+    velocity (vx=vy=0) — it rotates in place and physically tracks the yaw command. The VLA's Turn
+    primitive is a PURE in-place rotation (kino_vla/vla/planner.py Phase.TURNING), not a projected
+    waypoint, so this gate verifies the policy half: ±1.0 (and the diagnostic ±1.5) yaw commands are
+    tracked within tolerance, with the correct sign, low translation drift, and NO fall."""
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "isaac_turn_check.py"), "--headless"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=1800,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS: in-place turn policy" in proc.stdout

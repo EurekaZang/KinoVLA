@@ -42,6 +42,11 @@ class Tether(FailureOperator):
         d_sink: float = 0.0,
         appearance_class: str = "yellow_adhesive",
         visual_cost: float = 0.7,
+        peel_factor: float = 0.3,
+        force_cap_n: float = float("inf"),
+        force_offset_n: float = 0.0,
+        p0_m: float = 0.0,
+        k2_n_per_m: float = 0.0,
     ) -> None:
         if k < 0.0 or d < 0.0:
             raise ValueError("spring stiffness/damping must be non-negative")
@@ -51,11 +56,31 @@ class Tether(FailureOperator):
             raise ValueError(f"break force must be positive, got {f_break}")
         if d_sink < 0.0:
             raise ValueError(f"adhesive sink depth must be non-negative, got {d_sink}")
+        if not 0.0 <= peel_factor <= 1.0:
+            raise ValueError(f"peel_factor must be in [0,1], got {peel_factor}")
+        if force_cap_n < 0.0:
+            raise ValueError(f"force_cap_n must be non-negative, got {force_cap_n}")
+        if force_offset_n < 0.0:
+            raise ValueError(f"force_offset_n must be non-negative, got {force_offset_n}")
+        if p0_m < 0.0:
+            raise ValueError(f"two-phase plateau depth p0_m must be non-negative, got {p0_m}")
+        if k2_n_per_m < 0.0:
+            raise ValueError(f"two-phase ramp stiffness k2_n_per_m must be non-negative, "
+                             f"got {k2_n_per_m}")
         self._region = region
         self._k = float(k)
         self._d = float(d)
         self._l0 = float(l0)
         self._f_break = float(f_break)
+        # #49 peel-plateau force shaping (E1; default inf/0 ⇒ unshaped, byte-identical).
+        self._force_cap_n = float(force_cap_n)
+        self._force_offset_n = float(force_offset_n)
+        # A4.1 two-phase delayed-divergence (default 0/0 ⇒ the #49 path, byte-identical).
+        self._p0_m = float(p0_m)
+        self._k2_n_per_m = float(k2_n_per_m)
+        # Bug-1: the adhesive resists going DEEPER at full strength but only peel_factor of that in
+        # reverse, so the dog escapes by backing off (peeling), not by pushing through.
+        self._peel_factor = float(peel_factor)
         # Foot penetration into the adhesive layer (a glue-trap board sinks the foot too).
         # Defaults to 0; the constructive O2↔O4 ambiguity pair sets it equal to O2's d_sink
         # so even the base-height channel matches — proprioception is then airtight-identical.
@@ -78,6 +103,11 @@ class Tether(FailureOperator):
                     slack_length_m=self._l0,
                     break_force_n=self._f_break,
                     kind="tether",
+                    peel_factor=self._peel_factor,
+                    force_cap_n=self._force_cap_n,
+                    force_offset_n=self._force_offset_n,
+                    p0_m=self._p0_m,
+                    k2_n_per_m=self._k2_n_per_m,
                 )
             ]
         )
@@ -98,6 +128,11 @@ class Tether(FailureOperator):
             "L_0": self._l0,
             "F_break": self._f_break,
             "d_sink": self._d_sink,
+            "force_cap_n": self._force_cap_n,
+            "force_offset_n": self._force_offset_n,
+            "peel_factor": self._peel_factor,
+            "p0_m": self._p0_m,
+            "k2_n_per_m": self._k2_n_per_m,
             "region_cx": self._region.cx,
             "region_cy": self._region.cy,
             "region_hx": self._region.hx,

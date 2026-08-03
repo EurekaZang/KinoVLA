@@ -1,0 +1,40 @@
+{
+  "a8_in_scope": false,
+  "bootstrap_repetitions": 10000,
+  "bootstrap_seed": 2026072307,
+  "conditions": {
+    "with_texture_swap_augmentation": "all three synchronized appearance views in fit",
+    "without_texture_swap_augmentation": "primary appearance view only in fit"
+  },
+  "dataset_scope": "kinofail_realistic",
+  "feature_manifest": "outputs/eval/realistic_a0_a7_v6/features/feature_manifest.json",
+  "feature_manifest_sha256": "72b4541aa7d38c9638d89d043172266777bc19ed3f893185b4b5499f27ccdaaa",
+  "features": "outputs/eval/realistic_a0_a7_v6/features/features.npz",
+  "features_sha256": "d45c4eae2aab6ab0aecbf57c52cd608fe65fddddab7471e27e4e6714ba7224fc",
+  "fit_split": "registry scene split in {train,val}",
+  "freeze_policy": "Architecture, split, seeds and statistics are copied unchanged from the scale-v7 ablation; this step only binds hashes after deterministic feature extraction and before fitting either ablation arm.",
+  "headline_view": "primary",
+  "model_implementation": "kino_vla/eval/realistic_multimodal.py",
+  "model_implementation_sha256": "08b900598bebb33849aae7567a790e373ce900505e8b0057e5d80d37fb8cd06e",
+  "negative_results_retained": true,
+  "output": "outputs/eval/realistic_a0_a7_v6/a7_texture_consistency_ablation.json",
+  "protocol_id": "kinofail_realistic_a7_texture_ablation_scale_v8_nuisance_v2",
+  "records": "outputs/eval/realistic_a0_a7_v6/snapshots/snapshot_records.jsonl",
+  "records_sha256": "0c0bcbc2851d96e5742260dc3c2842127cee09ac0ec2e9d871548e56519ddbe4",
+  "scene_registry": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schema_version": "kinofail.realistic-a7-texture-ablation-protocol.v1",
+  "statistical_unit": "paired counterfactual physics group clustered over physical episodes",
+  "status": "frozen_before_scale_v8_a7_outcomes",
+  "test_split": "registry scene split test",
+  "texture_consistency_views": [
+    "primary",
+    "swap_01",
+    "swap_02"
+  ],
+  "training_seeds": [
+    0,
+    1,
+    2
+  ]
+}

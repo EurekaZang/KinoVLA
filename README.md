@@ -38,9 +38,9 @@ conda activate kinovla
 # PyTorch with Blackwell kernels first, so Isaac Sim does not pin an older build
 pip install torch --index-url https://download.pytorch.org/whl/cu128
 
-# Isaac Sim 5.x + Isaac Lab (pip workflow)
-pip install "isaacsim[all,extscache]>=5.0" --extra-index-url https://pypi.nvidia.com
-pip install isaaclab[isaacsim,all]==2.3.0 --extra-index-url https://pypi.nvidia.com
+# Reproduce the benchmark-tested pair (do not mix the Isaac Lab 3.x beta with Sim 5.1)
+pip install "isaacsim[all,extscache]==5.1.*" --extra-index-url https://pypi.nvidia.com
+pip install isaaclab[isaacsim,all]==2.3.2 --extra-index-url https://pypi.nvidia.com
 
 pip install -e ".[dev]"
 python scripts/check_env.py             # must show the 5090 with sm_120 and cuda >= 12.8
@@ -52,7 +52,8 @@ pytest -m sim                           # GPU-gated test suite
 First Isaac Sim launch compiles shaders and downloads asset caches; expect several
 minutes and ~10 GB of disk. If `isaaclab` pip pinning fails on your driver/OS combo,
 fall back to the official Isaac Lab source install and `pip install -e .` this repo
-into that same environment.
+into that same environment. For a source install, check out Isaac Lab `v2.3.2`; every
+publication gate records the resolved Isaac Sim/Lab versions and input hashes.
 
 ## Repository layout
 

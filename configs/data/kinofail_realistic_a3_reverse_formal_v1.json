@@ -1,0 +1,71 @@
+{
+  "allowed": {
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_0bf5c765b10d2840a1ee",
+      "cf_0f4df90a0f723241f931",
+      "cf_128dc27306cb429dddd5",
+      "cf_7ad0d55f95479e3b9a30",
+      "cf_7c0d6167c4596ac8f9cf",
+      "cf_a6a954edfe4acd888385",
+      "cf_a6d8aa63200618a04995",
+      "cf_afcf9b5a2daf6a19ddc6",
+      "cf_d9cffd0cc5b591cd69c3"
+    ],
+    "geometry_profiles": [
+      "same_surface_counterfactual"
+    ],
+    "physical_realizations": [
+      "appearance_physics_swap"
+    ],
+    "scene_families": [
+      "forest_river_walk_metric_g07",
+      "forest_slope_metric_g06",
+      "forest_trail_metric_g03",
+      "indoor_bedroom_118",
+      "indoor_kitchen_140",
+      "indoor_livingroom_139",
+      "indoor_office_162",
+      "indoor_office_168",
+      "indoor_office_186"
+    ],
+    "severity_ids": [
+      "moderate"
+    ],
+    "target_operators": [
+      "O7_visual_remap"
+    ]
+  },
+  "benchmark_id": "kinofail_realistic_a3_reverse_v1",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "counterfactual_pairs": 9,
+    "domains": 3,
+    "independent_scene_clusters": 9,
+    "nominal_probe_requires_depth_bias_m": 0.0,
+    "nominal_probe_requires_mu_d_ge": 0.6,
+    "nominal_probe_requires_mu_s_ge": 0.8,
+    "outcome_strength_is_reported_not_gated": true,
+    "per_scene_parameter_tuning_forbidden": true,
+    "physical_episodes": 18
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_pair_v6.py",
+  "collector_sha256": "3f0e2a949df2c0143f88c48c86a558d31ab44dd142253dc13ff23660b6b9ffd7",
+  "design_audit_path": "outputs/kinofail_realistic/design_a3_reverse_v1/audit.json",
+  "design_audit_sha256": "d074623f336e6e2454d9364fb0061270b74bd7bea8c6610d8f9e53c669f81055",
+  "frozen_utc": "2026-07-23T15:29:52.510819+00:00",
+  "protocol_id": "kinofail_realistic_a3_reverse_18_v1",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule_path": "outputs/kinofail_realistic/design_a3_reverse_v1/schedule.jsonl",
+  "schedule_sha256": "bba6377f8be7c5174cf46257f39ee934fb1314c21d34011e39aa020e350f491d",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "A3 three-domain O7 reverse-conflict extension: hazard-looking scanned PBR appearance paired with nominal physics; A8 excluded.",
+  "status": "frozen"
+}

@@ -1,11 +1,8 @@
-"""O3 Triggered Collapse — thin ice that breaks once loaded (spec §8.2, Axis I).
+"""O3 Triggered Collapse — load-damaged support topology (spec §8.2, Axis I).
 
-θ = (trigger_dwell, mu_collapsed, region). A region that is intact (``mu_intact``)
-until the robot has dwelled on it past ``trigger_dwell_s`` (a time proxy for the
-contact-load threshold F_th of the spec's collider-swap mechanism), after which its
-friction collapses to ``mu_collapsed`` for the rest of the episode. Spec instance
-[B: region-level topology hazard — the whole homogeneous sheet must be marked, not
-just the broken cell].
+The realistic parameterization is θ = (normal-impulse damage threshold, drop, residual support,
+region).  It changes real collision topology.  The older dwell/friction swap remains available as
+the controlled-core approximation used by historical A0--A7 runs.
 
 Forms the **constructive ambiguity pair with O1**: both read as a low-friction
 slip, but the decision granularity is opposite — O1 uniform ice wants a local
@@ -23,7 +20,7 @@ from kino_vla.utils.geometry import Rect
 
 
 class Collapse(FailureOperator):
-    """A region whose friction collapses after the robot dwells on it past a threshold."""
+    """A support region using load damage when configured, otherwise legacy dwell."""
 
     name: ClassVar[str] = "O3_collapse"
     axis: ClassVar[str] = "I_contact_material_field"
@@ -32,17 +29,32 @@ class Collapse(FailureOperator):
         self,
         region: Rect,
         mu_collapsed: float,
-        trigger_dwell_s: float,
+        trigger_dwell_s: float = 0.0,
         mu_intact: float = 0.8,
+        *,
+        damage_threshold_ns: float | None = None,
+        drop_m: float = 0.0,
+        residual_support: float = 0.0,
     ) -> None:
         if mu_collapsed < 0.0 or mu_intact < 0.0:
             raise ValueError("friction must be non-negative")
         if trigger_dwell_s < 0.0:
             raise ValueError(f"trigger_dwell_s must be non-negative, got {trigger_dwell_s}")
+        if damage_threshold_ns is not None and damage_threshold_ns <= 0.0:
+            raise ValueError("damage_threshold_ns must be positive when provided")
+        if drop_m < 0.0:
+            raise ValueError("drop_m must be non-negative")
+        if not 0.0 <= residual_support <= 1.0:
+            raise ValueError("residual_support must be in [0, 1]")
         self._region = region
         self._mu_intact = float(mu_intact)
         self._mu_collapsed = float(mu_collapsed)
         self._trigger_dwell = float(trigger_dwell_s)
+        self._damage_threshold_ns = (
+            None if damage_threshold_ns is None else float(damage_threshold_ns)
+        )
+        self._drop_m = float(drop_m)
+        self._residual_support = float(residual_support)
 
     @property
     def region(self) -> Rect:
@@ -56,12 +68,15 @@ class Collapse(FailureOperator):
                     mu_intact=self._mu_intact,
                     mu_collapsed=self._mu_collapsed,
                     trigger_dwell_s=self._trigger_dwell,
+                    damage_threshold_ns=self._damage_threshold_ns,
+                    drop_m=self._drop_m,
+                    residual_support=self._residual_support,
                 )
             ]
         )
 
     def get_privileged_state(self) -> dict[str, float]:
-        return {
+        state = {
             "mu_intact": self._mu_intact,
             "mu_collapsed": self._mu_collapsed,
             "trigger_dwell_s": self._trigger_dwell,
@@ -69,4 +84,9 @@ class Collapse(FailureOperator):
             "region_cy": self._region.cy,
             "region_hx": self._region.hx,
             "region_hy": self._region.hy,
+            "drop_m": self._drop_m,
+            "residual_support": self._residual_support,
         }
+        if self._damage_threshold_ns is not None:
+            state["damage_threshold_ns"] = self._damage_threshold_ns
+        return state

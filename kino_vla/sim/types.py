@@ -56,28 +56,31 @@ class FrictionRegion:
 
 @dataclass(frozen=True)
 class CollapseRegion:
-    """A region whose friction collapses once dwelled-on past a threshold (operator O3).
+    """A support region with either a legacy dwell trigger or load-damage topology trigger.
 
-    Models thin ice / a trigger-and-swap collider: intact (``mu_intact``) until the
-    robot accumulates ``trigger_dwell_s`` of contact inside it, then it drops to
-    ``mu_collapsed`` for the rest of the episode (region-level topology hazard).
+    ``damage_threshold_ns`` activates the realistic path: foot normal impulse is accumulated and,
+    at threshold, support cells are removed while a catch surface remains ``drop_m`` below.  The
+    dwell/friction-only fields remain for the controlled causal core and backwards compatibility.
     """
 
     rect: Rect
     mu_intact: float
     mu_collapsed: float
     trigger_dwell_s: float
+    damage_threshold_ns: float | None = None
+    drop_m: float = 0.0
+    residual_support: float = 0.0
 
 
 @dataclass(frozen=True)
 class BlockingRegion:
-    """An impassable collider with no effect until touched (operator O8: invisible wall).
-
-    Forward motion into the region is hard-stopped at its boundary; nothing is
-    rendered, so only proprioception (a tracking-error spike) reveals it.
-    """
+    """A visually weak obstacle with independently controlled collision (operator O8)."""
 
     rect: Rect
+    height_m: float | None = None
+    collision_enabled: bool = True
+    geometry_kind: str = "legacy_invisible_wall"
+    optical_transmission: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -105,6 +108,31 @@ class ResistanceRegion:
     break_force_n: float = float("inf")
     slack_length_m: float = 0.0  # O4 tether free length L_0 before the spring engages
     kind: str = "compliance"
+    # O4 ADHESIVE GRIP (Bug-1): the hold grows with PENETRATION (forward progress into the patch),
+    # resists going deeper at full strength (push-through stalls), but is scaled by peel_factor (<1)
+    # when reversing, so the dog escapes by PEELING OUT (backing off), not by pushing through. The
+    # grip still snaps at break_force_n (a LOW-break tether tears under forward load, the M5 gate).
+    peel_factor: float = 1.0
+    # #49 PEEL-PLATEAU force shaping (E1 calibration; tether kind only): cap the spring grip at
+    # ``force_cap_n`` and add a constant pre-load ``force_offset_n`` ⇒ ``grip = min(k·(pen−L₀),
+    # force_cap_n) + force_offset_n``. Physically a real adhesive peel is a BOUNDED, near-constant
+    # force, not an unbounded Hookean spring. This lets O4's forward signal be made a constant drag
+    # matching O2 (set force_cap_n=0, force_offset_n=k_c) so the E1 C2ST can reach the strong claim.
+    # Defaults (inf, 0) reproduce the unshaped tether EXACTLY — no behaviour change for any caller.
+    force_cap_n: float = float("inf")
+    force_offset_n: float = 0.0
+    # A4.1 TWO-PHASE (delayed-divergence) adhesion (experiments_design.md §4 A4.1). When ``p0_m>0``
+    # the grip law is REPLACED by a plateau-then-ramp: ``grip = force_offset_n`` (a constant plateau
+    # byte-identical to O2 compliance's k_c drag, for pen ≤ p0_m) then ``force_offset_n +
+    # k2_n_per_m·(pen − p0_m)`` beyond. The plateau is where attribution happens (C2ST-
+    # indistinguishable from O2; A1.3 re-certifies it); the ramp is the CONSEQUENCE region.
+    # ``f_break`` then fires on the RAMP grip: finite ⇒ the tether tears under forward lean
+    # (a "catapult" release); ``f_break=inf`` + high ``k2`` ⇒ unbounded hold ("immobilization").
+    # Default (0, 0) reproduces the #49 path EXACTLY — no behaviour change for any caller. R7: the
+    # plateau magnitude is a free parameter (force_offset_n), so A4 places the pair where the
+    # consequence structure exists and A1.3 re-certifies byte-identity at that point.
+    p0_m: float = 0.0
+    k2_n_per_m: float = 0.0
 
 
 @dataclass(frozen=True)

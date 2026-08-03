@@ -1,0 +1,31 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v5-development",
+  "iteration_id": "forest-photographic-hdri-polyhaven-pbr-v8-runtime-lock-fix",
+  "status": "development_runtime_lock_fix_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v7.json",
+    "sha256": "6960fb2f33d67666cb28e24128596204a9fbe5780f121ed6a447dbfcc02cda60"
+  },
+  "overrides": {
+    "appearance": {
+      "material_lock": {
+        "path": "outputs/assets/forest_textures_polyhaven_v2/terrain_assets.lock.json",
+        "sha256": "8e6e4263d80146c9210fc703b59224bd76f99ed35e42ef0d74f456ed8c74fc78"
+      }
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v8"
+    }
+  },
+  "failed_predecessors": [
+    "v7 attempt1: collector hard-coded the legacy material lock",
+    "v7 attempt2: first forest lock used a non-runtime schema"
+  ],
+  "quality_policy": {
+    "scene_visual_content_unchanged_from_v7": true,
+    "only_runtime_material_lock_schema_corrected": true,
+    "body_fixed_go2_rtx_review_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

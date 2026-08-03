@@ -1,0 +1,37 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v5-development",
+  "iteration_id": "forest-photographic-hdri-single-mesh-feathered-route-v11",
+  "status": "development_route_feather_iteration_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v9.json",
+    "sha256": "bc040a91eb1aee5ebf762040413f0ac03629bee2dffc727866c47e89d6ac1e95"
+  },
+  "overrides": {
+    "near_field": {
+      "naturalized_route_visual": {
+        "feathered_edge": true,
+        "minimum_bank_overlap_m": 0.16,
+        "maximum_bank_overlap_m": 0.30
+      }
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v11"
+    }
+  },
+  "failed_predecessor": {
+    "config": "configs/data/kinofail_forest_hybrid_composition_dev_v10.json",
+    "failure": "Four overlapping transparent meshes produced RTX sorting/specular artifacts resembling a liquid trench.",
+    "policy": "v11 branches from v9 and does not inherit v10."
+  },
+  "visual_physics_separation": {
+    "feather_is_one_nonoverlapping_render_mesh": true,
+    "opacity_is_zero_at_outer_bank_and_one_at_physical_route_boundary": true,
+    "collision_route_is_unchanged": true,
+    "o2_o3_operator_parameters_are_unchanged": true
+  },
+  "quality_policy": {
+    "body_fixed_go2_rtx_review_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

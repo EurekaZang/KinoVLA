@@ -1,0 +1,64 @@
+{
+  "schema_version": "kinofail.embodiedgen-visual-shell-review-input.v1",
+  "review_id": "production-wild-shell-review-20260722-v1",
+  "status": "development_review_not_independent_formal_qa",
+  "reviewer": "codex_visual_inspection",
+  "rubric": {
+    "critical_criteria": [
+      "domain_identity",
+      "panorama_coherence",
+      "plausible_scale",
+      "route_visibility",
+      "no_default_grid"
+    ],
+    "refinement_criteria": [
+      "context_density",
+      "nearfield_detail"
+    ],
+    "minimum_refinement_passes_for_publication_candidate": 2,
+    "independent_human_review_required_before_registry": true
+  },
+  "reviews": [
+    {
+      "scene_id": "warehouse_loading_shell_dev01",
+      "domain": "production",
+      "image": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/warehouse_loading_shell_dev01/pano_image.png",
+      "image_sha256": "d7c679aede1a9c3c561da93fb7788946b74f5606d65496b3b9a519b582e9ab00",
+      "automated_preflight": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/warehouse_loading_shell_dev01/panorama_preflight.json",
+      "criteria": {
+        "domain_identity": true,
+        "panorama_coherence": true,
+        "plausible_scale": true,
+        "route_visibility": true,
+        "no_default_grid": true,
+        "context_density": false,
+        "nearfield_detail": false
+      },
+      "notes": [
+        "Warehouse/loading-bay identity and an open robot route are unambiguous.",
+        "The shell is visually soft and too sparse in racks, work cells, dock equipment and near-field production detail for a publication scene.",
+        "Retain as development evidence and remote background candidate; generate a denser independent production candidate before registry review."
+      ]
+    },
+    {
+      "scene_id": "forest_trail_shell_dev01",
+      "domain": "wild",
+      "image": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/pano_image.png",
+      "image_sha256": "ddd9f5690838e00e90bd96cad864795036a18abde0f100a8454081ca336e50b5",
+      "automated_preflight": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/panorama_preflight.json",
+      "criteria": {
+        "domain_identity": true,
+        "panorama_coherence": true,
+        "plausible_scale": true,
+        "route_visibility": true,
+        "no_default_grid": true,
+        "context_density": true,
+        "nearfield_detail": true
+      },
+      "notes": [
+        "Forest depth, vegetation, soil trail and route forks provide a recognizable wild setting with useful near- and mid-field cues.",
+        "Proceed to 3D visual-shell development; route topology and ground geometry must still be replaced or bounded by Kino-owned audited collision/heightfield."
+      ]
+    }
+  ]
+}

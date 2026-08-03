@@ -81,7 +81,22 @@ class CbfShield:
         if self._mode_name not in self._modes:
             raise ValueError(f"default_mode {self._mode_name!r} not in modes {list(self._modes)}")
         self._fallback_modes = [str(m) for m in cfg.get("fallback_modes", [])]
+        # Reactive brace (#42): the fix for the reduced-LIP CBF's push anti-protection (#13/#23).
+        rb = cfg.get("reactive_brace", {}) or {}
+        self._rb_enabled = bool(rb.get("enabled", False))
+        self._rb_mode = str(rb.get("mode", "brace"))
+        self._rb_jump = float(rb.get("push_jump_mps", 0.6))
+        self._rb_hold = int(rb.get("hold_steps", 60))
+        self._prev_v: np.ndarray | None = None  # last measured velocity (push detection)
+        self._rb_countdown = 0  # >0 while reacting to a detected push
+        self._rb_kind = "brace"  # "brace" (lateral push) | "rideout" (forward push)
         self.stats = ShieldStats()
+
+    def enable_reactive_brace(self, enabled: bool = True) -> None:
+        """Turn the reactive brace on for a real-Go2 deployment (#42). Kept OFF in cbf_v0.yaml so
+        the surrogate adversarial zero-fall gate + the §6.6 property tests are unchanged; the
+        physical-push contexts (scripts/isaac_cbf_pushfall.py, the closed loop) call this."""
+        self._rb_enabled = bool(enabled)
 
     # ------------------------------------------------------------------ state
     @property
@@ -123,7 +138,40 @@ class CbfShield:
     def reset(self) -> None:
         self._mode_name = str(self._cfg.default_mode)
         self._mu = float(self._cfg.mu_nominal)
+        self._prev_v = None
+        self._rb_countdown = 0
+        self._rb_kind = "brace"
         self.stats = ShieldStats()
+
+    def _reactive_brace_kind(self, v: np.ndarray) -> str | None:
+        """Direction-aware reactive-brace arbitration (#42). Returns the response kind for a
+        detected physical push, else None (nominal). An external push spikes the MEASURED velocity
+        by a large step (|Δv| > push_jump_mps) in one control step; a hostile command moves v only
+        gradually (slew-limited), so this fires on a physical push, NOT on the adversarial command
+        profiles. The kind is chosen by the push DIRECTION, because the right protection differs:
+
+        - LATERAL-dominant push  → ``"brace"``: the trained policy's lateral push-recovery is weak
+          (it topples), so brace — defend the wider/lower brace polygon + signal the physical brace
+          (lower CoM / wider stance), which recovers it.
+        - FORWARD-dominant push  → ``"rideout"``: the policy natively rides a forward push out (a
+          capture STEP at speed); a reduced-LIP velocity clamp SUPPRESSES that step and topples it
+          (the #13/#23 anti-protection). So defer to the policy for the brief push window (pass the
+          command through), then re-engage. Never worse than bypassed ⇒ no anti-protection.
+
+        This is gated to detected pushes (reactive_brace enabled only in the real-Go2 deployment),
+        so the surrogate adversarial zero-fall gate + §6.6 property tests are unaffected.
+        """
+        if not self._rb_enabled:
+            return None
+        if self._prev_v is not None:
+            dv = v - self._prev_v
+            if float(np.linalg.norm(dv)) > self._rb_jump:  # an external push spiked v in one step
+                self._rb_countdown = self._rb_hold
+                self._rb_kind = "brace" if abs(float(dv[1])) > abs(float(dv[0])) else "rideout"
+        if self._rb_countdown > 0:
+            self._rb_countdown -= 1
+            return self._rb_kind
+        return None
 
     # ------------------------------------------------------------- core solve
     def _solve_for_mode(
@@ -190,8 +238,26 @@ class CbfShield:
         wz = float(cmd[2])
 
         codes: list[str] = []
-        mode = self._modes[self._mode_name]
+        # Reactive brace (#42), direction-aware: on a detected physical push, either brace (lateral
+        # push — defend the wider/lower brace polygon + signal the physical brace) or RIDE OUT
+        # (forward push — defer to the policy's native capture step; a velocity clamp there is the
+        # #13/#23 anti-protection). No push ⇒ the nominal mode clamps hostile commands as before.
+        rb_kind = self._reactive_brace_kind(v)
+        self._prev_v = v.copy()
+        if rb_kind == "rideout":
+            # Forward push: pass the command through for the push window so the policy's forward
+            # ride-out is not suppressed (never worse than bypassed ⇒ no anti-protection). It
+            # re-engages when the window expires. NaN/Inf already rejected to HALT above.
+            self.stats.n_calls += 1
+            self.stats.qp_times_s.append(0.0)
+            self.stats.interventions.append(0.0)
+            self.stats.shield_times_s.append(time.perf_counter() - t0)
+            return ShieldDecision(cmd=cmd.copy(), intervened=False, codes=("PUSH_RIDEOUT",))
+        mode_name = self._rb_mode if rb_kind == "brace" else self._mode_name
+        mode = self._modes[mode_name]
         v_star, qp = self._solve_for_mode(mode, v, v_cmd)
+        if rb_kind == "brace":
+            codes.append("RECOVER_BRACE")
 
         # Infeasibility fallback chain (spec §6.8) — no constraint softening.
         if not qp.feasible:

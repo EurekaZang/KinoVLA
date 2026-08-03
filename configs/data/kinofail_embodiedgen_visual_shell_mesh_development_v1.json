@@ -1,0 +1,60 @@
+{
+  "schema_version": "kinofail.embodiedgen-visual-shell-mesh-development.v1",
+  "status": "development_only_not_formal_corpus",
+  "source_panorama_contract": {
+    "path": "configs/data/kinofail_embodiedgen_visual_shell_development_v1.json",
+    "sha256": "e1c149b0df0bece16386988791c239877ea870614e8999529c0eb6b256c82fde"
+  },
+  "software": {
+    "embodiedgen_release": "v2.0.0",
+    "embodiedgen_commit": "cc3015ca5ccdacf94df3428d9e65f79375982216",
+    "pano2room_commit": "bbf93ae57086ed700edc6ee445852d4457a9d704",
+    "pytorch3d_commit": "4daa00b41c52455440b938d1b676e00935b204d7",
+    "gsplat_version": "1.5.3",
+    "tiny_cuda_nn_commit": "749dd70c5afc5a9dadb85e5652ed65d55e0ba187",
+    "tinycudann_version": "2.0",
+    "torch_version": "2.9.1+cu130",
+    "cuda_version": "13.0"
+  },
+  "pipeline": {
+    "device": "cuda",
+    "pano_width": 2048,
+    "pano_height": 1024,
+    "cubemap_width": 512,
+    "cubemap_height": 512,
+    "fov_degrees": 90,
+    "pose_scale": 0.6,
+    "pano_center_offset": [-0.2, 0.3],
+    "inpaint_frame_stride": 20,
+    "depth_scale_factor": 3.4092,
+    "upscale_factor": 4,
+    "emit_3dgs_training_data": false
+  },
+  "compatibility_policy": {
+    "disable_realesrgan_in_mesh_only_mode": true,
+    "disabled_component_must_raise_if_called": true,
+    "rationale": "Pano2Mesh constructs the RealESRGAN wrapper at startup but only calls it while emitting 3DGS training images. This contract stops after the colored mesh and sets emit_3dgs_training_data=false, so an audited fail-closed shim avoids unrelated Kaolin/nvdiffrast dependencies without changing panorama depth, inpainting, mesh fusion, mesh repair or mesh export."
+  },
+  "mesh_preflight": {
+    "minimum_vertices": 10000,
+    "minimum_faces": 10000,
+    "minimum_colored_vertex_fraction": 0.95,
+    "maximum_nonfinite_vertex_fraction": 0.0,
+    "maximum_degenerate_face_fraction": 0.01,
+    "minimum_raw_percentile_height": 0.1,
+    "maximum_raw_percentile_height": 100.0,
+    "metric_height_relative_tolerance": 0.02
+  },
+  "admission_policy": {
+    "mesh_pass_does_not_admit_scene": true,
+    "visual_shell_only": true,
+    "embodiedgen_mesh_never_used_as_primary_walkable_collision": true,
+    "required_after_mesh": [
+      "novel_view_visual_qa",
+      "kino_collision_or_heightfield_compile",
+      "body_fixed_go2_rtx_qa",
+      "operator_capability_audit",
+      "registry_binding"
+    ]
+  }
+}

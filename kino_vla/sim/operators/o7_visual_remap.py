@@ -57,6 +57,12 @@ class VisualPhysicsRemap(FailureOperator):
         backend.add_friction_regions(
             [FrictionRegion(rect=self._region, mu_s=self._mu_s, mu_d=self._mu_d)]
         )
+        # Isaac's realistic path renders the benign-looking patch into the real RTX camera and
+        # corrupts only its segmented depth pixels after acquisition.  CPU/legacy backends keep
+        # using scene_region() below, so the controlled core remains backwards compatible.
+        install = getattr(backend, "add_visual_depth_fault_region", None)
+        if callable(install):
+            install(self._region, self._appearance, self._depth_bias)
 
     def scene_region(self) -> SemanticRegion | None:
         from kino_vla.map.types import SemanticRegion

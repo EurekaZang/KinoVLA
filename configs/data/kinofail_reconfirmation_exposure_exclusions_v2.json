@@ -1,0 +1,19 @@
+{
+  "schema_version": "kinofail.reconfirmation-exposure-exclusions.v2",
+  "status": "frozen_before_reconfirmation_generation",
+  "purpose": "Exclude every scene source or formal slot exposed during the invalid acquisition pilot.",
+  "records": [
+    {"scene_id": "confirm_v1_life_scene_00", "source_scene_id": "confirm_life_001"},
+    {"scene_id": "confirm_v1_life_scene_01", "source_scene_id": "confirm_life_002"},
+    {"scene_id": "confirm_v1_life_scene_02", "source_scene_id": "confirm_life_008"},
+    {"scene_id": "confirm_v1_life_scene_03", "source_scene_id": "confirm_life_009"},
+    {"scene_id": "confirm_v1_life_scene_04", "source_scene_id": "confirm_life_011"},
+    {"scene_id": "confirm_v1_life_scene_05", "source_scene_id": "confirm_life_012"},
+    {"scene_id": "confirm_v1_life_scene_06", "source_scene_id": "confirm_life_013"},
+    {"scene_id": "confirm_v1_life_scene_07", "source_scene_id": "confirm_life_014"},
+    {"scene_id": "confirm_v1_production_scene_06", "source_scene_id": "confirm_production_010"}
+  ],
+  "inference_exposure": false,
+  "physical_or_conflict_acquisition_exposure": true,
+  "eligible_for_reconfirmation": false
+}

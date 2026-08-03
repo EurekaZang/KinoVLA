@@ -1,0 +1,60 @@
+# =============================================================================================
+# A0.4 — Procedural appearance library (Paper-A §2 A0.4). PRE-REGISTERED (splits are frozen here,
+# before any agent is trained/evaluated). The direct counter to the strongest predictable review
+# attack on E2/A2: "B5-conflict learned yellow→Backstep, not conflict resolution." Each semantic
+# class gets ≥4 procedurally-distinct appearances (varied colour/pattern) that ALL map to the same
+# physics + the same taxonomy category — so an agent that generalises to the held-out appearances
+# demonstrably learned the CONCEPT, not the colour.
+#
+# Design constraints:
+#   * WITHIN a class: appearances are visually distinct (kills the exact-colour shortcut).
+#   * ACROSS the load-bearing pair (adhesion vs compliant_terrain): every appearance stays
+#     separable by real CLIP (C1 needs vision AUC=1.0), so the C1 canonical certificate is unaffected.
+#   * splits: train appearances install the concept; the held-out `test` appearances measure whether
+#     it transferred (A2 appearance-held-out, A5.1 appearance OOD). Splits are disjoint + frozen.
+#   * benign hazard-decals: hazard-COLOURED paint on nominal floor — the A3.2 reverse-conflict probe
+#     (appearance says hazard, proprio says nominal ⇒ correct answer is `continue`).
+#
+# rgb is the diffuse colour the §7 RGB-D render paints (rgbd.material_color); base_material selects
+# the RTX texture structure (map.clip_segmentation.material_texture) for the live-camera path.
+# semantic_class ties the appearance to its physics category (taxonomy); it is NEVER the render input.
+# =============================================================================================
+
+meta:
+  spec: "experiments_design.md §2 A0.4 / §4 A2,A3,A5"
+  binding_rules: [R7-appearance-family]
+  # the C1 certificate appearances (must stay cross-separable by CLIP): one canonical per class.
+  canonical: { adhesion: yellow_board, compliant_terrain: brown_mud, low_friction: ice_sheet }
+
+# --- classes: semantic_class -> appearances (id, rgb, base_material, split) -------------------
+classes:
+
+  adhesion:            # O4 tether/adhesion — the T2 conflict surface
+    - { id: yellow_board,      rgb: [0.90, 0.80, 0.18], base_material: adhesive, split: train }  # canonical (C1)
+    - { id: amber_adhesive,    rgb: [0.85, 0.66, 0.14], base_material: adhesive, split: train }
+    - { id: gray_tape,         rgb: [0.60, 0.58, 0.52], base_material: adhesive, split: test  }
+    - { id: checker_decal,     rgb: [0.74, 0.68, 0.24], base_material: adhesive, split: test  }
+    - { id: translucent_sheet, rgb: [0.82, 0.84, 0.72], base_material: adhesive, split: test  }
+
+  compliant_terrain:   # O2 compliance/mud — the T1 agree control + the reverse-of-T2 conflict
+    - { id: brown_mud,     rgb: [0.42, 0.28, 0.14], base_material: mud, split: train }  # canonical (C1)
+    - { id: dark_gray_mud, rgb: [0.30, 0.28, 0.26], base_material: mud, split: train }
+    - { id: reddish_mud,   rgb: [0.52, 0.27, 0.17], base_material: mud, split: test  }
+    - { id: wet_sheen_mud, rgb: [0.36, 0.31, 0.24], base_material: mud, split: test  }
+
+  low_friction:        # O1/O3/O7 ice — T1 (looks-ice) + T3 (O7 looks-safe hides ice)
+    - { id: ice_sheet,   rgb: [0.80, 0.88, 0.98], base_material: ice, split: train }  # canonical (C1)
+    - { id: clear_frost, rgb: [0.86, 0.90, 0.93], base_material: ice, split: train }
+    - { id: gray_ice,    rgb: [0.66, 0.73, 0.80], base_material: ice, split: test  }
+
+  solid_ground:        # O5/O6/O8/O9/O10/O11 + O7-deception + background — the "no terrain signal" class
+    - { id: solid_ground,     rgb: [0.50, 0.50, 0.50], base_material: solid_ground, split: train }  # canonical
+    - { id: concrete_speckle, rgb: [0.55, 0.54, 0.52], base_material: solid_ground, split: train }
+    - { id: pale_concrete,    rgb: [0.60, 0.60, 0.58], base_material: solid_ground, split: test  }
+    - { id: dark_asphalt,     rgb: [0.38, 0.38, 0.40], base_material: solid_ground, split: test  }
+
+  # Benign hazard-coloured decals (A3.2 reverse probe): hazard COLOUR on nominal floor. semantic_class
+  # is `nominal` — the physics is benign; only the appearance alarms. Correct answer: `continue`.
+  hazard_decal_benign:
+    - { id: hazard_decal_yellow, rgb: [0.90, 0.80, 0.18], base_material: adhesive, split: test }  # looks adhesive
+    - { id: hazard_decal_red,    rgb: [0.80, 0.28, 0.20], base_material: adhesive, split: test }  # looks alarming

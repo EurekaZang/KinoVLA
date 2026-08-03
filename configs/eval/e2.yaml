@@ -1,0 +1,62 @@
+# E2 — proprioceptive-ceiling A/B dichotomy: strongest pure-proprio B1 vs the agent (B5) vs FSM (B2).
+#
+# Shows: on Suite-Sem (matched B-class) B1 is chance attribution + recovery failure while B5 succeeds;
+# on Suite-Cal (A-class) B1 ≈ B5 (parity ⇒ B1 is a fair opponent). E1's C2ST bounds B1 to chance on
+# the matched pair. All numbers here (QA 5.1.5). Real-stack only (Isaac Go2 + monitor + VLA + CLIP).
+
+# --- B1: the RMA-fidelity proprioception-only attributor (trained, not just the deployed monitor) ---
+b1:
+  # retrain the MonitorNet backbone at a long RMA history on the EXISTING real-Go2 monitor data
+  # (scripts/train_learned_monitor.py --window-len), then wrap as ProprioBaselinePolicy.
+  window_len: 50                 # 1 s @ 50 Hz (RMA-typical; > the deployed 25)
+  train_npz: "outputs/monitor_learned/windows_train.npz"
+  test_npz: "outputs/monitor_learned/windows_test.npz"
+  model_path: "outputs/eval/e2/b1_attributor/monitor"   # train output (load via LearnedMonitorModel)
+  epochs: 120
+
+# --- B5: the trained vision+proprio agent (existing SFT adapter) ---
+b5:
+  adapter_dir: "outputs/vla/sft_latent/adapter_best"
+  config: "vla/sft.yaml"
+  route: "latent"
+  temperature: 0.0
+
+# --- Suite-Sem (matched construction) ---------------------------------------------------------
+# Attribution set: the E1 attribution-matched preset (proprio-blind, E1-proven). Closed-loop set:
+# the calibrated TRAPPING-matched preset (matched at detection AND traps push-through) — found by the
+# G1/G2 sweep below; flagged as deviation #50 when used.
+suite_sem:
+  matched_o4_o2:                 # = configs/eval/e1_c2st.yaml pairs.O4_O2 (k=14, c=6)
+    o2: {k_c: 14.0, c_c: 6.0, d_sink: 0.08}
+    o4: {k: 14.0, d: 6.0, f_break: 1.0e+9}
+  attribution_preset:            # E1-proven proprio-blind (constant drag = O2)
+    force_cap_n: 0.0
+    force_offset_n: 14.0
+    peel_factor: 0.3
+  # Closed-loop trapping-matched calibration (the central risk; the sweep searches these grids).
+  calibration:
+    enabled: true
+    # candidate "constant offset (matched) + slow compounding ramp (traps)":
+    force_offset_n: 14.0         # match O2's constant drag at detection
+    k_grid: [4.0, 8.0, 12.0, 20.0]      # slow ramp slope (within-noise over T=25, traps over crossing)
+    force_cap_grid: [60.0, 100.0, 160.0]  # plateau so the ramp isn't clipped early
+    peel_factor: 0.3             # Backstep (reverse) peels out; push-through stalls
+    g1_detection_steps: 25       # G1: C2ST on the first in-region window must be ≈0.5 vs matched O2
+    g1_auc_high: 0.65            # G1 passes if detection-window C2ST AUC <= this (near chance)
+    g2_backstep_distance_m: 0.6  # G2: an explicit-Backstep rollout must reach; push-through must not
+
+# --- Suite-Cal (A-class; constructors in kino_vla/vla/scenarios.py; θ below the hindsight A/B thr) ---
+suite_cal:
+  operators: [O1, O2, O5, O10, O6, O11]   # o1_ice_A / o2_compliance_A / o5_payload_A / o10_/ o6_/ o11_
+  b5_reaches_precheck: true      # drop any scenario the base policy can't cross (not truly A-class)
+
+# --- run / acceptance --------------------------------------------------------------------------
+run:
+  repeats: 5                     # rollouts per (scenario, policy)
+  seed_base: 0
+  goal_tol_m: 0.6
+
+accept:
+  sem_attribution_gap_min: 0.30  # B5 ambiguous attribution acc − B1 must exceed this (B5≫B1)
+  cal_parity_tol: 0.20           # |B1 Cal success − B5 Cal success| must be within this (parity)
+  power_check: true              # B1 chance on matched pair is E1-backed (C2ST optimal ceiling)

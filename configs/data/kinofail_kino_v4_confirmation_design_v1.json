@@ -1,0 +1,78 @@
+{
+  "schema_version": "kinofail.kino-v4-independent-confirmation-design.v1",
+  "protocol_id": "kinofail-kino-v4-independent-confirmation-v1",
+  "status": "frozen_source_before_confirmation_f1",
+  "method_f0": {
+    "path": "outputs/freeze/kino_v4_dinov2large_terrain448_f0/freeze_manifest.json",
+    "sha256": "c149f23a1de34feb723ca0a6d6cd7cd815f0eb1198eb8da8d11341a9a800dc87"
+  },
+  "data_root": "/data/eureka/kinofail_kino_v4_confirmation_v1",
+  "scene_contract": {
+    "count": 12,
+    "per_domain": 4,
+    "candidate_source": "configs/data/kinofail_kino_v4_confirmation_scene_candidates_v1.json",
+    "selection": "first four model-blind admissions in each frozen domain stream"
+  },
+  "material_contract": {
+    "count": 12,
+    "per_domain": 4,
+    "catalog": "configs/data/kinofail_kino_v4_confirmation_terrain_pbr_v1.yaml",
+    "contexts_per_scene": 2,
+    "assignment": "slot_i uses material_i and material_(i+2)_mod_4",
+    "appearance_views_per_physical_episode": 3
+  },
+  "operators": ["O1_mu_field","O2_compliance","O3_collapse","O4_tether","O5_payload","O6_push","O7_visual_remap","O8_invisible_collider","O9_high_centering","O10_effort_decay","O11_obs_bias"],
+  "scale": {
+    "scene_count": 12,
+    "material_contexts_per_scene": 2,
+    "replicates_per_scene_material_operator": 8,
+    "replicates_per_band": 4,
+    "moderate_lambda_interval": [0.56, 0.68],
+    "moderate_lambda_points": [0.575, 0.605, 0.635, 0.665],
+    "hard_lambda_interval": [0.985, 1.0],
+    "hard_lambda_points": [0.986875, 0.990625, 0.994375, 0.998125],
+    "counterfactual_pairs": 2112,
+    "physical_episodes": 4224,
+    "model_rows": 12672,
+    "seed_namespace_start": 2184000000,
+    "physical_nuisance": {
+      "pair_shared": true,
+      "controller_target_lateral_offset_m": 0.0,
+      "profile_table": [
+        {"profile_index":0,"start_progress_m":0.022,"start_lateral_offset_m":-0.044,"start_heading_offset_rad":0.014,"forward_speed_mps":0.248},
+        {"profile_index":1,"start_progress_m":0.112,"start_lateral_offset_m":0.019,"start_heading_offset_rad":-0.030,"forward_speed_mps":0.221},
+        {"profile_index":2,"start_progress_m":0.058,"start_lateral_offset_m":-0.025,"start_heading_offset_rad":0.027,"forward_speed_mps":0.273},
+        {"profile_index":3,"start_progress_m":0.132,"start_lateral_offset_m":0.039,"start_heading_offset_rad":-0.009,"forward_speed_mps":0.236},
+        {"profile_index":4,"start_progress_m":0.038,"start_lateral_offset_m":-0.013,"start_heading_offset_rad":-0.023,"forward_speed_mps":0.261},
+        {"profile_index":5,"start_progress_m":0.088,"start_lateral_offset_m":0.032,"start_heading_offset_rad":0.018,"forward_speed_mps":0.217},
+        {"profile_index":6,"start_progress_m":0.142,"start_lateral_offset_m":-0.038,"start_heading_offset_rad":0.004,"forward_speed_mps":0.269},
+        {"profile_index":7,"start_progress_m":0.068,"start_lateral_offset_m":0.006,"start_heading_offset_rad":-0.014,"forward_speed_mps":0.241}
+      ]
+    }
+  },
+  "conflict": {
+    "cells": ["T2_vision_decisive", "T3_proprio_decisive"],
+    "cases_per_scene_material_cell": 12,
+    "cases_per_cell": 288,
+    "cases_total": 576,
+    "records_per_case": 6,
+    "model_rows": 3456,
+    "seed_namespace_start": 2185000000,
+    "t2_causes": ["O2_compliance", "O4_tether"],
+    "t3_causes": ["O7_visual_remap", "O8_invisible_collider"]
+  },
+  "analysis_contract": {
+    "authority": "outputs/freeze/kino_v4_dinov2large_terrain448_f0/freeze_manifest.json#/analysis_contract",
+    "inherit_exactly": true,
+    "score_once_and_report_regardless_of_outcome": true
+  },
+  "independence_contract": {
+    "new_scene_sources": true,
+    "new_material_source_assets": true,
+    "new_random_seed_namespace": true,
+    "new_operator_parameter_intervals": true,
+    "architecture_threshold_features_and_statistics_frozen_before_generation": true,
+    "model_outcomes_forbidden_during_scene_or_validity_selection": true,
+    "fit_refit_retuning_or_threshold_change_allowed": false
+  }
+}

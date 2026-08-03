@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from kino_vla.shield.passthrough import PassThroughShield
-from tests.test_monitor import make_obs
+from tests._monitor_stub import make_obs
 
 
 def test_passthrough_identity():

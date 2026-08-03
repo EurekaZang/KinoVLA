@@ -1,0 +1,53 @@
+{
+  "actions": {
+    "O2_compliance": [
+      "continue",
+      "slow_high_step"
+    ],
+    "O4_tether": [
+      "continue",
+      "backstep_release"
+    ],
+    "O5_payload": [
+      "continue",
+      "hold_and_request"
+    ],
+    "O8_invisible_collider": [
+      "continue",
+      "backstep_detour_replan"
+    ],
+    "O9_high_centering": [
+      "continue",
+      "raise_body_slow_cross"
+    ]
+  },
+  "case_count": 50,
+  "collector": "scripts/isaac_collect_kinofail_realistic_a4_action_v1.py",
+  "collector_sha256": "e65114068df6d32548a35c56566643c5b97eedbe48aa051e9a68f3e1796bd9d4",
+  "created_utc": "2026-07-23T16:30:01.616522+00:00",
+  "decision_rule": "fixed operator-specific physical-onset dwell, independent of action arm",
+  "minimum_episode_seeds_per_action_cell": 10,
+  "operators": [
+    "O2_compliance",
+    "O4_tether",
+    "O5_payload",
+    "O8_invisible_collider",
+    "O9_high_centering"
+  ],
+  "outcome_policy": "retain all weak, null, and unfavorable cells; never tune after outcome",
+  "paired_prefix_gate": "exact decision step and canonical telemetry-row SHA256 equality",
+  "physical_episode_count": 100,
+  "protocol_id": "kinofail-realistic-a4-actual-action-v1",
+  "scene_clusters": [
+    "forest_river_walk_metric_g07",
+    "forest_trail_metric_g03",
+    "indoor_livingroom_139",
+    "indoor_office_162",
+    "indoor_office_186"
+  ],
+  "schedule": "outputs/kinofail_realistic/design_a4_actual_action_v1/schedule.jsonl",
+  "schedule_sha256": "c90593c5a680a58cc5a2b29275bbdd9152acbea9616d05968df67305cf795e9a",
+  "schema_version": "kinofail.realistic-a4-actual-action-protocol.v1",
+  "statistics": "scene-cluster paired bootstrap with case-level paired differences",
+  "status": "frozen_before_any_a4_v1_outcome"
+}

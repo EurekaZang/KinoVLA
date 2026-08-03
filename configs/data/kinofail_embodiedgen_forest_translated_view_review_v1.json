@@ -1,0 +1,44 @@
+{
+  "schema_version": "kinofail.embodiedgen-translated-view-review-input.v1",
+  "review_id": "forest-trail-translated-view-development-review-20260722-v1",
+  "status": "development_review_not_independent_formal_qa",
+  "reviewer": "codex_visual_inspection",
+  "scene_id": "forest_trail_shell_dev01",
+  "domain": "wild",
+  "contact_sheet": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/mesh_development/translated_view_qa_v2/novel_view_contact_sheet.png",
+  "contact_sheet_sha256": "f45713d216afb8b8271fbf327dafe8ee0bb9c21537896225b5c37c55d61cc489",
+  "machine_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/mesh_development/translated_view_qa_v2/novel_view_stage_audit.json",
+  "machine_audit_sha256": "e0ad94156b11552bd56bf2482ca86ea86da32cf020d5c1142b38520798aee9ff",
+  "rubric": {
+    "critical_criteria": [
+      "route_identity_persists",
+      "translation_parallax_present",
+      "no_catastrophic_geometry_collapse",
+      "nearfield_route_not_blocked",
+      "no_default_grid"
+    ],
+    "refinement_criteria": [
+      "hole_free_rendering",
+      "sharp_nearfield",
+      "local_geometry_coherent"
+    ],
+    "minimum_refinement_passes_for_publication_candidate": 3
+  },
+  "criteria": {
+    "route_identity_persists": true,
+    "translation_parallax_present": true,
+    "no_catastrophic_geometry_collapse": true,
+    "nearfield_route_not_blocked": true,
+    "no_default_grid": true,
+    "hole_free_rendering": false,
+    "sharp_nearfield": false,
+    "local_geometry_coherent": false
+  },
+  "notes": [
+    "The dirt trail, central tree and vegetation identity persist under forward and plus/minus 35 cm camera translations, and the displacement creates visible parallax rather than four identical renders.",
+    "Thin white disocclusion holes remain around the close tree and canopy edges; translated views also expose localized stretching and soft near-field texture.",
+    "The shell may proceed to Isaac visual-only composition as a development candidate, with Kino-owned near-field terrain and collision. It is not a publication-ready scene and must not be used as the primary walkable surface.",
+    "These renders use the reconstructed panorama center at 2.118 m height, not the body-fixed Go2 camera; low-height RTX QA remains mandatory."
+  ],
+  "independent_human_review_required_before_registry": true
+}

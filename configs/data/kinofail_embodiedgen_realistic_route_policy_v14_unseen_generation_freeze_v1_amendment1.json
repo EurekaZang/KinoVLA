@@ -1,0 +1,25 @@
+{
+  "schema_version": "kinofail.embodiedgen-realistic-route-policy-v14-unseen-generation-freeze-amendment.v1",
+  "status": "administrative_hash_correction_before_any_scene_generation_or_runtime_execution",
+  "base_freeze": {
+    "path": "configs/data/kinofail_embodiedgen_realistic_route_policy_v14_unseen_generation_freeze_v1.json",
+    "sha256": "3978f374cc171c4079250b17aa9331dee0852b724d3b031f1d9469c6fea8fef3"
+  },
+  "failed_preflight_retained": {
+    "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_realistic_route_policy_v14_unseen_generation_preflight_v1.json",
+    "sha256": "a50a95619e5828350f9b5a57752304cfc8ebad6dc453497aba4b54193d34b505",
+    "only_failed_check": "house_exclusion_bound"
+  },
+  "correction": {
+    "json_pointer": "/selection_policy/house_exclusion_evidence/sha256",
+    "incorrect_sha256": "dc98c99a2b72f5627f1eb18c48ef081766524324c4550b83c5a5577b8d163269",
+    "correct_sha256": "d5d6dcc2a62fa86cc7da32bc832290054d34aafe2fc9243ffe793b484ca0436e"
+  },
+  "scientific_fields_changed": false,
+  "scene_selection_changed": false,
+  "seed_changed": false,
+  "material_assignment_changed": false,
+  "runtime_or_threshold_changed": false,
+  "new_scene_existed_when_amendment_was_written": false,
+  "runtime_output_existed_when_amendment_was_written": false
+}

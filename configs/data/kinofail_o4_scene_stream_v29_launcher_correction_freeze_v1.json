@@ -1,0 +1,100 @@
+{
+  "schema_version": "kinofail.o4-scene-stream-v29-freeze.v1",
+  "created_utc": "2026-07-23T04:32:29Z",
+  "freeze_status": "frozen_before_any_v29_candidate_generation_or_o4_execution",
+  "purpose": "Restart operator-blind scene acquisition after the sealed v28 launcher invalidation. The sole architecture correction is sourcing Isaac Sim's environment for USD-aware Python stages. Candidate88 is excluded and may not be rerun; the remaining predeclared candidates retain order, followed by one preregistered Bedroom candidate to preserve a balanced 24-scene six-family stream.",
+  "evidence_policy": {
+    "development_only": true,
+    "counts_as_a0_a7_evidence": false,
+    "counts_as_realistic_corpus_evidence": false,
+    "counts_as_o4_confirmation": false,
+    "a8_in_scope": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "old_a0_a7_metrics_may_be_mixed": false,
+    "candidate88_rerun_forbidden": true,
+    "successful_acquisition_authorizes_only_frozen_v27_heldout_confirmation": true
+  },
+  "base_config": {
+    "path": "configs/data/kinofail_o4_scene_stream_v28_prefix_freeze_v1.json",
+    "sha256": "5a8e9a3afdbe0276906ae8c523f54a7826fe3e0febb5df16877e7c6905ceb307"
+  },
+  "candidate_ids": [
+    "indoor_diningroom_89",
+    "indoor_office_90",
+    "indoor_livingroom_91",
+    "indoor_kitchen_92",
+    "indoor_house_93",
+    "indoor_bedroom_94",
+    "indoor_diningroom_95",
+    "indoor_office_96",
+    "indoor_livingroom_97",
+    "indoor_kitchen_98",
+    "indoor_house_99",
+    "indoor_bedroom_100",
+    "indoor_diningroom_101",
+    "indoor_office_102",
+    "indoor_livingroom_103",
+    "indoor_kitchen_104",
+    "indoor_house_105",
+    "indoor_bedroom_106",
+    "indoor_diningroom_107",
+    "indoor_office_108",
+    "indoor_livingroom_109",
+    "indoor_kitchen_110",
+    "indoor_house_111",
+    "indoor_bedroom_112"
+  ],
+  "new_candidates": [
+    {
+      "scene_id": "indoor_bedroom_112",
+      "room_type": "Bedroom",
+      "source_seed": 20261381,
+      "runtime_seed": 20261382,
+      "material_id": "val_concrete045",
+      "material_split": "val",
+      "complexity": "simple",
+      "output_directory": "Bedroom_seed20261381"
+    }
+  ],
+  "selection_policy_overrides": {
+    "processing_order": "strict_candidate_stream_order",
+    "stop_at_first_prefix_meeting_quota": true,
+    "maximum_candidates": 24,
+    "minimum_admitted_scenes": 5,
+    "minimum_admitted_families": 4,
+    "one_generation_attempt_per_candidate": true,
+    "replacement_seed_allowed": false,
+    "source_repair_allowed": false,
+    "continue_after_terminal_rejection_until_quota_or_budget": true,
+    "all_processed_candidates_count_in_denominator": true,
+    "unprocessed_suffix_must_remain_untouched": true,
+    "o4_withheld_until_cohort_frozen": true,
+    "all_admitted_scenes_must_enter_v27_confirmation": true,
+    "fresh_process_per_stage_and_scene": true
+  },
+  "pipeline_overrides": {
+    "candidate_runner": "scripts/run_o4_scene_candidate_v29.py",
+    "route_output_name": "route_surface_o4_v29_heldout_stream"
+  },
+  "operator_output_root": "outputs/kinofail_realistic/operator_confirmation/o4_action_v30_heldout_confirmation",
+  "additional_locked_files": [
+    {
+      "path": "scripts/run_o4_scene_candidate_v29.py",
+      "sha256": "323ad5bea1dec01798b646538aea589d2ee265fbd443702114e7dbbe109cabcd"
+    },
+    {
+      "path": "scripts/audit_o4_scene_stream_v29.py",
+      "sha256": "ed87691424b291c060f6fb6f95fe54e0378ff4a7ea4db5a34e3031b33d7a34ea"
+    },
+    {
+      "path": "tests/test_o4_scene_stream_v29.py",
+      "sha256": "af620d9c2c00aa75e684330c2ae3023fe2c93da0c9b7172e25ac6bdb4b5d809b"
+    },
+    {
+      "path": "outputs/kinofail_realistic/operator_confirmation/o4_action_v28_scene_stream/invalidation_audit.json",
+      "sha256": "908f12f7a4e65648f81ecf3c48c4af411dc7cf76e1175e799fac10c784292739",
+      "json_passed": false,
+      "json_sealed": true
+    }
+  ]
+}

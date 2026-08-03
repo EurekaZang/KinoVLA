@@ -7,18 +7,39 @@ neighbours via CLIP-feature similarity. The map crop is served to the recovery p
 """
 
 from kino_vla.map.appearance import appearance_embedding, cosine_similarity
+from kino_vla.map.clip_appearance import ClipAppearanceEncoder
+from kino_vla.map.clip_segmentation import ClipSegmenter, material_texture
 from kino_vla.map.costmap import Costmap
+from kino_vla.map.pixel_appearance import PixelAppearanceEncoder
+from kino_vla.map.rgbd import (
+    CameraExtrinsics,
+    CameraIntrinsics,
+    RgbdFrame,
+    RgbdSegmenter,
+    backproject_regions,
+    render_ground_scene,
+)
 from kino_vla.map.segmentation import SurrogateSegmenter
 from kino_vla.map.traversability_map import TraversabilityMap
 from kino_vla.map.types import MapCrop, ObservedRegion, SemanticRegion
 
 __all__ = [
+    "CameraExtrinsics",
+    "CameraIntrinsics",
+    "ClipAppearanceEncoder",
+    "ClipSegmenter",
     "Costmap",
     "MapCrop",
     "ObservedRegion",
+    "PixelAppearanceEncoder",
+    "RgbdFrame",
+    "RgbdSegmenter",
     "SemanticRegion",
     "SurrogateSegmenter",
     "TraversabilityMap",
     "appearance_embedding",
+    "backproject_regions",
     "cosine_similarity",
+    "material_texture",
+    "render_ground_scene",
 ]

@@ -1,0 +1,310 @@
+{
+  "schema_version": "kinofail.unified-confirmatory-freeze-input.v1",
+  "protocol_id": "kinofail-unified-confirmatory-v1",
+  "status": "frozen_design_source_before_f0",
+  "confirmatory": true,
+  "f0_v2_seed_representation_correction": {
+    "supersedes_manifest": "outputs/freeze/unified_moe_v3_confirmatory_f0/freeze_manifest.json",
+    "invalid_attempt_archive": "outputs/kinofail_confirmatory_invalid_f0_v1_seed_range_failure_20260725",
+    "successful_scenes": 0,
+    "anomaly_episodes": 0,
+    "model_inferences": 0,
+    "changed_field": "indoor source_seed representation only",
+    "architecture_threshold_features_statistics_and_candidate_order_unchanged": true
+  },
+  "candidate_source": {
+    "path": "configs/data/kinofail_unified_confirmatory_scene_candidates_v1.json",
+    "authoritative": true,
+    "life_candidates": 20,
+    "production_candidates": 20,
+    "wild_fixed_scenes": 10,
+    "selection": {
+      "life": "first_10_model_blind_QA_passes_in_frozen_order",
+      "production": "first_10_model_blind_QA_passes_in_frozen_order",
+      "wild": "all_10_fixed_scenes_must_pass",
+      "replacement_or_repair": false,
+      "model_or_anomaly_outcomes_visible_during_selection": false
+    }
+  },
+  "final_scene_slots": {
+    "count": 30,
+    "per_domain": 10,
+    "slot_id_pattern": "confirm_v1_{domain}_scene_{00..09}",
+    "registry_path": "outputs/kinofail_confirmatory_v1/scene_registry.json",
+    "required_provenance": [
+      "source_scene_id",
+      "source_scene_seed_or_metric_geometry_seed",
+      "runtime_seed",
+      "episode_usd_sha256",
+      "compiled_audit_sha256",
+      "geometry_hash",
+      "model_blind_admission_audit_sha256"
+    ]
+  },
+  "material_contract": {
+    "catalog_path": "configs/data/kinofail_confirmatory_terrain_pbr_v1.yaml",
+    "lock_path": "outputs/assets/terrain_pbr_confirmatory_v1/terrain_assets.lock.json",
+    "count": 30,
+    "per_domain": 10,
+    "id_pattern": "confirm_v1_{domain}_pbr_{00..09}",
+    "contexts_per_scene": 2,
+    "assignment": "slot_i_uses_material_i_and_contrast_material_(i+5)_mod_10",
+    "appearance_views_per_physical_episode": 3,
+    "appearance_view_material_slots": [0, 1, 1],
+    "source_asset_and_content_hash_must_be_legacy_disjoint": true
+  },
+  "scale": {
+    "operators": [
+      "O1_mu_field",
+      "O2_compliance",
+      "O3_collapse",
+      "O4_tether",
+      "O5_payload",
+      "O6_push",
+      "O7_visual_remap",
+      "O8_invisible_collider",
+      "O9_high_centering",
+      "O10_effort_decay",
+      "O11_obs_bias"
+    ],
+    "scene_count": 30,
+    "material_contexts_per_scene": 2,
+    "replicates_per_scene_material_operator": 16,
+    "replicates_per_band": 8,
+    "moderate_lambda_interval": [0.15, 0.45],
+    "moderate_lambda_points": [
+      0.16875,
+      0.20625,
+      0.24375,
+      0.28125,
+      0.31875,
+      0.35625,
+      0.39375,
+      0.43125
+    ],
+    "hard_lambda_interval": [0.65, 0.95],
+    "hard_lambda_points": [
+      0.66875,
+      0.70625,
+      0.74375,
+      0.78125,
+      0.81875,
+      0.85625,
+      0.89375,
+      0.93125
+    ],
+    "parameter_rule": "P(lambda)=(1-lambda)*M+lambda*S_componentwise",
+    "M_and_S_source": "moderate_and_severe_operator_endpoints_in_configs/data/kinofail_realistic.yaml_with_frozen_scale_O4_per_foot_override",
+    "counterfactual_pairs": 10560,
+    "physical_episodes": 21120,
+    "seed_formula": "2030000000+(((scene_index*2+material_slot)*11+operator_index)*16+replicate_index)",
+    "physical_nuisance": {
+      "exact_keys": [
+        "profile_index",
+        "start_progress_m",
+        "start_lateral_offset_m",
+        "start_heading_offset_rad",
+        "forward_speed_mps",
+        "controller_target_lateral_offset_m",
+        "physics_seed",
+        "pair_shared"
+      ],
+      "physics_seed_equals_operator_seed": true,
+      "pair_shared": true,
+      "start_progress_m_range": [0.0, 0.14],
+      "start_lateral_offset_m_range": [-0.05, 0.05],
+      "start_heading_offset_rad_range": [-0.035, 0.035],
+      "forward_speed_mps_range": [0.21, 0.27],
+      "controller_target_lateral_offset_m": 0.0,
+      "sampling": "fixed_16_profile_table",
+      "profile_table": [
+        {"profile_index": 0, "start_progress_m": 0.02, "start_lateral_offset_m": -0.05, "start_heading_offset_rad": -0.035, "forward_speed_mps": 0.21},
+        {"profile_index": 1, "start_progress_m": 0.04, "start_lateral_offset_m": -0.043333, "start_heading_offset_rad": 0.007, "forward_speed_mps": 0.24},
+        {"profile_index": 2, "start_progress_m": 0.06, "start_lateral_offset_m": -0.036667, "start_heading_offset_rad": -0.021, "forward_speed_mps": 0.27},
+        {"profile_index": 3, "start_progress_m": 0.08, "start_lateral_offset_m": -0.03, "start_heading_offset_rad": 0.021, "forward_speed_mps": 0.225},
+        {"profile_index": 4, "start_progress_m": 0.1, "start_lateral_offset_m": -0.023333, "start_heading_offset_rad": -0.007, "forward_speed_mps": 0.255},
+        {"profile_index": 5, "start_progress_m": 0.12, "start_lateral_offset_m": -0.016667, "start_heading_offset_rad": 0.035, "forward_speed_mps": 0.2175},
+        {"profile_index": 6, "start_progress_m": 0.14, "start_lateral_offset_m": -0.01, "start_heading_offset_rad": -0.028, "forward_speed_mps": 0.2475},
+        {"profile_index": 7, "start_progress_m": 0.03, "start_lateral_offset_m": -0.003333, "start_heading_offset_rad": 0.014, "forward_speed_mps": 0.2625},
+        {"profile_index": 8, "start_progress_m": 0.05, "start_lateral_offset_m": 0.003333, "start_heading_offset_rad": -0.014, "forward_speed_mps": 0.2325},
+        {"profile_index": 9, "start_progress_m": 0.07, "start_lateral_offset_m": 0.01, "start_heading_offset_rad": 0.028, "forward_speed_mps": 0.25875},
+        {"profile_index": 10, "start_progress_m": 0.09, "start_lateral_offset_m": 0.016667, "start_heading_offset_rad": -0.0315, "forward_speed_mps": 0.22125},
+        {"profile_index": 11, "start_progress_m": 0.11, "start_lateral_offset_m": 0.023333, "start_heading_offset_rad": 0.0105, "forward_speed_mps": 0.25125},
+        {"profile_index": 12, "start_progress_m": 0.13, "start_lateral_offset_m": 0.03, "start_heading_offset_rad": -0.0105, "forward_speed_mps": 0.22875},
+        {"profile_index": 13, "start_progress_m": 0.025, "start_lateral_offset_m": 0.036667, "start_heading_offset_rad": 0.0315, "forward_speed_mps": 0.26625},
+        {"profile_index": 14, "start_progress_m": 0.075, "start_lateral_offset_m": 0.043333, "start_heading_offset_rad": -0.0175, "forward_speed_mps": 0.23625},
+        {"profile_index": 15, "start_progress_m": 0.125, "start_lateral_offset_m": 0.05, "start_heading_offset_rad": 0.0175, "forward_speed_mps": 0.24375}
+      ]
+    }
+  },
+  "conflict": {
+    "cells": [
+      "T2_vision_decisive",
+      "T3_proprio_decisive"
+    ],
+    "scene_count": 30,
+    "material_contexts_per_scene": 2,
+    "cases_per_scene_material_cell": 25,
+    "cases_per_scene_cell": 50,
+    "cases_per_cell": 1500,
+    "cases_total": 3000,
+    "records_per_case": 6,
+    "seed_formula": "2040000000+cell_index*1500+context_index*25+local_case_index",
+    "t2": {
+      "collector_contract": "shared_prefix_C1",
+      "candidate_causes": [
+        "O2_compliance",
+        "O4_tether"
+      ],
+      "operator_physics_after_decision_boundary": true
+    },
+    "t3": {
+      "operators": [
+        "O7_visual_remap",
+        "O8_invisible_collider"
+      ],
+      "pairs_per_case": 2,
+      "physical_episodes_per_case": 4,
+      "physical_nuisance_contract": "same_exact_keys_and_pair_shared_rules_as_scale"
+    }
+  },
+  "snapshot_protocol": {
+    "schema_version": "kinofail.realistic-snapshot-protocol.v2",
+    "one_scale_protocol_per_scene_shard": true,
+    "one_t3_protocol_per_scene_shard": true,
+    "bind_sha256": [
+      "scale_or_t3_schedule",
+      "scene_registry",
+      "material_lock",
+      "collector",
+      "runtime_manifest",
+      "F0_manifest"
+    ],
+    "temporal_alignment": {
+      "anchor": "first_predeclared_privileged_operator_event_in_anomaly_only",
+      "minimum_decision_time_s": 0.42,
+      "decision_delay_s_by_operator": {
+        "O5_payload": 0.4,
+        "O10_effort_decay": 0.7,
+        "O11_obs_bias": 0.4
+      },
+      "rgb_offsets_from_decision_s": [-0.4, -0.3, -0.2, -0.1, 0.0],
+      "proprio_samples": 21,
+      "proprio_window_s": 0.5,
+      "on_temporal_alignment_failure": "exclude_complete_pair_and_audit"
+    }
+  },
+  "freshness_contract": {
+    "required_zero_intersections": [
+      "scene_slot_and_source_scene_ids",
+      "source_scene_or_geometry_seeds",
+      "material_alias_and_source_asset_ids",
+      "material_content_hashes",
+      "physical_and_case_seeds",
+      "active_anomaly_operator_parameter_vectors"
+    ],
+    "nominal_mechanism_off_controls_are_intentionally_retained": true,
+    "outcome_strength_is_report_only": true,
+    "post_freeze_parameter_or_scene_replacement": false
+  },
+  "runtime_paths": {
+    "scene_registry": "outputs/kinofail_confirmatory_v1/scene_registry.json",
+    "material_lock": "outputs/assets/terrain_pbr_confirmatory_v1/terrain_assets.lock.json",
+    "collector": "scripts/isaac_collect_kinofail_confirmatory_pair_v1.py",
+    "runtime_manifest": "kino_vla/data/runtime_manifest.py",
+    "schedule_output": "outputs/kinofail_confirmatory_v1/schedules",
+    "corpus_root": "outputs/kinofail_confirmatory_v1/corpus",
+    "snapshot_root": "outputs/eval/unified_moe_v3_confirmatory_v1/shards"
+  },
+  "frozen_files": {
+    "scene_and_appearance_inputs": [
+      "configs/data/kinofail_unified_confirmatory_scene_candidates_v1.json",
+      "configs/data/kinofail_unified_confirmatory_hdri_v1.json",
+      "configs/data/kinofail_confirmatory_terrain_pbr_v1.yaml",
+      "configs/data/kinofail_realistic.yaml"
+    ],
+    "scene_pipeline": [
+      "scripts/run_kinofail_confirmatory_indoor_scene_v1.py",
+      "scripts/run_kinofail_confirmatory_wild_scene_v1.py",
+      "scripts/build_kinofail_confirmatory_scene_registry_v1.py",
+      "scripts/sync_terrain_pbr_assets.py",
+      "scripts/sync_forest_hdri_assets.py",
+      "scripts/audit_forest_hdri.py",
+      "scripts/run_embodiedgen_room_source_failure_closed_v1.py",
+      "scripts/generate_embodiedgen_room_source.py",
+      "scripts/audit_embodiedgen_source_preflight_v1.py",
+      "scripts/compile_embodiedgen_kinofail_scene.py",
+      "scripts/refine_embodiedgen_kinofail_scene_v2.py",
+      "scripts/refine_embodiedgen_kinofail_scene_v4.py",
+      "scripts/compile_embodiedgen_terrain_route_v2.py",
+      "scripts/audit_embodiedgen_terrain_route_v2.py",
+      "scripts/isaac_render_embodiedgen_scene_qa_v5.py",
+      "scripts/isaac_embodiedgen_go2_scene_qa.py",
+      "scripts/compile_kinofail_forest_hybrid_scene.py",
+      "scripts/isaac_collect_realistic_route_operator_lane_v6.py",
+      "kino_vla/sim/terrain_materials.py",
+      "configs/data/kinofail_forest_hybrid_composition_dev_v24.json",
+      "outputs/locomotion/realistic_route_v1/policy.pt"
+    ],
+    "schedule_and_collection_pipeline": [
+      "scripts/build_kinofail_unified_confirmatory_v1_schedules.py",
+      "scripts/isaac_collect_kinofail_confirmatory_pair_v1.py",
+      "scripts/isaac_collect_kinofail_realistic_pair_v1.py",
+      "scripts/isaac_collect_kinofail_realistic_pair_v4.py",
+      "scripts/isaac_collect_kinofail_confirmatory_t2_v1.py",
+      "scripts/isaac_collect_kinofail_realistic_c1_causal_v1.py",
+      "scripts/run_kinofail_realistic_c1_causal_v1.py",
+      "scripts/run_kinofail_confirmatory_t2_shards_v1.py",
+      "kino_vla/sim/c1_causal_visuals.py",
+      "scripts/run_kinofail_confirmatory_scale_shard_v1.py",
+      "scripts/seal_and_prune_kinofail_confirmatory_shard_v1.py",
+      "scripts/seal_kinofail_confirmatory_f1.py",
+      "kino_vla/sim/backend.py",
+      "kino_vla/sim/isaac_o4_v3_backend.py",
+      "kino_vla/sim/isaac_policy_backend.py",
+      "kino_vla/sim/realistic_route_controller_v3.py",
+      "kino_vla/sim/realistic_route_protocol_v2.py",
+      "kino_vla/sim/operators/__init__.py",
+      "kino_vla/sim/operators/base.py",
+      "kino_vla/sim/operators/o1_mu_field.py",
+      "kino_vla/sim/operators/o2_compliance.py",
+      "kino_vla/sim/operators/o3_collapse.py",
+      "kino_vla/sim/operators/o4_tether.py",
+      "kino_vla/sim/operators/o5_payload.py",
+      "kino_vla/sim/operators/o6_push.py",
+      "kino_vla/sim/operators/o7_visual_remap.py",
+      "kino_vla/sim/operators/o8_invisible_collider.py",
+      "kino_vla/sim/operators/o9_high_centering.py",
+      "kino_vla/sim/operators/o10_effort_decay.py",
+      "kino_vla/sim/operators/o11_obs_bias.py",
+      "kino_vla/utils/geometry.py",
+      "configs/sim/go2_skeleton.yaml"
+    ],
+    "freshness_and_feature_pipeline": [
+      "scripts/audit_kinofail_confirmatory_freshness_v1.py",
+      "scripts/build_kinofail_confirmatory_c2_base_features_v1.py",
+      "scripts/build_kinofail_realistic_snapshot_dev.py",
+      "scripts/extract_kinofail_realistic_features.py",
+      "scripts/build_kinofail_unified_invariant_features_v1.py",
+      "scripts/extract_kinofail_realistic_c1_causal_features_v1.py",
+      "scripts/extract_kinofail_confirmatory_t2_features_v1.py",
+      "scripts/merge_kinofail_confirmatory_t2_features_v1.py",
+      "scripts/prepare_kinofail_confirmatory_valid_conflict_design_v1.py",
+      "scripts/build_kinofail_realistic_c2_v5_features.py",
+      "scripts/build_kinofail_confirmatory_evaluation_bundle_inputs_v1.py",
+      "scripts/assemble_kinofail_confirmatory_blind_bundle_v1.py"
+    ],
+    "blind_inference_and_scoring": [
+      "scripts/predict_kinofail_unified_moe_v3_blind.py",
+      "scripts/score_kinofail_unified_moe_v3_confirmatory.py",
+      "scripts/build_kinofail_confirmatory_scoring_protocol_v1.py",
+      "scripts/freeze_kinofail_unified_confirmatory_f0.py"
+    ],
+    "model_and_runtime_dependencies": [
+      "kino_vla/eval/unified_moe.py",
+      "kino_vla/eval/realistic_multimodal.py",
+      "kino_vla/eval/c2_temporal_v5.py",
+      "kino_vla/data/runtime_manifest.py"
+    ]
+  }
+}

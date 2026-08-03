@@ -1,0 +1,48 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v7-development",
+  "iteration_id": "forest-independent-metric-geometry-g02-v19",
+  "status": "development_independent_metric_geometry_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v14.json",
+    "sha256": "f1b60ae56f6a8e35ff7a2c977af6d7ea79dda4220c85b2be9e4f6b8f7fada824"
+  },
+  "overrides": {
+    "scene_id": "forest_trail_metric_g02",
+    "source_scene_id": "forest_trail_shell_metric_g02_dev01",
+    "route": {
+      "waypoints_xy_m": [[0.0, -0.18], [1.1, -0.18], [2.2, -0.18], [3.3, -0.18], [4.4, -0.18]],
+      "surface_width_m": 1.2,
+      "endpoint_margin_m": 0.65
+    },
+    "near_field": {
+      "prop_transform_overrides": {
+        "roots_left_00": {"xyz_m": [0.8, 2.45, 0.0], "rotation_xyz_deg": [0.0, 0.0, 43.0]},
+        "roots_right_00": {"xyz_m": [3.2, -2.55, 0.0], "rotation_xyz_deg": [0.0, 0.0, 197.0]},
+        "roots_left_01": {"xyz_m": [5.5, 2.60, 0.0], "rotation_xyz_deg": [0.0, 0.0, 109.0]},
+        "rocks_left_00": {"xyz_m": [2.8, 2.55, 0.08], "rotation_xyz_deg": [0.0, 0.0, 27.0]},
+        "rocks_right_00": {"xyz_m": [0.5, -2.65, 0.08], "rotation_xyz_deg": [0.0, 0.0, 151.0]},
+        "rocks_right_01": {"xyz_m": [6.1, -2.75, 0.08], "rotation_xyz_deg": [0.0, 0.0, 231.0]},
+        "stump_left_00": {"xyz_m": [4.1, 2.65, 0.10], "rotation_xyz_deg": [0.0, 0.0, 61.0]},
+        "stump_right_00": {"xyz_m": [-0.9, -2.60, 0.10], "rotation_xyz_deg": [0.0, 0.0, 267.0]}
+      },
+      "opaque_composited_ground": {
+        "seed": 1919,
+        "centerline_wander_m": 0.06,
+        "phase_rad": 1.19
+      },
+      "visual_height_variation": {
+        "phase_rad": 0.91
+      }
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g02_dev01/isaac_hybrid_composition_dev_v19"
+    }
+  },
+  "quality_policy": {
+    "physical_route_and_prop_collision_hashes_must_differ_from_g01": true,
+    "nominal_route_gate_precedes_operator_pairs": true,
+    "trajectory_contract_is_frozen_outside_scene_config": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

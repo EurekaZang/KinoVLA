@@ -1,0 +1,97 @@
+{
+  "allowed": {
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_0efae9a4d434733959af",
+      "cf_14ea33f15e60bec92cb7",
+      "cf_29c9f5bbcff1c4bc763a",
+      "cf_2a34cb231a90de7d8dc7",
+      "cf_2f796719854e609883b1",
+      "cf_4b0aa0d154b6af441f49",
+      "cf_507059449bae7d4118bf",
+      "cf_5664d44d479cedd1a632",
+      "cf_56f78002cfda28750410",
+      "cf_649153f03c7c2fbe3c5f",
+      "cf_6619277e07da879091bb",
+      "cf_74eebd3767793d565186",
+      "cf_782dcf6071bbe6a00499",
+      "cf_82bbcd6b7caeae6e3d2c",
+      "cf_86c321fb2dc27620b064",
+      "cf_97fd7bac07505e0e8066",
+      "cf_a2808213fc2d6a789524",
+      "cf_a51d45fbf3f180436fc0",
+      "cf_aaa117ca540f513f20be",
+      "cf_ade8b9c10dd41b2e2c44",
+      "cf_bac04a865b8e72b48d37",
+      "cf_c1c7a9dd5f1cad08638a",
+      "cf_c793a08308b5fa06890b",
+      "cf_c84bdfa2a9069657d508",
+      "cf_d8519201c5c5cb8b10db",
+      "cf_da30bd46e7792df3302d",
+      "cf_ddaf39ed16cbfda99034",
+      "cf_ee521bb284c4debf519a",
+      "cf_ef98c0d777aa9287ee27",
+      "cf_f37c5fb6aa562ff5e00c"
+    ],
+    "geometry_profiles": [
+      "same_surface_counterfactual",
+      "transparent_panel"
+    ],
+    "physical_realizations": [
+      "appearance_physics_swap",
+      "transparent_acrylic"
+    ],
+    "scene_families": [
+      "forest_trail_metric_g02",
+      "indoor_bedroom_190",
+      "indoor_office_156"
+    ],
+    "severity_ids": [
+      "moderate",
+      "severe"
+    ],
+    "target_operators": [
+      "O7_visual_remap",
+      "O8_invisible_collider"
+    ]
+  },
+  "benchmark_id": "c2_bidirectional_confirmation_v5_t3",
+  "case_schedule_sha256": "1dbdc4cd7723407ffb0e7a5d0f4ab043430fffbee6c4ce4c621ebf859a082a7a",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "counterfactual_pairs": 30,
+    "domains": 3,
+    "formal_collection_status": "formal_pilot",
+    "isaac_processes": 30,
+    "maximum_frame_highlight_fraction": 0.995,
+    "maximum_mean_highlight_fraction": 0.45,
+    "operators": 2,
+    "outcome_strength_is_reported_not_gated": true,
+    "pairs_per_process": 1,
+    "per_scene_parameter_tuning_forbidden": true,
+    "physical_episodes": 60,
+    "runtime_schema": "kinofail.realistic-runtime.v5",
+    "scene_families": 3
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_pair_v3.py",
+  "collector_sha256": "0ba9575432e22da3b1ef9824758186f5381226470b5b36ce6fcf078bb1953686",
+  "design_audit_sha256": "faf1737cb1ccabd5ae3379a0ceb39e1d3ced8f915c50cb1294b6b1a7fbdcfe5b",
+  "frozen_utc": "2026-07-24T14:57:40.054905+00:00",
+  "outcomes_available_at_freeze": false,
+  "protocol_id": "kinofail-realistic-c2-v5-t3-collection",
+  "runner_path": "scripts/run_kinofail_realistic_c2_v4_t3_isolated.py",
+  "runner_sha256": "5157f1ee23ee23bf1d1ba04fba0979543ddf6ea70217e28a244ade5929d21d48",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_c2_v5_confirmation_scene_registry.json",
+  "scene_registry_sha256": "6665a1accf81446b74d8eda81dc736f0077a17b292e9ec3041c2c4f40ae757f5",
+  "schedule_path": "outputs/kinofail_realistic/design_c2_bidirectional_confirmation_v5_t3/schedule.jsonl",
+  "schedule_sha256": "83404a3fe06a1334aeda1aae7aad059fd24c83ccc440923414a522cb91b7962f",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "60 physical episodes / 30 nominal-anomaly O7/O8 pairs on three fresh C2 scene instances.",
+  "status": "frozen"
+}

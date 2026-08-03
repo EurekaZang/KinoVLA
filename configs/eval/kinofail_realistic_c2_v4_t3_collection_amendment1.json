@@ -1,0 +1,99 @@
+{
+  "allowed": {
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_09417f1413ce378f2d1f",
+      "cf_0af784848ae6bb4fddd0",
+      "cf_1556128f4b3f3ba2cd17",
+      "cf_218093e4661f1f61b36b",
+      "cf_31a5608884e9fbb596f3",
+      "cf_492d52c1b755cac0e6b8",
+      "cf_4e3553d013f67ccd10be",
+      "cf_4faf48151cadbda85df0",
+      "cf_5bee00afa445ec4f1dfa",
+      "cf_7075a9d13efb462a4c0b",
+      "cf_707b917a76410c1222e8",
+      "cf_74d62b83ca551e1ec0f9",
+      "cf_7d884abf5584cb4943a2",
+      "cf_859d64adfa3db81b4a91",
+      "cf_8a4573aacb3bce553bb2",
+      "cf_8d06735261c377b535c0",
+      "cf_92717dfbf3010b281dd2",
+      "cf_9b58dde0cef2a3094343",
+      "cf_a01ceef9eb65ac48edc7",
+      "cf_ad09857ee8989b02545e",
+      "cf_ae3a10568687ca45e882",
+      "cf_b04cdfcbc8b3a2bc437f",
+      "cf_bd11f9aa8b50e3fdb575",
+      "cf_c4b8aa5f8ef81908bc60",
+      "cf_d18aaf3cb8fa79e49b08",
+      "cf_de144aeea6f9b9ac15ce",
+      "cf_de793ff4139d5c32b75f",
+      "cf_f1ae15840bb44a4c3fd6",
+      "cf_f44b6ac47544dfc377ae",
+      "cf_fa73ae4b6022f5d32c16"
+    ],
+    "geometry_profiles": [
+      "same_surface_counterfactual",
+      "transparent_panel"
+    ],
+    "physical_realizations": [
+      "appearance_physics_swap",
+      "transparent_acrylic"
+    ],
+    "scene_families": [
+      "forest_trail_hochsal_metric_g05",
+      "indoor_diningroom_185",
+      "indoor_office_102"
+    ],
+    "severity_ids": [
+      "moderate",
+      "severe"
+    ],
+    "target_operators": [
+      "O7_visual_remap",
+      "O8_invisible_collider"
+    ]
+  },
+  "amendment_id": "C2-v4-T3-A1-runtime-scope-fields",
+  "amendment_scope": "administrative_runtime_protocol_completion_only",
+  "benchmark_id": "c2_bidirectional_confirmation_v3_t3",
+  "case_schedule_sha256": "5476eb854a1e45cdae27d52c296a975c282aca92aaade3dcf82018a5f4daeee7",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "counterfactual_pairs": 30,
+    "domains": 3,
+    "formal_collection_status": "formal_pilot",
+    "isaac_processes": 30,
+    "operators": 2,
+    "outcome_strength_is_reported_not_gated": true,
+    "pairs_per_process": 1,
+    "per_scene_parameter_tuning_forbidden": true,
+    "physical_episodes": 60,
+    "runtime_schema": "kinofail.realistic-runtime.v5",
+    "scene_families": 3
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_pair_v2.py",
+  "collector_sha256": "d5e50103508b33784cad2584584d0cc560f22a6cc80ed482d266b13ce4500240",
+  "design_audit_sha256": "8e08c69925dd46e6edcc88ce9a2bbd4600b099b6480755cb095a0262ae372182",
+  "frozen_utc": "2026-07-24T13:47:10Z",
+  "outcomes_available_at_amendment_freeze": false,
+  "protocol_id": "kinofail-realistic-c2-v4-t3-collection-amendment1",
+  "reason": "The original v4 wrapper omitted the frozen status and explicit allowed schedule scope required by the unchanged runtime-v5 validator. One rejected pilot pair exposed the omission; no usable v4 T3 outcomes or model predictions existed when this administrative amendment was frozen.",
+  "runner_path": "scripts/run_kinofail_realistic_c2_v3_t3_isolated.py",
+  "runner_sha256": "9b8c6f3215f43e361c1a3f0660b46475562eaf09e6498b4cb3218b5d87c9985b",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_c2_v4_confirmation_scene_registry.json",
+  "scene_registry_sha256": "b3d922776bf8d1b60bde2f791d4fe23540170da58acd1aa4c18e17d4b0ef9e96",
+  "schedule_path": "outputs/kinofail_realistic/design_c2_bidirectional_confirmation_v4_t3/schedule.jsonl",
+  "schedule_sha256": "e2fa97115ce5dcfd2f00ca832a2d923eb5e81c0b2793467b1ad1ea470f892b4a",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "60 physical episodes / 30 nominal-anomaly O7/O8 pairs on three fresh realistic scene instances.",
+  "status": "frozen",
+  "supersedes_sha256": "901975d2c30e57fd08b2c65375d41c7f761c2d5de9e61966dc7b4f34acbe722f"
+}

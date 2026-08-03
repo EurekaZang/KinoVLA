@@ -1,0 +1,100 @@
+{
+  "schema_version": "kinofail.forest-unseen-scene-operator-v3-confirmation.v1-development",
+  "created_utc": "2026-07-22T19:08:00Z",
+  "status": "frozen_after_nominal_route_preflight_before_any_g06_g07_anomaly_run",
+  "purpose": "Confirm the calibration-derived O1/O2 admission-v3 candidate and unchanged O3 gate on two unseen photographic appearance families crossed with two new metric route and prop-collision geometries.",
+  "evidence_boundary": {
+    "development_only": true,
+    "g06_g07_appearance_families_unseen_by_g01_g05_operator_runs": true,
+    "g06_g07_metric_geometries_and_trajectory_contracts_unseen_by_g01_g05": true,
+    "candidate_v3_was_frozen_before_any_g06_g07_anomaly_run": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "does_not_complete_realistic_a0_a7": true
+  },
+  "frozen_sources": {
+    "collector": {"path": "scripts/isaac_collect_visual_shell_o2_lane.py", "sha256": "418e7e13e23bbeb074916503bf40482a22d760c1e892d215558ff0ea2e3e60f0"},
+    "route_protocol": {"path": "kino_vla/sim/realistic_route_protocol.py", "sha256": "c75806f8c51922c1a942333d6d554ca720de258bc5273a2f105b5538b1d9f94c"},
+    "operator_admission_v3": {"path": "kino_vla/eval/realistic_operator_admission_v3.py", "sha256": "c6a98a095722c624c502ec0c9cfe36f29ffff76724a5be8853c0c6aff8d0c83b"},
+    "o1_pair_auditor": {"path": "scripts/audit_forest_o1_pair.py", "sha256": "783748595dcb57bfb74672c01fffe35c4a3728855f670dd15b2119ab2e2f16e6"},
+    "o2_pair_auditor": {"path": "scripts/audit_forest_o2_pair.py", "sha256": "f4e4c2946741d601e599d0964bba1a654c408777ae4c9739b70a0427bcb1bc34"},
+    "o3_pair_auditor": {"path": "scripts/audit_forest_o3_pair.py", "sha256": "05167a945c88fb07b2f28a91cc839ce81c9e4cab8fe9a5b1e14e9f738d8d6d91"}
+  },
+  "candidate_origin": {
+    "calibration_result": {"path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_crossed_appearance_geometry_o1_o3_replication_dev_v1/operator_admission_v3_calibration.json", "sha256": "7e417e055f71f8da3f8842ae8f3525e4d738d2bb00f7d2b9c7817bc5967b14d1"},
+    "strict_v2_calibration_result": {"passed_pairs": 4, "total_pairs": 6},
+    "candidate_v3_calibration_result": {"passed_pairs": 6, "total_pairs": 6},
+    "calibration_scenes_cannot_confirm_candidate": true
+  },
+  "asset_contract": {
+    "source_config": {"path": "configs/data/kinofail_forest_hdri_assets_polyhaven_confirmation_v3.json", "sha256": "8dda99406e89f0ef3c9bd90f630795e699179afa1e1b1f07cfc9b8d33c36cd39"},
+    "asset_lock": {"path": "outputs/assets/forest_hdri_polyhaven_confirmation_v3/forest_hdri.lock.json", "sha256": "2b03f9bba55971df55ce2db7791add2dd1d1d66bcc85da55e6db6cc2988b319b"},
+    "forest_slope_preflight": {"path": "outputs/assets/forest_hdri_polyhaven_confirmation_v3/forest_slope/preflight.json", "sha256": "ffe1bff10ae88e665ec5133d8b0cedcc4b82ef88f64ec1143f9759e9454c8452"},
+    "river_walk_1_preflight": {"path": "outputs/assets/forest_hdri_polyhaven_confirmation_v3/river_walk_1/preflight.json", "sha256": "72cdbe1c470831c893bb986023f74ae22c85504757283a63f032f740ad51b7e4"}
+  },
+  "independence_reference_compiled_audits": [
+    {"realization_id": "g01", "path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v14/compiled_scene_audit.json", "sha256": "f59d2020b97fe8793fe90c0c921166d533bce7ba23c56245e555ee28edc7cfc8"},
+    {"realization_id": "g02", "path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g02_dev01/isaac_hybrid_composition_dev_v19/compiled_scene_audit.json", "sha256": "8b52bbee97f9092d2661786716a214ecca94c3b5593a9eb8e2ac90f706e6bea4"},
+    {"realization_id": "g03", "path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_metric_g03_dev01/isaac_hybrid_composition_dev_v20/compiled_scene_audit.json", "sha256": "9ae21d4197c7f37332fce41bdbf5e2050393972c198e160892fd731de57220d3"},
+    {"realization_id": "g04", "path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_whipple_metric_g04_dev01/isaac_hybrid_composition_dev_v21/compiled_scene_audit.json", "sha256": "aa56ff1c9af6bd1dcf8e5b7ea0aa15a49fbefca59ac7eff18650f14e7ab1c7d7"},
+    {"realization_id": "g05", "path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_hochsal_metric_g05_dev01/isaac_hybrid_composition_dev_v22/compiled_scene_audit.json", "sha256": "bd1eb8660fabd9687c17d1d871d40dc9ad35d9cf618c9a0d9aa3d5f02c6d1702"}
+  ],
+  "scene_realizations": [
+    {
+      "realization_id": "g06",
+      "appearance_family": "polyhaven_forest_slope_4k_with_test_split_ground073_gravel022",
+      "role": "unseen_scene_confirmation_1",
+      "config": {"path": "configs/data/kinofail_forest_hybrid_composition_dev_v23.json", "sha256": "ab239e9ef07d6e4e309c47c8c03a3969276818284b43cf85a741e4118b0d8873"},
+      "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_slope_metric_g06_confirmation/isaac_hybrid_composition_dev_v23/compiled_scene_audit.json", "sha256": "a0d450593527b317eb659dfa09c4b20f77491dd3765cb7c57d414eaf578a536b"},
+      "nominal_route_preflight": {"path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_slope_metric_g06_confirmation/isaac_hybrid_composition_dev_v23/g06_nominal_route_preflight_attempt1/lane_manifest.json", "sha256": "bdffe945b8843c0e598a233f0ca388caa5dfde384fc89fb1d417c3f791e28c84"},
+      "planned_outputs": {
+        "o1_nominal": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_slope_metric_g06_confirmation/isaac_hybrid_composition_dev_v23/g06_nominal_route_preflight_attempt1",
+        "o1_anomaly": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_slope_metric_g06_confirmation/isaac_hybrid_composition_dev_v23/g06_o1_v3_confirmation_attempt1_anomaly",
+        "o2_pair": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_slope_metric_g06_confirmation/isaac_hybrid_composition_dev_v23/g06_o2_v3_confirmation_attempt1",
+        "o3_pair": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_slope_metric_g06_confirmation/isaac_hybrid_composition_dev_v23/g06_o3_v3_confirmation_attempt1"
+      }
+    },
+    {
+      "realization_id": "g07",
+      "appearance_family": "polyhaven_river_walk_1_4k_with_test_split_gravel022_ground073",
+      "role": "unseen_scene_confirmation_2",
+      "config": {"path": "configs/data/kinofail_forest_hybrid_composition_dev_v24.json", "sha256": "9f3e45a0eb55e27138ac3dea59c1a0b343e51ddd1bf8d57701aa10efc5c2c44a"},
+      "compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_river_walk_metric_g07_confirmation/isaac_hybrid_composition_dev_v24/compiled_scene_audit.json", "sha256": "7b1f9063a128ff4e8c4c90d3a3ddfd8e684edcc64cdceaedbd0756bfd07eedac"},
+      "nominal_route_preflight": {"path": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_river_walk_metric_g07_confirmation/isaac_hybrid_composition_dev_v24/g07_nominal_route_preflight_attempt1/lane_manifest.json", "sha256": "6acf179275c074d32d644466c6fb039a64b5622de1ebb384a5eba1036c398652"},
+      "planned_outputs": {
+        "o1_nominal": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_river_walk_metric_g07_confirmation/isaac_hybrid_composition_dev_v24/g07_nominal_route_preflight_attempt1",
+        "o1_anomaly": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_river_walk_metric_g07_confirmation/isaac_hybrid_composition_dev_v24/g07_o1_v3_confirmation_attempt1_anomaly",
+        "o2_pair": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_river_walk_metric_g07_confirmation/isaac_hybrid_composition_dev_v24/g07_o2_v3_confirmation_attempt1",
+        "o3_pair": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_river_walk_metric_g07_confirmation/isaac_hybrid_composition_dev_v24/g07_o3_v3_confirmation_attempt1"
+      }
+    }
+  ],
+  "runtime_contracts": {
+    "g06": {
+      "common": {"steps": 580, "material_id": "test_ground073", "material_lock": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "region_progress_m": 2.10, "region_lateral_offset_m": 0.04, "region_half_length_m": 0.70, "region_half_width_m": 0.60, "start_lateral_offset_m": 0.13, "start_heading_offset_rad": -0.06, "target_lateral_offset_m": -0.02, "forward_speed_mps": 0.32},
+      "o1": {"seed": 20260861, "mu_s": 0.04, "mu_d": 0.03},
+      "o2": {"seed": 20260871},
+      "o3": {"seed": 20260881, "damage_threshold_ns": 25.0, "drop_m": 0.12, "residual_support": 0.18}
+    },
+    "g07": {
+      "common": {"steps": 620, "material_id": "test_gravel022", "material_lock": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "region_progress_m": 2.35, "region_lateral_offset_m": -0.04, "region_half_length_m": 0.72, "region_half_width_m": 0.62, "start_lateral_offset_m": -0.09, "start_heading_offset_rad": -0.05, "target_lateral_offset_m": 0.05, "forward_speed_mps": 0.30},
+      "o1": {"seed": 20260862, "mu_s": 0.04, "mu_d": 0.03},
+      "o2": {"seed": 20260872},
+      "o3": {"seed": 20260882, "damage_threshold_ns": 25.0, "drop_m": 0.12, "residual_support": 0.18}
+    }
+  },
+  "frozen_primary_endpoints": {
+    "o1_candidate_v3": {"mean_region_slip_delta_min": 0.30, "absolute_lateral_deviation_delta_m_min": 0.10, "kinematic_combination": "OR", "route_progress_deficit_m_min": 0.75, "nominal_completes_without_fall": true, "anomaly_falls": true},
+    "o2_candidate_v3": {"absolute_visual_depth_m_min": 0.05, "visual_depth_to_sinkage_ratio_min": 0.65, "contact_local_imprint_count_min": 4, "deformed_vertex_count_min_exclusive": 0, "physical_causal_and_outcome_checks_unchanged": true},
+    "o3_unchanged_v2": {"disabled_support_cells": 13, "minimum_visual_offset_m_max": -0.10, "deformed_vertex_count_min_exclusive": 50, "median_base_height_delta_m_min": 0.10, "route_progress_deficit_m_min": 1.00, "nominal_completes_without_fall": true, "anomaly_falls": true}
+  },
+  "execution_policy": {
+    "one_attempt_per_scene_operator_lane": true,
+    "no_threshold_or_runtime_contract_change_after_any_anomaly_observation": true,
+    "o1_o2_order": "nominal_then_anomaly_then_strict_v2_pair_audit_then_candidate_v3_audit",
+    "o3_order": "anomaly_then_nominal_replay_at_measured_trigger_step_then_unchanged_v2_pair_audit",
+    "strict_v2_results_remain_reported": true,
+    "failed_attempts_are_retained": true,
+    "no_retry_or_scene_replacement": true
+  }
+}

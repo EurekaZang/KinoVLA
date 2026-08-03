@@ -1,0 +1,72 @@
+{
+  "schema_version": "kinofail.embodiedgen-visual-shell-development.v2",
+  "plan_id": "wild-high-resolution-visual-shell-development-20260722-v2",
+  "status": "development_only_not_formal_corpus",
+  "objective": "Replace the 1024x512 forest background that failed manual Go2-view QA with a directly synthesized 2048x1024 panorama; preserve the failed source and forbid interpolation-only upscaling from being reported as additional visual detail.",
+  "extends_conceptually": {
+    "path": "configs/data/kinofail_embodiedgen_visual_shell_development_v1.json",
+    "sha256": "e1c149b0df0bece16386988791c239877ea870614e8999529c0eb6b256c82fde"
+  },
+  "embodiedgen": {
+    "repository": "https://github.com/HorizonRobotics/EmbodiedGen",
+    "release": "v2.0.0",
+    "commit": "cc3015ca5ccdacf94df3428d9e65f79375982216",
+    "scene_model_repository": "archerfmy0831/sd-t2i-360panoimage",
+    "pipeline_commit": "84a1198dbae40d0ecc7276e54d957f1789566610"
+  },
+  "generation": {
+    "num_inference_steps": 40,
+    "upscale": false,
+    "output_width": 2048,
+    "output_height": 1024,
+    "resolution_policy": "direct_diffusion_synthesis_at_requested_resolution_no_post_resize",
+    "negative_prompt": "people, animals, text, logo, watermark, fisheye discontinuity, floating objects, collapsed geometry, blocked trail, paved road, buildings, default grid, checkerboard floor, blurry, low resolution"
+  },
+  "visual_preflight": {
+    "minimum_luminance_std": 18.0,
+    "minimum_5bit_colors": 1024,
+    "maximum_black_fraction": 0.25,
+    "maximum_white_fraction": 0.25,
+    "maximum_horizontal_seam_mae": 35.0
+  },
+  "requests": [
+    {
+      "scene_id": "forest_trail_shell_hr_dev02",
+      "domain": "wild",
+      "split": "development",
+      "seed": 20260912,
+      "real_height_m": 8.0,
+      "prompt": "photorealistic temperate working forest trail at eye level, broad naturally irregular compacted dirt route for a quadruped robot, tall mature trees at metric scale, layered trunks with visible depth, roots, mossy rocks, leaf litter, ferns, shrubs and understory, coherent overcast daylight, physically plausible materials, visually rich foreground and midground, deep forest background, open traversable route, no people, no animals, no buildings"
+    }
+  ],
+  "failed_predecessor": {
+    "scene_id": "forest_trail_shell_dev01",
+    "panorama": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/pano_image.png",
+      "sha256": "ddd9f5690838e00e90bd96cad864795036a18abde0f100a8454081ca336e50b5",
+      "resolution": [1024, 512]
+    },
+    "failure": "Manual body-fixed Go2 RTX review found the infinity background too soft for publication figures; the source remains development-only even though its image non-degeneracy preflight passed."
+  },
+  "physics_ownership": {
+    "visual_shell_only": true,
+    "embodiedgen_mesh_never_used_as_primary_walkable_collision": true,
+    "kino_owned_collision_and_route_required": true,
+    "wild_near_field_requires_audited_heightfield": true,
+    "operator_physics_owned_by_kino_fail": true
+  },
+  "admission_policy": {
+    "development_panorama_pass_does_not_admit_scene": true,
+    "manual_go2_view_quality_required": true,
+    "interpolation_only_upscale_is_not_new_visual_evidence": true,
+    "required_next_stages": [
+      "panorama_visual_preflight",
+      "metric_near_field_composition",
+      "kino_collision_or_heightfield_compile",
+      "body_fixed_go2_rtx_qa",
+      "operator_capability_audit",
+      "independent_human_review",
+      "registry_binding"
+    ]
+  }
+}

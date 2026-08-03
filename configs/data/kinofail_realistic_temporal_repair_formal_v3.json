@@ -1,0 +1,231 @@
+{
+  "allowed": {
+    "camera_profiles": [
+      "go2_front_calib_a",
+      "go2_front_calib_b",
+      "go2_front_calib_c"
+    ],
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_073986c105277723f35d",
+      "cf_0794376c1852a73c66ba",
+      "cf_0872d6613640168f9629",
+      "cf_091f6a0a9457a975163e",
+      "cf_0a28a1cea130b19ac36c",
+      "cf_139c67dd02a8f5c33053",
+      "cf_15486b273c55bf59631b",
+      "cf_15832c4d8ac790a69264",
+      "cf_1854b706f6ee2e45e078",
+      "cf_19585c6c19e9a3ab2d7f",
+      "cf_219fcdb92b29b28e008b",
+      "cf_26edbd30dae2283d4f64",
+      "cf_293a99486076da9460f5",
+      "cf_296df24b8c847ea588f2",
+      "cf_29e2a23b9d1230462a57",
+      "cf_2b188e60179e65570dca",
+      "cf_2db9c13ce63629427717",
+      "cf_3209752dd77e585be370",
+      "cf_321d48ce625bccd6395b",
+      "cf_3609428793ab101b765b",
+      "cf_399dfae2f8bcff05bb98",
+      "cf_3f9366d6b20c5d8a65a1",
+      "cf_4071efc1c4fc195acce6",
+      "cf_40c08c29c9cd31b944c1",
+      "cf_42d2cd2e63eaa6b6bcb2",
+      "cf_42e5ee9c31f31038ae2c",
+      "cf_437738087702d59d2b58",
+      "cf_445e2ba042a33d96da70",
+      "cf_46bb55813abc3d7d4483",
+      "cf_46ea41ff580a007d08ca",
+      "cf_49086157f12f126810e5",
+      "cf_4d3cf86554a2fac42dc6",
+      "cf_4e072fa2fc06aaf33542",
+      "cf_5c1faca0b71e788a273c",
+      "cf_5d1269267996bc5e547e",
+      "cf_6219e8fa01fbab0367b7",
+      "cf_62a6479ab8bf75d403f9",
+      "cf_67c868765802360b4caa",
+      "cf_710a8743fbc39ce6499b",
+      "cf_726aa765217c136dd2ce",
+      "cf_765e901868e69ddfa58d",
+      "cf_7760d0e6167928d8d19a",
+      "cf_7a23a2cfa868b91fb20e",
+      "cf_7be8af0173f6d7197fa6",
+      "cf_7c54a6bfacb1b140f3fd",
+      "cf_7ee3ee620a8dc9fb0f94",
+      "cf_7fca894c71b7bd71f7a0",
+      "cf_8096f58ee8745144a63b",
+      "cf_81f463114719065d23f6",
+      "cf_83548e13028de5b3bea4",
+      "cf_8504371ea1a2ac0a5b65",
+      "cf_86d6a628036fa2ae1cab",
+      "cf_88c0e771a597f6c38018",
+      "cf_8e16e60de893e142256e",
+      "cf_8fd24c8c33c23a353e36",
+      "cf_9075e44840fbe04d1631",
+      "cf_919dd40debde603266a0",
+      "cf_959ad02cfd722777f2c9",
+      "cf_95fd653f6e4a10a9e7c2",
+      "cf_97aa001526be3c41e2dc",
+      "cf_9a93ce7dea88890f94d5",
+      "cf_9d4c8f48f343235ddf99",
+      "cf_9ec914aaf6c999921864",
+      "cf_a24952e200d5ec6a5478",
+      "cf_a5329c42ef0c3d7d0f1b",
+      "cf_a8b189a94fdbc5762cfd",
+      "cf_a8f4ffc9d09bf77dd1be",
+      "cf_a8f8419f24e7f2015c1c",
+      "cf_abc406af5406dd11dfad",
+      "cf_af0aa70b80e39313d36a",
+      "cf_b1a53a0a7b6bd4f8441d",
+      "cf_b25f91fd92b294e74e5c",
+      "cf_b433b25072edb8afec49",
+      "cf_b70350661f367cee7ba4",
+      "cf_bcb3d79b8da7249666b6",
+      "cf_c033aed42859e7205c7a",
+      "cf_c3bc53918ce77da821d3",
+      "cf_cadec27a31d401d53e4f",
+      "cf_d26fce7f564c08df186a",
+      "cf_d34c7c08157969dd162f",
+      "cf_d4fbadcfe18d25d6ee89",
+      "cf_e6b97b55f4cd469fcf7b",
+      "cf_e8ccdbefae66c143cdf6",
+      "cf_eb2d4e3f13e79f4d1db3",
+      "cf_f6e55349455a0da4328f",
+      "cf_f70ee89f8448e2eac1d6",
+      "cf_f8bb985271838f35349b",
+      "cf_fa29aec732a31376f4d5",
+      "cf_fcab4029b5cf39948ffd",
+      "cf_ffaebd9e8dc48fe9502e"
+    ],
+    "design_blocks": [
+      {
+        "physical_nuisance_profile_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "severity_id": "severe",
+        "target_operator": "O3_collapse"
+      },
+      {
+        "physical_nuisance_profile_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "severity_id": "severe",
+        "target_operator": "O8_invisible_collider"
+      }
+    ],
+    "geometry_profiles": [
+      "hidden_support_cells",
+      "transparent_panel"
+    ],
+    "physical_nuisance_profile_indices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "physical_realizations": [
+      "impulse_triggered_support_tile",
+      "transparent_acrylic"
+    ],
+    "scene_families": [
+      "forest_river_walk_metric_g07",
+      "forest_slope_metric_g06",
+      "forest_trail_metric_g03",
+      "indoor_bedroom_118",
+      "indoor_kitchen_140",
+      "indoor_livingroom_139",
+      "indoor_office_162",
+      "indoor_office_168",
+      "indoor_office_186"
+    ],
+    "severity_ids": [
+      "severe"
+    ],
+    "target_operators": [
+      "O3_collapse",
+      "O8_invisible_collider"
+    ]
+  },
+  "amendment": {
+    "changed": "Install every severe O3/O8 instance after a uniform 30-control-step (0.6 s) recorded locomotion pre-roll so the frozen 0.5 s observable history always exists before the event.",
+    "model_predictions_available_at_freeze": false,
+    "pair_selection_is_complete_operator_severity_blocks_not_outcome_cherry_picking": true,
+    "selection_basis": {
+      "complete_design_blocks": [
+        "O3_collapse / severe / all five physical nuisance profiles / all nine scenes",
+        "O8_invisible_collider / severe / all five physical nuisance profiles / all nine scenes"
+      ],
+      "observed_before_freeze": {
+        "O3_severe": {
+          "finished_pairs": 4,
+          "too_short_pairs": 4,
+          "observed_too_short_profiles": [
+            1,
+            3
+          ]
+        },
+        "O8_severe": {
+          "finished_pairs": 2,
+          "too_short_pairs": 2,
+          "observed_too_short_profiles": [
+            3
+          ]
+        }
+      },
+      "all_unobserved_members_of_both_blocks_included_prospectively": true
+    },
+    "unchanged": [
+      "all scheduled O3 and O8 physical parameters",
+      "five-profile route-entry nuisance definition and balance",
+      "scene geometry and operator region",
+      "controller and commanded speed",
+      "body-fixed Go2 front camera",
+      "three synchronized PBR appearance views",
+      "counterfactual pairing",
+      "10 Hz RGB capture",
+      "runtime quality gates"
+    ]
+  },
+  "base_protocol": "configs/data/kinofail_realistic_scale_v8_replication_formal_v3.json",
+  "benchmark_id": "kinofail_realistic_scale_v8_replication_v1",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "counterfactual_pairs": 90,
+    "physical_episodes": 180,
+    "pre_operator_control_steps": 30,
+    "pre_operator_duration_s": 0.6,
+    "separate_repair_root_required": true
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_temporal_repair_v3.py",
+  "collector_sha256": "b9736cacad6f122c4ac6d5f2fe9156d154430b4cd2458f1a647aeaabfbc79940",
+  "frozen_utc": "2026-07-23T19:31:00+00:00",
+  "protocol_id": "kinofail_realistic_scale_v8_temporal_repair_v3",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule_path": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+  "schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "Uniform all-scene, all-profile repair of the complete O3-severe and O8-severe blocks; no moderate pair or other operator is admitted.",
+  "status": "frozen",
+  "supersedes": {
+    "protocol": "configs/data/kinofail_realistic_temporal_repair_formal_v2.json",
+    "protocol_sha256": "f4847165f77c2198ab30ad7a1847aa4aa933d7129f031865547c6f0ad25a6cc6",
+    "reason": "Runtime QA exposed O3 severe premature termination in a second nuisance profile before any model training or prediction; complete blocks prevent iterative profile-by-profile repair."
+  }
+}

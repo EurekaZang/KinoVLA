@@ -1,0 +1,100 @@
+{
+  "allowed": {
+    "camera_profiles": [
+      "go2_front_calib_a",
+      "go2_front_calib_b",
+      "go2_front_calib_c"
+    ],
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_073986c105277723f35d",
+      "cf_0794376c1852a73c66ba",
+      "cf_0872d6613640168f9629",
+      "cf_139c67dd02a8f5c33053",
+      "cf_42d2cd2e63eaa6b6bcb2",
+      "cf_49086157f12f126810e5",
+      "cf_a24952e200d5ec6a5478",
+      "cf_b433b25072edb8afec49",
+      "cf_e8ccdbefae66c143cdf6"
+    ],
+    "geometry_profiles": [
+      "hidden_support_cells"
+    ],
+    "physical_nuisance_profile_indices": [
+      1
+    ],
+    "physical_realizations": [
+      "impulse_triggered_support_tile"
+    ],
+    "scene_families": [
+      "forest_river_walk_metric_g07",
+      "forest_slope_metric_g06",
+      "forest_trail_metric_g03",
+      "indoor_bedroom_118",
+      "indoor_kitchen_140",
+      "indoor_livingroom_139",
+      "indoor_office_162",
+      "indoor_office_168",
+      "indoor_office_186"
+    ],
+    "severity_ids": [
+      "severe"
+    ],
+    "target_operators": [
+      "O3_collapse"
+    ]
+  },
+  "amendment": {
+    "changed": "Install O3 after a uniform 30-control-step (0.6 s) recorded locomotion pre-roll so the frozen 0.5 s observable history exists before the severe collapse event.",
+    "model_predictions_available_at_freeze": false,
+    "pair_selection_is_complete_design_cell_not_outcome_cherry_picking": true,
+    "selection_basis": {
+      "affected_design_cell": "O3_collapse / severe / physical nuisance profile 1 / all nine registered scenes",
+      "observed_before_freeze": {
+        "affected_pairs_finished": 3,
+        "affected_pairs_with_too_few_proprio_samples": 3,
+        "anomaly_proprio_samples_each": 23,
+        "collapse_trigger_step_each": 11
+      },
+      "remaining_affected_pairs_included_prospectively": 6
+    },
+    "unchanged": [
+      "all scheduled O3 damage, drop and residual-support parameters",
+      "five-profile route-entry nuisance definition",
+      "scene geometry and operator region",
+      "controller and commanded speed",
+      "body-fixed Go2 front camera",
+      "three synchronized PBR appearance views",
+      "counterfactual pairing",
+      "10 Hz RGB capture",
+      "runtime quality gates"
+    ]
+  },
+  "base_protocol": "configs/data/kinofail_realistic_scale_v8_replication_formal_v3.json",
+  "benchmark_id": "kinofail_realistic_scale_v8_replication_v1",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "counterfactual_pairs": 9,
+    "physical_episodes": 18,
+    "pre_operator_control_steps": 30,
+    "pre_operator_duration_s": 0.6,
+    "separate_repair_root_required": true
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_o3_temporal_repair_v1.py",
+  "collector_sha256": "a6d72be978c67a29a3e2b575632f5f614eb070615836dcba61c21b7e7c80d5a1",
+  "frozen_utc": "2026-07-23T19:07:43+00:00",
+  "protocol_id": "kinofail_realistic_scale_v8_o3_temporal_repair_v1",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule_path": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+  "schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "Targeted all-scene repair of the frozen O3 severe/profile-1 cell whose valid collapse terminates before the predeclared observable window exists; no other pair is admitted.",
+  "status": "frozen"
+}

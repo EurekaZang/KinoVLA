@@ -1,0 +1,103 @@
+{
+  "acceptance": {
+    "beat_every_baseline_point_estimate": true,
+    "maximum_wrong_modality_direction_accuracy": 0.6,
+    "minimum_balanced_accuracy": 0.88,
+    "minimum_delta_ci95_lower": -0.05,
+    "minimum_texture_swap_hard_consistency": 0.8,
+    "minimum_worst_direction_accuracy": 0.82,
+    "minimum_worst_scene_accuracy": 0.8
+  },
+  "administrative_amendment": {
+    "amendment_id": "C2-v4-A1-T3-runtime-scope-fields",
+    "architecture_changed": false,
+    "development_or_confirmation_predictions_inspected": false,
+    "reason": "Bind the complete runtime-v5 T3 collection protocol after one rejected pilot pair exposed missing status/allowed-scope fields in the original wrapper.",
+    "supersedes_protocol_sha256": "73bfa65451d8e39d3912ad53c14d81230c29a1e171c2982efc23338147c34ef5",
+    "thresholds_changed": false
+  },
+  "asset_lock_sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003",
+  "bootstrap": {
+    "draws": 20000,
+    "seed": 2026072441,
+    "unit": "scene cluster with matched case resampling nested within scene"
+  },
+  "claim_boundary": "C2 v4 tests bidirectional modality conflict on four attribution categories, three appearance interventions per cause, and three scene instances absent from all twelve-scene development. It supports structured modality selection under the frozen T2/T3 battery; it does not claim universal optimality across all eleven operators.",
+  "clip_extractor_sha256": "e49809b7040653f4b9467dedcee02ad8d9cb3e50926c436e1315d0b6f60d9960",
+  "created_utc": "2026-07-24T13:47:10Z",
+  "development_feature_builder_sha256": "bf6c265b1e677eb319ebaf29d63dae0a872b182aa0326d0b8124b4102440e691",
+  "development_feature_manifest_sha256": "ba78443a8c92498f9a64b7b4ce2b458063a61ce1fd36ddacd94b0b86bc2d73df",
+  "development_report_sha256": "e6229ce893aa5d044120ef3c8bb3b4b87ef7269984ab0bbe6f9a811539bb69ae",
+  "development_result": {
+    "best_baseline": "late_fusion",
+    "best_baseline_balanced_accuracy": 0.9627700617283951,
+    "family_gate_accuracy": 1.0,
+    "structured_balanced_accuracy": 0.9878472222222222,
+    "structured_t2_accuracy": 0.9756944444444444,
+    "structured_t3_accuracy": 1.0,
+    "structured_worst_scene_accuracy": 0.9,
+    "twelve_scene_loso": true,
+    "v3_failure_used_as_development": true,
+    "v4_confirmation_outcomes_used": false
+  },
+  "evaluator_sha256": "2130798df7c46fd9d8b6a6b3af981a686d74779df5aa8753377928e1d5ae2c17",
+  "feature_builder_sha256": "0917e4ee6361344bace0734eae232c4342e5ef9a06ed4c500e3a236824d84fc7",
+  "formal_design": {
+    "T2": "byte-identical proprioception across causal visual alternatives",
+    "T3": "byte-identical O7 RTX sequence across actual O7/O8 proprioceptive rollouts",
+    "appearance_views_per_cause": 3,
+    "cases_per_direction": 15,
+    "domains": 3,
+    "fresh_scene_instances": 3,
+    "matched_cases": 30,
+    "samples": 180
+  },
+  "freeze_timing": {
+    "architecture_selected_before_any_v4_confirmation_prediction": true,
+    "raw_t2_collection_completed_at_freeze": true,
+    "rejected_t3_pilot_pairs_before_amendment": 1,
+    "t2_feature_extraction_completed_at_freeze": false,
+    "t2_model_predictions_available_at_freeze": false,
+    "t3_collection_completed_at_freeze": false,
+    "usable_t3_outcomes_available_at_freeze": false,
+    "v4_confirmation_used_for_architecture_or_threshold_selection": false
+  },
+  "frozen_architecture": {
+    "T2_specialist": "balanced logistic(C=0.1) on CLIP+generic HOG",
+    "composition": "accept a four-class proprioceptive proposal only when it predicts a T3 category; otherwise invoke the T2 visual specialist",
+    "forbidden_inputs": [
+      "truth label",
+      "operator ID",
+      "cell ID",
+      "scene ID",
+      "domain",
+      "split",
+      "severity",
+      "material ID",
+      "formal correctness"
+    ],
+    "proprio_proposal": "balanced four-class logistic(C=1) on the frozen 130-dimensional scene-invariant proprioceptive summary",
+    "temporal_contract": "first base-footprint/region overlap at 0.40 m margin, fixed +0.20 s delay, then the latest 21 native-rate samples within a 0.50 s eligible lookback; no label, outcome, or failure-time alignment"
+  },
+  "model_roster": [
+    "vision_only",
+    "proprio_only",
+    "early_fusion_linear",
+    "early_fusion_rbf",
+    "late_fusion",
+    "structured_class_proposal_router_v4"
+  ],
+  "outcomes_available_at_freeze": false,
+  "protocol_id": "kinofail-realistic-c2-bidirectional-confirmation-v4-amendment1",
+  "scene_registry_sha256": "b3d922776bf8d1b60bde2f791d4fe23540170da58acd1aa4c18e17d4b0ef9e96",
+  "schema_version": "kinofail.realistic-c2-bidirectional-protocol.v4",
+  "status": "frozen_administrative_amendment_before_valid_v4_t3_collection",
+  "t2_collection_protocol_sha256": "db90c674e2e3b3d8888b1afdc81fed785f39d1f2caecbe6bf0c0e8015757b3be",
+  "t2_design_audit_sha256": "0ece206dc7cd59388be30820e9ff2031c38f4f4105093483de5e268e70d07002",
+  "t2_schedule_sha256": "477931a2f37882e47573d6c677b0d223e00375de306faad34fa359b877c79de9",
+  "t3_case_schedule_sha256": "5476eb854a1e45cdae27d52c296a975c282aca92aaade3dcf82018a5f4daeee7",
+  "t3_collection_protocol_sha256": "d05948ae5447a750308e5312af5b649f9e417d4110af4b9e1905b764e42660b0",
+  "t3_design_audit_sha256": "8e08c69925dd46e6edcc88ce9a2bbd4600b099b6480755cb095a0262ae372182",
+  "t3_schedule_sha256": "e2fa97115ce5dcfd2f00ca832a2d923eb5e81c0b2793467b1ad1ea470f892b4a",
+  "temporal_contract_sha256": "a9dee3338f4161f4bdd6f722f837f923d0033ee3aecbb84093df5dba859411b3"
+}

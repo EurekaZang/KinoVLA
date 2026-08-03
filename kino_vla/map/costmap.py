@@ -29,16 +29,47 @@ from kino_vla.utils.geometry import Rect
 class Costmap:
     """A grid of traversability costs in [0, 1] over a fixed odometry-frame extent."""
 
-    def __init__(self, cfg: Config) -> None:
+    def __init__(self, cfg: Config, embed_dim: int | None = None) -> None:
         self._res = float(cfg.resolution_m)
         self._extent = (float(cfg.extent[0]), float(cfg.extent[1]))
         self._origin = -0.5 * np.asarray(self._extent, dtype=np.float64)  # lower corner (x,y)
         self._nx = int(round(self._extent[0] / self._res))
         self._ny = int(round(self._extent[1] / self._res))
+        # The appearance-feature width: 64 for the class/pixel surrogates, 512 for real CLIP. The
+        # map's similarity machinery is encoder-agnostic; only the stored feature width changes.
+        self._embed_dim = int(
+            embed_dim if embed_dim is not None else cfg.get("embed_dim", EMBED_DIM)
+        )
         self._cost = np.zeros((self._ny, self._nx), dtype=np.float64)
         self._physical = np.zeros((self._ny, self._nx), dtype=bool)
         self._observed = np.zeros((self._ny, self._nx), dtype=bool)
-        self._embed = np.zeros((self._ny, self._nx, EMBED_DIM), dtype=np.float64)
+        self._embed = np.zeros((self._ny, self._nx, self._embed_dim), dtype=np.float64)
+
+    @property
+    def embed_dim(self) -> int:
+        return self._embed_dim
+
+    @property
+    def resolution_m(self) -> float:
+        return self._res
+
+    @property
+    def origin_xy(self) -> np.ndarray:
+        """World-frame coordinate of the grid's lower (i=0, j=0) corner."""
+        return self._origin.copy()
+
+    @property
+    def cost_grid(self) -> np.ndarray:
+        """A copy of the (ny, nx) cost grid — read by the deployed geometric planner (decoupled
+        nav, #44): A* routes around every cell above the hazard threshold."""
+        return self._cost.copy()
+
+    @property
+    def physical_grid(self) -> np.ndarray:
+        """A copy of the (ny, nx) bool mask of cells stamped by a physical-failure overwrite (the
+        contact 'physics writes the map' / Update_Topology cells, as opposed to the lower-confidence
+        visual prior or CLIP-propagated cells) — for the decoupled-nav visualization (#45)."""
+        return self._physical.copy()
 
     # ------------------------------------------------------------ indexing
 
@@ -118,6 +149,47 @@ class Costmap:
                     self._cost[j, i] = new_cost
         return propagated
 
+    # ------------------------------------------------------------ rolling (egocentric) window
+
+    def recenter(self, center_xy: np.ndarray, *, margin_m: float) -> bool:
+        """Roll the fixed-size grid so it stays centred on ``center_xy`` — an egocentric costmap for
+        long-distance / multi-patch courses (#47). Marks move WITH the world (an integer-cell shift,
+        no resampling, so ``cost_at(world)`` is invariant for on-window points); cells that scroll
+        off the trailing edge are cleared (they left the world window — far behind, irrelevant to
+        forward nav). Rolls only when ``center_xy`` is within ``margin_m`` of an edge (hysteresis ⇒
+        infrequent), then recentres to the middle. Returns True iff it rolled."""
+        rel = (np.asarray(center_xy, dtype=np.float64) - self._origin) / self._res
+        m = int(np.ceil(float(margin_m) / self._res))
+        near_edge = (
+            rel[0] < m or rel[0] > self._nx - m or rel[1] < m or rel[1] > self._ny - m
+        )
+        if not near_edge:
+            return False
+        shift_i = int(round(self._nx / 2.0 - rel[0]))
+        shift_j = int(round(self._ny / 2.0 - rel[1]))
+        if shift_i == 0 and shift_j == 0:
+            return False
+        self._roll(shift_i, shift_j)
+        self._origin = self._origin - np.array([shift_i, shift_j], dtype=np.float64) * self._res
+        return True
+
+    def _roll(self, shift_i: int, shift_j: int) -> None:
+        """Shift every layer by (shift_i cols, shift_j rows); clear the wrapped-in (newly exposed)
+        cells — np.roll wraps, and those cells are now unobserved ground, not stale data."""
+        self._cost = np.roll(self._cost, (shift_j, shift_i), axis=(0, 1))
+        self._physical = np.roll(self._physical, (shift_j, shift_i), axis=(0, 1))
+        self._observed = np.roll(self._observed, (shift_j, shift_i), axis=(0, 1))
+        self._embed = np.roll(self._embed, (shift_j, shift_i), axis=(0, 1))
+        for arr in (self._cost, self._physical, self._observed, self._embed):
+            if shift_i > 0:
+                arr[:, :shift_i] = 0
+            elif shift_i < 0:
+                arr[:, shift_i:] = 0
+            if shift_j > 0:
+                arr[:shift_j, :] = 0
+            elif shift_j < 0:
+                arr[shift_j:, :] = 0
+
     # ------------------------------------------------------------ read
 
     def cost_at(self, world_xy: np.ndarray) -> float:
@@ -133,6 +205,34 @@ class Costmap:
             return False
         i, j = cell
         return bool(self._physical[j, i])
+
+    def embedding_at(self, world_xy: np.ndarray) -> np.ndarray | None:
+        """The appearance feature *actually perceived* at a cell, or None if never observed.
+
+        Propagation must compare like with like: whatever encoder painted the map (class-hash
+        surrogate or real pixel feature) is what a failure attribution should generalise with.
+        """
+        cell = self._cell_of(world_xy)
+        if cell is None:
+            return None
+        i, j = cell
+        embed = self._embed[j, i]
+        return embed.copy() if float(np.linalg.norm(embed)) > 0.0 else None
+
+    def dominant_feature_in(self, rect: Rect) -> np.ndarray | None:
+        """The mean L2-normalised OBSERVED appearance feature over the cells in ``rect`` (None if
+        none observed). Robust source of a region's CLIP feature when the exact query cell was not
+        directly imaged (the forward-down camera rarely sees the cell under the robot)."""
+        feats = [
+            self._embed[j, i]
+            for i, j in self._cells_in_rect(rect)
+            if self._observed[j, i] and float(np.linalg.norm(self._embed[j, i])) > 0.0
+        ]
+        if not feats:
+            return None
+        mean = np.mean(feats, axis=0)
+        n = float(np.linalg.norm(mean))
+        return mean / n if n > 0.0 else None
 
     def crop(self, center_xy: np.ndarray, half_extent_m: float) -> MapCrop:
         """Local cost window centred on ``center_xy`` (planner context, spec §7)."""

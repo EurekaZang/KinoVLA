@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
 
-from kino_vla.monitor.rule_monitor import RuleMonitor
+from kino_vla.monitor.event import Monitor
 from kino_vla.sim.types import Obs
 from kino_vla.tokens.features import MU_INDEX
 from kino_vla.tokens.semantics import REGIMES
@@ -77,7 +77,7 @@ class MuEstimateCoupler:
         self._hold_until = -1.0
         self._shield.set_mu_estimate(self._nominal_mu)
 
-    def step(self, obs: Obs, monitor: RuleMonitor) -> CouplerRecord:
+    def step(self, obs: Obs, monitor: Monitor) -> CouplerRecord:
         """Update μ̂ from the window when aroused; push it to the shield."""
         self._win.push(obs)
         aroused = monitor.anomaly_score >= self._gate_threshold or obs.t < self._hold_until
