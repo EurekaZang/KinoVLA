@@ -1,0 +1,63 @@
+{
+  "schema_version": "kinofail.embodiedgen-visual-shell-development.v1",
+  "plan_id": "production-wild-visual-shell-development-20260722-v1",
+  "status": "development_only_not_formal_corpus",
+  "objective": "Test EmbodiedGen panorama visual shells for the missing production and wild domains before authoring Kino-owned route collision, heightfield and operator layers.",
+  "embodiedgen": {
+    "repository": "https://github.com/HorizonRobotics/EmbodiedGen",
+    "release": "v2.0.0",
+    "commit": "cc3015ca5ccdacf94df3428d9e65f79375982216",
+    "scene_model_repository": "archerfmy0831/sd-t2i-360panoimage",
+    "pipeline_commit": "84a1198dbae40d0ecc7276e54d957f1789566610"
+  },
+  "generation": {
+    "num_inference_steps": 40,
+    "upscale": false,
+    "output_width": 1024,
+    "output_height": 512,
+    "negative_prompt": "people, animals, text, logo, watermark, fisheye discontinuity, floating objects, collapsed geometry, blocked aisle, narrow passage, default grid, checkerboard floor"
+  },
+  "visual_preflight": {
+    "minimum_luminance_std": 18.0,
+    "minimum_5bit_colors": 512,
+    "maximum_black_fraction": 0.25,
+    "maximum_white_fraction": 0.25,
+    "maximum_horizontal_seam_mae": 35.0
+  },
+  "requests": [
+    {
+      "scene_id": "warehouse_loading_shell_dev01",
+      "domain": "production",
+      "split": "development",
+      "seed": 20260901,
+      "real_height_m": 5.5,
+      "prompt": "photorealistic industrial warehouse loading bay interior, spacious wide central aisle for a quadruped robot, concrete floor with realistic wear, steel columns, pallet racks, wooden pallets, shipping crates, safety barriers, loading dock doors, overhead industrial lights, coherent metric scale, physically plausible materials, open traversable foreground and midground, no people"
+    },
+    {
+      "scene_id": "forest_trail_shell_dev01",
+      "domain": "wild",
+      "split": "development",
+      "seed": 20260902,
+      "real_height_m": 8.0,
+      "prompt": "photorealistic temperate forest trail, broad traversable dirt path for a quadruped robot, natural trees, roots, rocks, leaf litter, shrubs and distant forest depth, coherent outdoor daylight, physically plausible scale and materials, clear foreground and midground route, no people, no buildings"
+    }
+  ],
+  "physics_ownership": {
+    "visual_shell_only": true,
+    "embodiedgen_mesh_never_used_as_primary_walkable_collision": true,
+    "kino_owned_collision_and_route_required": true,
+    "wild_near_field_requires_audited_heightfield": true,
+    "operator_physics_owned_by_kino_fail": true
+  },
+  "admission_policy": {
+    "development_panorama_pass_does_not_admit_scene": true,
+    "required_next_stages": [
+      "panorama_visual_preflight",
+      "pano_to_mesh_or_3dgs_shell",
+      "kino_collision_or_heightfield_compile",
+      "body_fixed_go2_rtx_qa",
+      "operator_capability_audit",
+      "registry_binding"
+    ]
+  }
+}

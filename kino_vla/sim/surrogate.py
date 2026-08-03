@@ -98,16 +98,28 @@ class SurrogateBackend:
     def add_blocking_regions(self, regions: list[BlockingRegion]) -> None:
         self._blocking.extend(regions)
 
-    def add_support_loss_regions(self, regions: list[SupportLossRegion]) -> None:
+    def add_support_loss_regions(
+        self,
+        regions: list[SupportLossRegion],
+        height_m: float | None = None,
+        geometry_kind: str = "box_ridge",
+    ) -> None:
+        del height_m, geometry_kind  # geometry is outside the planar surrogate's scope
         self._support.extend(regions)
 
     def add_resistance_regions(self, regions: list[ResistanceRegion]) -> None:
         """Append tangential-resistance regions (operators O2 compliance / O4 tether)."""
         self._resistance.extend(_ResistanceState(region=r) for r in regions)
 
-    def add_payload(self, mass_kg: float, com_offset_m: np.ndarray) -> None:
+    def add_payload(
+        self,
+        mass_kg: float,
+        com_offset_m: np.ndarray,
+        size_m: np.ndarray | None = None,
+    ) -> None:
+        del size_m
         self.mass_kg = self.mass_kg + float(mass_kg)
-        offset = float(np.linalg.norm(np.asarray(com_offset_m, dtype=np.float64)))
+        offset = float(np.linalg.norm(np.asarray(com_offset_m, dtype=np.float64)[:2]))
         self._payload_com_demand += float(self._cfg.payload_com_demand_gain) * offset
 
     def set_effort_scale(self, scale: float) -> None:
@@ -161,6 +173,21 @@ class SurrogateBackend:
             self.mass_kg
         )
         self._yaw_rate += float(yaw_impulse_nms) / float(self._cfg.yaw_inertia_kgm2)
+
+    def start_push_pulse(
+        self,
+        impulse_xy_ns: np.ndarray,
+        yaw_impulse_nms: float,
+        duration_s: float,
+        application_point_body_m: np.ndarray,
+    ) -> None:
+        """CPU fallback preserves total impulse; point/duration fidelity is Isaac-only."""
+        if duration_s <= 0.0:
+            raise ValueError("push-pulse duration must be positive")
+        point = np.asarray(application_point_body_m, dtype=np.float64)
+        if point.shape != (3,):
+            raise ValueError("push-pulse application point must have shape (3,)")
+        self.apply_push(impulse_xy_ns, yaw_impulse_nms)
 
     # ------------------------------------------------------------ dynamics
 
@@ -328,8 +355,15 @@ class SurrogateBackend:
             if state.collapsed:
                 continue
             if state.region.rect.contains(self._pos):
-                state.dwell += self.dt
-                if state.dwell >= state.region.trigger_dwell_s:
+                if state.region.damage_threshold_ns is not None:
+                    # CPU scaffolding has no feet.  Use total static support impulse as a monotonic
+                    # proxy; Isaac's publication path integrates measured per-foot normal forces.
+                    state.damage_ns += self.mass_kg * float(self._cfg.gravity) * self.dt
+                    threshold_reached = state.damage_ns >= state.region.damage_threshold_ns
+                else:
+                    state.dwell += self.dt
+                    threshold_reached = state.dwell >= state.region.trigger_dwell_s
+                if threshold_reached:
                     state.collapsed = True
 
     def _apply_blocking(self, cur: np.ndarray, proposed: np.ndarray) -> tuple[np.ndarray, bool]:
@@ -337,6 +371,8 @@ class SurrogateBackend:
         blocked = False
         out = proposed.copy()
         for region in self._blocking:
+            if not region.collision_enabled:
+                continue
             rect = region.rect
             if rect.contains(cur):
                 continue  # already inside (shouldn't happen): don't trap
@@ -401,13 +437,14 @@ class SurrogateBackend:
 
 
 class _CollapseState:
-    """Mutable per-region dwell/trigger state for O3 collapse regions."""
+    """Mutable legacy-dwell or load-damage trigger state for O3 collapse regions."""
 
-    __slots__ = ("region", "dwell", "collapsed")
+    __slots__ = ("region", "dwell", "damage_ns", "collapsed")
 
     def __init__(self, region: CollapseRegion) -> None:
         self.region = region
         self.dwell = 0.0
+        self.damage_ns = 0.0
         self.collapsed = False
 
 

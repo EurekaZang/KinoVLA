@@ -32,6 +32,11 @@ class Primitive:
 
 
 @dataclass(frozen=True)
+class Continue(Primitive):
+    """Explicit non-intervention: keep the nominal policy in control."""
+
+
+@dataclass(frozen=True)
 class Backstep(Primitive):
     distance_m: float
 
@@ -120,6 +125,9 @@ class PrimitiveCompiler:
 
     def compile(self, prim: Primitive, obs: Obs) -> CompiledCommand:
         """Compile one primitive into an executable command (or a rejection code)."""
+        if isinstance(prim, Continue):
+            return CompiledCommand(True, "OK: continue")
+
         if isinstance(prim, Backstep):
             if not prim.distance_m > 0.0:
                 return CompiledCommand(False, f"REJECT: Backstep.distance_m={prim.distance_m} ≤ 0")

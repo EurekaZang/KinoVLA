@@ -1,0 +1,41 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v7-development",
+  "iteration_id": "forest-hochsal-radiance-normalized-heldout-v18",
+  "status": "development_radiance_normalized_replacement_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v17.json",
+    "sha256": "7b89199cd9a1c577bfcaca688f9da5babe1bd22a76d08dd360ac75372ed153a7"
+  },
+  "overrides": {
+    "background": {
+      "intensity": 455.0
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_hochsal_dev01/isaac_hybrid_composition_dev_v18"
+    }
+  },
+  "predecessor_result": {
+    "config": "configs/data/kinofail_forest_hybrid_composition_dev_v17.json",
+    "nominal_lane": "passed",
+    "anomaly_physics": "passed",
+    "anomaly_visual_sequence": "failed_matched_consequence_std_luminance_0.02262_below_0.035",
+    "diagnosis": "Doubling the auxiliary distant light barely changed contrast; the held-out HDRI had substantially lower mean radiance than the Whipple reference."
+  },
+  "radiance_normalization_contract": {
+    "reference_family": "forest_whipple_cool_overcast_train",
+    "reference_hdri_mean_luminance": 2.351883334283489,
+    "reference_dome_intensity": 120.0,
+    "target_hdri_mean_luminance": 0.6203861711993873,
+    "computed_target_dome_intensity": 454.91987606428034,
+    "authored_target_dome_intensity": 455.0,
+    "formula": "reference_intensity * reference_mean_luminance / target_mean_luminance",
+    "uses_model_results": false,
+    "physics_unchanged": true
+  },
+  "quality_policy": {
+    "hard_anomaly_visual_gate_is_run_before_nominal_recollection": true,
+    "both_lanes_required_before_family_pass": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

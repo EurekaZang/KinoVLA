@@ -1,0 +1,44 @@
+{
+  "schema_version": "kinofail.embodiedgen-realistic-route-policy-v14-unseen-generation-freeze-amendment.v1",
+  "status": "administrative_command_completion_before_any_scene_generation_or_runtime_execution",
+  "base_freeze": {
+    "path": "configs/data/kinofail_embodiedgen_realistic_route_policy_v14_unseen_generation_freeze_v1.json",
+    "sha256": "3978f374cc171c4079250b17aa9331dee0852b724d3b031f1d9469c6fea8fef3"
+  },
+  "amendment1": {
+    "path": "configs/data/kinofail_embodiedgen_realistic_route_policy_v14_unseen_generation_freeze_v1_amendment1.json",
+    "sha256": "109fdcbe902d5fcc598cac19f558ac7edb71369a21df4b7d89323be2dfabd94a"
+  },
+  "passed_preflight_v2_retained": {
+    "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_realistic_route_policy_v14_unseen_generation_preflight_v2.json",
+    "sha256": "4f474b15fc4b58f6652683fae279363fa4a822198f5aa06071ef2ce983bc33ef"
+  },
+  "correction": {
+    "json_pointer": "/new_untouched_scene_request/generation_command",
+    "reason": "The frozen wrapper command omitted its required --embodiedgen-root argument; no scientific selection or generator child command changes.",
+    "effective_generation_command": [
+      "/home/eureka/miniconda3/envs/kinovla/bin/python",
+      "scripts/generate_embodiedgen_room_source.py",
+      "--embodiedgen-root",
+      "/home/eureka/dependencies/EmbodiedGen-v2.0.0",
+      "--output-root",
+      "outputs/kinofail_realistic/scene_sources/embodiedgen_v2",
+      "--scene-id",
+      "indoor_bathroom_33",
+      "--room-type",
+      "Bathroom",
+      "--seed",
+      "20261213",
+      "--complexity",
+      "simple"
+    ]
+  },
+  "scientific_fields_changed": false,
+  "scene_selection_changed": false,
+  "seed_changed": false,
+  "material_assignment_changed": false,
+  "generator_child_command_changed": false,
+  "runtime_or_threshold_changed": false,
+  "new_scene_existed_when_amendment_was_written": false,
+  "runtime_output_existed_when_amendment_was_written": false
+}

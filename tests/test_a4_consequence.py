@@ -22,6 +22,7 @@ from kino_vla.eval.a4_consequence import (  # noqa: E402
     M_matrix,
     Outcome,
     agent_label_distribution,
+    attribution_to_label,
     compose_agent,
     physical_cost,
     primitive_to_label,
@@ -117,6 +118,11 @@ def test_primitive_to_label_map_covers_registry_vocabulary():
     assert primitive_to_label("Adjust_Posture") == "slow_low"
     assert primitive_to_label("continue") == "continue"
     assert primitive_to_label("Whatever") == "continue"
+    with pytest.raises(ValueError, match="observed mode"):
+        primitive_to_label("Switch_Gait", {}, strict_params=True)
+    assert attribution_to_label("effort_decay") == "crawl"
+    assert attribution_to_label("compliant_terrain") == "high_step"
+    assert attribution_to_label("nominal") == "continue"
 
 
 def test_compose_agent_regret_zero_for_perfect_attributor():
@@ -140,6 +146,29 @@ def test_compose_agent_regret_zero_for_perfect_attributor():
     assert (
         comp2.ers_per_scenario["O4_adhesion"] > comp.ers_per_scenario["O4_adhesion"]
     )  # higher cost
+
+
+def test_compose_agent_regret_integrates_distribution_not_argmax():
+    outs: list[Outcome] = []
+    canon = {"O4_adhesion": "backstep_detour"}
+    for _ in range(10):
+        outs.append(_out("O4_adhesion", "backstep_detour", reached=True, success=True))
+        outs.append(_out("O4_adhesion", "high_step", immob=True, success=False))
+    m = M_matrix(outs, ["O4_adhesion"], LABELS)
+    mixed = {"O4_adhesion": {"backstep_detour": 0.6, "high_step": 0.4}}
+    comp = compose_agent(mixed, m, ["O4_adhesion"], canon)
+    # The modal action is safe, but 40% of decisions are immobilizing and must contribute to both
+    # ERS and regret.  Historical argmax-only regret incorrectly returned zero here.
+    assert comp.mode_label_per_scenario["O4_adhesion"] == "backstep_detour"
+    assert comp.ers_per_scenario["O4_adhesion"] == pytest.approx(1.6)
+    assert comp.regret_per_scenario["O4_adhesion"] == pytest.approx(1.6)
+
+
+def test_compose_agent_rejects_missing_scenario_distribution():
+    outs = [_out("s", "continue", reached=True, success=True)]
+    m = M_matrix(outs, ["s"], LABELS)
+    with pytest.raises(ValueError, match="missing matrix scenario"):
+        compose_agent({}, m, ["s"], {"s": "continue"})
 
 
 def test_agent_label_distribution_from_per_item():

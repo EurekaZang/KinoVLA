@@ -2,16 +2,15 @@
 
 Closes the perception loop the synthetic ``ClipSegmenter`` left open. A robot-mounted RGB + depth +
 semantic-segmentation camera images the textured terrain; for every tagged hazard region the real
-camera pixels are CLIP-embedded + CLIP-labelled, and the region geometry is recovered by
-intersecting the camera rays (the camera's real intrinsics + its commanded look-at pose) with z=0.
+ camera pixels are CLIP-embedded + CLIP-labelled, and the region geometry is recovered from the
+camera's measured ``distance_to_image_plane`` depth and real intrinsics/pose.
 So WHICH pixels are a hazard (the semantic mask), WHAT it is (the open-vocab CLIP label + 512-d
 feature) and WHERE it is (the ground-ray footprint) all come from the real camera — not from a
 ground-truth rect or a label-keyed synthetic texture.
 
-Drop-in for the :class:`~kino_vla.map.traversability_map.Segmenter` protocol; proven by
-scripts/isaac_perception_probe.py (footprint error 0.18 m, CLIP 'mud' p=0.96). Geometry assumes the
-hazards lie on the ground plane (true for the Kino-Fail terrain operators), which makes the
-ray∩ground footprint exact and sidesteps depth-unprojection / camera-convention guesswork.
+Drop-in for the :class:`~kino_vla.map.traversability_map.Segmenter` protocol.  Using the measured
+depth is essential for O7: a timestamped depth fault must displace the observed map footprint while
+the RGB appearance remains unchanged.
 """
 
 from __future__ import annotations
@@ -20,7 +19,7 @@ import numpy as np
 
 from kino_vla.map.clip_appearance import ClipAppearanceEncoder
 from kino_vla.map.clip_segmentation import MATERIAL_VOCAB
-from kino_vla.map.rgbd import CameraExtrinsics, CameraIntrinsics, _pixel_rays
+from kino_vla.map.rgbd import CameraExtrinsics, CameraIntrinsics
 from kino_vla.map.types import ObservedRegion, SemanticRegion
 from kino_vla.utils.geometry import Rect
 
@@ -51,7 +50,7 @@ class LiveRtxSegmenter:
         return self._enc.embed_dim  # 512 (real CLIP ViT-B/32)
 
     def _ground_xy(self, cap: dict) -> tuple[np.ndarray, np.ndarray]:
-        """(H, W, 2) start-frame ground point per pixel + an (H, W) finite mask (ray ∩ z=0)."""
+        """Back-project measured image-plane depth to start-frame xy for every valid pixel."""
         h, w = cap["rgb"].shape[:2]
         eye, target = (
             np.asarray(cap["eye"], dtype=np.float64),
@@ -70,12 +69,24 @@ class LiveRtxSegmenter:
             cy=float(k[1, 2]),
         )
         extr = CameraExtrinsics.look(eye[:2], heading, float(eye[2]), pitch)
-        rays = _pixel_rays(intr, extr)  # (H, W, 3) world(=start-frame) rays
-        rz = rays[..., 2]
-        with np.errstate(divide="ignore", invalid="ignore"):
-            t = np.where(rz < -1e-6, -extr.pos[2] / rz, np.nan)
-        world_xy = extr.pos[:2] + t[..., None] * rays[..., :2]
-        finite = np.isfinite(t) & (t > 0.0) & (t < 30.0) & np.isfinite(world_xy).all(-1)
+        us = np.arange(w, dtype=np.float64) + 0.5
+        vs = np.arange(h, dtype=np.float64) + 0.5
+        grid_u, grid_v = np.meshgrid(us, vs)
+        ray_camera = np.stack(
+            [(grid_u - intr.cx) / intr.fx, (grid_v - intr.cy) / intr.fy, np.ones_like(grid_u)],
+            axis=-1,
+        )
+        # Isaac's distance_to_image_plane is optical-axis Z depth, so multiplying the
+        # unnormalised [x/z,y/z,1] ray gives camera-frame xyz directly.
+        ray_world = ray_camera @ extr.rot_wc.T
+        depth = np.asarray(cap["depth"], dtype=np.float64)
+        world_xy = extr.pos[:2] + depth[..., None] * ray_world[..., :2]
+        finite = (
+            np.isfinite(depth)
+            & (depth > 0.0)
+            & (depth < 30.0)
+            & np.isfinite(world_xy).all(-1)
+        )
         return world_xy, finite
 
     def segment(

@@ -1,0 +1,84 @@
+{
+  "schema_version": "kinofail.embodiedgen-route-surface-lighting-v5-development-matrix.v1",
+  "matrix_id": "route-surface-lighting-v5-phase-aware-20260721",
+  "status": "frozen_before_any_requested_v5_matrix_render",
+  "objective": "Validate the unchanged render-only route surface and seven-panel lighting architecture with a calibrated 0.01 m near clip, strict canonical context gates and phase-aware sensor gates for close-ground pitch views.",
+  "inference_scope": "development only; no cell is formal benchmark evidence",
+  "supersedes_invalid_measurement": {
+    "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/route_surface_lighting_v4_development_matrix_v1_invalidation_audit.json",
+    "sha256": "b9462fe7dc47d028dd3f790cf97f5cdcdb0470428329e685f7ffba0982d2970f",
+    "recovery_allowed": false
+  },
+  "pre_matrix_pilot": {
+    "scene_id": "indoor_kitchen_07",
+    "material_id": "train_tiles141",
+    "role": "code-path validation only; excluded from the 21-cell matrix",
+    "rtx_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/route_surface_lighting_v4_development/train_tiles141/rtx_qa_v5_development_pilot/rtx_scene_audit.json",
+      "sha256": "26514c27dc05a07063950bd259bca0d9f607aa14d1522bc169703d5362aa56c8",
+      "passed": true
+    }
+  },
+  "development_scenes": [
+    {"scene_id": "indoor_kitchen_07", "role": "legacy dark-floor failure", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "f8c23ff135f521dc19fb80cd3b1985a74cfe30be6438a951c246667e53757d13"},
+    {"scene_id": "indoor_livingroom_08", "role": "legacy balanced-light guard", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260813/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "eececf7f3f5a1fb74565291bdd023c2ad39752d29dbb16bb3691aa047adf3904"},
+    {"scene_id": "indoor_diningroom_09", "role": "legacy bright-floor overexposure guard", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260815/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "b0b9cca26f22cc746087d79f8fc1f2cde085b36d2a0e4ec7052073c257d36262"},
+    {"scene_id": "indoor_livingroom_15", "role": "v6-native passed-scene guard", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260827/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "0194330e8f83d3a17159c8b3467e21abc527420a294a38183788bc55af7b2fd8"},
+    {"scene_id": "indoor_livingroom_16", "role": "v6-native entry-oblique near-black failure", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260829/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "f7b7d133571ea13924347a53ddbb7b7fada42c7d9d4501cfbb8e2658e1baba11"},
+    {"scene_id": "indoor_livingroom_17", "role": "v6-native reverse-view all-black failure", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260831/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "a34b8935bb84473fa71f848c5ea2b1d7991210734a923f7a05ca8362013e1e2d"},
+    {"scene_id": "indoor_kitchen_20", "role": "v6-native bright passed-scene guard", "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260837/kinofail_corridor_v2_tracking030/compiled_scene_audit.json", "sha256": "aba8da94ff3d4f8ba357414241ca3e0f43f436302f1f692c5795640e427d3887"}
+  ],
+  "materials": [
+    {"material_id": "train_tiles141", "role": "bright high-contrast indoor tile"},
+    {"material_id": "train_concrete034", "role": "bright low-contrast concrete stress"},
+    {"material_id": "train_road007", "role": "dark marked-surface stress"}
+  ],
+  "material_policy": {
+    "material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+    "development_split_only": "train",
+    "reserved_for_future_confirmation": ["val", "test"],
+    "same_visual_surface_for_nominal_and_anomaly": true,
+    "operator_condition_independent": true
+  },
+  "frozen_architecture": {
+    "route_surface_width_m": 1.2,
+    "route_surface_endpoint_margin_m": 0.45,
+    "route_surface_lift_m": 0.003,
+    "route_surface_collision": false,
+    "route_surface_purpose": "render",
+    "dome_intensity": 350.0,
+    "panel_count": 7,
+    "panel_intensity": 450.0,
+    "panel_exposure": 7.0,
+    "endpoint_extension_m": 0.45
+  },
+  "view_contract": {
+    "near_clip_m": 0.01,
+    "far_clip_m": 1000.0,
+    "canonical_context": {"min_std_luminance": 0.035, "min_dynamic_range": 0.12, "max_black_fraction": 0.9, "max_white_fraction": 0.9, "min_quantized_colors_5bit": 64},
+    "pitch_sensor": {"min_mean_luminance": 0.005, "min_std_luminance": 0.005, "max_black_fraction": 0.995, "max_white_fraction": 0.995, "min_quantized_colors_5bit": 8},
+    "minimum_canonical_pairwise_rgb_l1": 0.01
+  },
+  "execution_contract": {
+    "scene_count": 7,
+    "material_count": 3,
+    "exact_render_count": 21,
+    "one_render_per_scene_material_cell": true,
+    "additional_candidate_forbidden": true,
+    "threshold_change_after_render_forbidden": true,
+    "renderer_resolution": [960, 540],
+    "warmup_frames_per_view": 36,
+    "view_count_per_render": 7
+  },
+  "success_rule": "all eight structural checks and all eight phase-aware visual checks pass in all 21 cells",
+  "frozen_code": {
+    "scene_v4": {"path": "kino_vla/sim/embodiedgen_scene_v4.py", "sha256": "2e4541d6cc6dcf07adf6c2e441e15c63c43490703b305728a9282827f9881dd3"},
+    "refiner_v4": {"path": "scripts/refine_embodiedgen_kinofail_scene_v4.py", "sha256": "4ece78e871242723b5bf4a83d1cf4b91ef56effec750def884593c0a2a6d99b9"},
+    "visual_contract_v5": {"path": "kino_vla/eval/embodiedgen_visual_contract_v5.py", "sha256": "be383b861a17ec7c27f12ffa690e28a054811aac8bdd270fb8491d538ace70ef"},
+    "rtx_qa_v5": {"path": "scripts/isaac_render_embodiedgen_scene_qa_v5.py", "sha256": "bd6db19ec7772ab0b7b28d63e909468777fc6189104784e7587e8badac15191f"},
+    "matrix_auditor_v5": {"path": "scripts/audit_embodiedgen_route_surface_lighting_v5_matrix.py", "sha256": "9cdd18d9991842fba5be6aada605119466d0e84480f4490ecdc060061a43a60f"},
+    "geometry_tests": {"path": "tests/test_embodiedgen_scene_v4.py", "sha256": "0ed2157c02e66ca8ab5ace98e6749e6991e8cddcfc118ba7f5e6472f93a1303d"},
+    "view_contract_tests": {"path": "tests/test_embodiedgen_visual_contract_v5.py", "sha256": "1ca39776e250c4460eda33722706494857058349e3ca827422d8056c962fd8a6"}
+  },
+  "future_confirmation_exclusion": ["indoor_kitchen_07", "indoor_livingroom_08", "indoor_diningroom_09", "indoor_livingroom_15", "indoor_livingroom_16", "indoor_livingroom_17", "indoor_kitchen_20"]
+}

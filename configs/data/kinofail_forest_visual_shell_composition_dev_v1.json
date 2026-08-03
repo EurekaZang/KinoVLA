@@ -1,0 +1,77 @@
+{
+  "schema_version": "kinofail.visual-shell-isaac-composition.v1-development",
+  "status": "development_only_not_scene_registry_not_a0_a7_evidence",
+  "scene_id": "forest_trail_01",
+  "source_scene_id": "forest_trail_shell_dev01",
+  "domain": "wild",
+  "split": "train",
+  "source": {
+    "mesh_stage_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/mesh_development/mesh_stage_audit.json",
+      "sha256": "8b28cbced80f51c3f0397dfe2bf65f130288171821203d09cdc96db05ff59c91"
+    },
+    "metric_visual_mesh": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/mesh_development/mesh_model_metric_visual.ply",
+      "sha256": "799ee5f959b108f7cf003860472dc3fdb88433a36370fa770454c730cf1e8383"
+    },
+    "translated_view_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/mesh_development/translated_view_qa_v2/novel_view_stage_audit.json",
+      "sha256": "e0ad94156b11552bd56bf2482ca86ea86da32cf020d5c1142b38520798aee9ff"
+    },
+    "translated_view_review": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/mesh_development/translated_view_review_audit.json",
+      "sha256": "dd3590e6f6dc1a4de328b48eeab676a652e829e549ed61b8c1ff9fd6f422452a"
+    }
+  },
+  "coordinate_contract": {
+    "source_up_axis": "+metric_y",
+    "source_forward_axis": "+metric_z",
+    "isaac_up_axis": "+isaac_z",
+    "isaac_go2_forward_axis": "+isaac_x",
+    "isaac_xyz_from_metric_xyz": ["metric_z", "metric_x", "metric_y"],
+    "matrix": [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]],
+    "determinant": 1.0,
+    "pano_eye_metric_xyz_m": [0.0, 2.1180014926769117, 0.0],
+    "pano_eye_isaac_xyz_m": [0.0, 0.0, 2.1180014926769117]
+  },
+  "route": {
+    "waypoints_xy_m": [[0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [3.0, 0.0], [4.0, 0.0]],
+    "surface_width_m": 1.4,
+    "endpoint_margin_m": 0.75,
+    "floor_top_z_m": 0.0,
+    "floor_thickness_m": 0.08,
+    "appearance_lift_m": 0.003,
+    "required_clearance_m": 0.55,
+    "nominal_static_friction": 0.8,
+    "nominal_dynamic_friction": 0.6
+  },
+  "appearance": {
+    "material_lock": {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    },
+    "route_material_id": "train_ground037",
+    "route_material_is_operator_independent": true,
+    "route_material_may_be_swapped_without_physics_change": true,
+    "shell_vertex_color_is_visual_only": true,
+    "dome_light_intensity": 550.0,
+    "distant_light_intensity": 1800.0,
+    "distant_light_angle_deg": 2.0,
+    "distant_light_rotation_xyz_deg": [35.0, -25.0, -20.0]
+  },
+  "output": {
+    "directory": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_v1/forest_trail_shell_dev01/isaac_composition_dev_v1"
+  },
+  "admission_policy": {
+    "embodiedgen_mesh_must_be_render_only": true,
+    "embodiedgen_mesh_must_have_no_collision_or_rigid_body_api": true,
+    "only_kino_route_floor_may_author_collision": true,
+    "default_isaac_grid_must_be_hidden_at_runtime": true,
+    "body_fixed_go2_front_rtx_required": true,
+    "articulated_go2_route_qa_required": true,
+    "independent_human_review_required": true,
+    "operator_capability_audit_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

@@ -161,9 +161,11 @@ def _binom_two_sided_p(k: int, n: int) -> float:
         return 1.0
     from math import comb
 
-    probs = [comb(n, i) * 0.5**n for i in range(n + 1)]
-    p_obs = probs[k]
-    return float(min(1.0, sum(pi for pi in probs if pi <= p_obs + 1e-12)))
+    # McNemar supplies min(b, c), so k is in the lower half of the symmetric
+    # Binomial(n, 0.5) distribution and the exact two-sided p is 2*lower-tail.
+    # An absolute comparison tolerance is invalid for very small probabilities.
+    lower_tail = sum(comb(n, i) * 0.5**n for i in range(k + 1))
+    return float(min(1.0, 2.0 * lower_tail))
 
 
 def mcnemar(a_correct: list[bool], b_correct: list[bool]) -> dict:
@@ -188,7 +190,7 @@ def mcnemar(a_correct: list[bool], b_correct: list[bool]) -> dict:
         "b_lo_right_hi_wrong": b,
         "c_lo_wrong_hi_right": c,
         "discordant": disc,
-        "p_exact_two_sided": round(p_exact, 5),
+        "p_exact_two_sided": p_exact,
         "chi2_cc": round(chi2, 4),
         "higher_row_better": c > b,
         "significant_05": p_exact < 0.05,
@@ -248,11 +250,15 @@ def _balanced(results: list[ItemResult], *, n_boot: int = 2000, seed: int = 0) -
         "n_O4": len(o4),
         "n_O2": len(o2),
         "attribution_balanced": round(_macro(o4, o2, "attr_ok"), 3),
-        "attribution_balanced_ci": [round(float(np.percentile(attr_bs, 2.5)), 3),
-                                    round(float(np.percentile(attr_bs, 97.5)), 3)],
+        "attribution_balanced_ci": [
+            round(float(np.percentile(attr_bs, 2.5)), 3),
+            round(float(np.percentile(attr_bs, 97.5)), 3),
+        ],
         "correct_recovery_balanced": round(_macro(o4, o2, "joint_ok"), 3),
-        "correct_recovery_balanced_ci": [round(float(np.percentile(cr_bs, 2.5)), 3),
-                                        round(float(np.percentile(cr_bs, 97.5)), 3)],
+        "correct_recovery_balanced_ci": [
+            round(float(np.percentile(cr_bs, 2.5)), 3),
+            round(float(np.percentile(cr_bs, 97.5)), 3),
+        ],
         "o4_attr": round(sum(r.attr_ok for r in o4) / len(o4), 3),
         "o2_attr": round(sum(r.attr_ok for r in o2) / len(o2), 3),
     }

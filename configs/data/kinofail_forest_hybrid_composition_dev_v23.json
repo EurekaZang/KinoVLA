@@ -1,0 +1,54 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v7-development",
+  "iteration_id": "forest-slope-unseen-appearance-metric-geometry-g06-v23",
+  "status": "frozen_unseen_scene_candidate_before_operator_admission_v3_runtime",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v14.json",
+    "sha256": "f1b60ae56f6a8e35ff7a2c977af6d7ea79dda4220c85b2be9e4f6b8f7fada824"
+  },
+  "overrides": {
+    "scene_id": "forest_slope_metric_g06",
+    "source_scene_id": "forest_slope_shell_metric_g06_confirmation",
+    "background": {
+      "panorama": {"path": "outputs/assets/forest_hdri_polyhaven_confirmation_v3/forest_slope/forest_slope_4k.hdr", "sha256": "112c4035c56e7699637ec798800edaade535cba6f3bfb8b0a602172c4ec30e52"},
+      "preflight": {"path": "outputs/assets/forest_hdri_polyhaven_confirmation_v3/forest_slope/preflight.json", "sha256": "ffe1bff10ae88e665ec5133d8b0cedcc4b82ef88f64ec1143f9759e9454c8452"},
+      "intensity": 400.0,
+      "rotation_xyz_deg": [0.0, 0.0, 35.0]
+    },
+    "appearance": {
+      "route_material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+      "route_material_id": "test_ground073",
+      "route_expected_split": "test",
+      "surrounding_material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+      "surrounding_material_id": "test_gravel022",
+      "surrounding_expected_split": "test"
+    },
+    "route": {
+      "waypoints_xy_m": [[0.0, -0.52], [1.225, -0.52], [2.45, -0.52], [3.675, -0.52], [4.90, -0.52]],
+      "surface_width_m": 1.45,
+      "endpoint_margin_m": 0.82
+    },
+    "near_field": {
+      "prop_transform_overrides": {
+        "roots_left_00": {"xyz_m": [0.30, 3.25, 0.0], "rotation_xyz_deg": [0.0, 0.0, 44.0]},
+        "roots_right_00": {"xyz_m": [3.60, -3.70, 0.0], "rotation_xyz_deg": [0.0, 0.0, 218.0]},
+        "roots_left_01": {"xyz_m": [6.00, 3.35, 0.0], "rotation_xyz_deg": [0.0, 0.0, 132.0]},
+        "rocks_left_00": {"xyz_m": [2.10, 3.40, 0.08], "rotation_xyz_deg": [0.0, 0.0, 16.0]},
+        "rocks_right_00": {"xyz_m": [1.00, -3.60, 0.08], "rotation_xyz_deg": [0.0, 0.0, 177.0]},
+        "rocks_right_01": {"xyz_m": [6.55, -3.65, 0.08], "rotation_xyz_deg": [0.0, 0.0, 296.0]},
+        "stump_left_00": {"xyz_m": [4.70, 3.45, 0.10], "rotation_xyz_deg": [0.0, 0.0, 68.0]},
+        "stump_right_00": {"xyz_m": [-1.15, -3.55, 0.10], "rotation_xyz_deg": [0.0, 0.0, 252.0]}
+      },
+      "opaque_composited_ground": {"seed": 2323, "centerline_wander_m": 0.09, "phase_rad": 0.41},
+      "visual_height_variation": {"phase_rad": 2.72}
+    },
+    "output": {"directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_slope_metric_g06_confirmation/isaac_hybrid_composition_dev_v23"}
+  },
+  "confirmation_contract": {
+    "appearance_family_unseen_by_g01_g05": true,
+    "metric_geometry_unseen_by_g01_g05": true,
+    "test_split_route_and_surrounding_materials": true,
+    "selected_before_v3_runtime": true,
+    "counts_as_a0_a7_evidence": false
+  }
+}

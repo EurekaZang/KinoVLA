@@ -1,0 +1,54 @@
+{
+  "acceptance": {
+    "beat_every_baseline_point_estimate": true,
+    "maximum_wrong_modality_direction_accuracy": 0.6,
+    "minimum_balanced_accuracy": 0.9,
+    "minimum_delta_ci95_lower": -0.05,
+    "minimum_texture_swap_hard_consistency": 0.8,
+    "minimum_worst_direction_accuracy": 0.85,
+    "minimum_worst_scene_accuracy": 0.8
+  },
+  "administrative_amendment": {
+    "acceptance_thresholds_changed": false,
+    "all_t3_pairs_recollected": true,
+    "amendment_id": "C2-v5-T3-A1-strong-material-swaps",
+    "amendment_sha256": "d502b0bff96463c1665890070f2b11d8accf862cdb4c785b3a9d18fb39ca5fc6",
+    "architecture_changed": false,
+    "model_predictions_inspected": false,
+    "temporal_contract_changed": false
+  },
+  "amendment_model_predictions_available_at_freeze": false,
+  "base_protocol_path": "configs/eval/kinofail_realistic_c2_bidirectional_formal_v5.json",
+  "base_protocol_sha256": "00faf2fe2274493dab777220ea21a71c7cd341ca97e95156608c151ee238918a",
+  "bootstrap": {
+    "draws": 20000,
+    "seed": 2026072451,
+    "unit": "scene cluster with matched case resampling nested within scene"
+  },
+  "claim_boundary": "C2 v5 tests bidirectional modality conflict on four attribution categories, three appearance interventions per cause, and three C2-fresh realistic scene instances. Together with six-scene LOSO development, it supports post-interaction structured modality selection under the frozen T2/T3 battery; it does not claim universal optimality across all eleven operators.",
+  "created_utc": "2026-07-24T15:19:11.674232+00:00",
+  "development_feature_manifest_sha256": "016b792737144d02c853cc6e70e558c7fa073bd7e6f6a6b3eed99b7bd67b1a60",
+  "development_report_sha256": "0abaad6278e8aac15748edb721fba60d2cd3d304886839dabffa73e9d3a12511",
+  "evaluator_sha256": "9e37c17713b39b87eaebcd00b43a6e5993397337844c0a72e6c6bf2f61db24f9",
+  "feature_builder_sha256": "1da760e9476b3beb1ab0bb39ca8a4459a318f8b74e9bd2bb3f5d0d3352941a46",
+  "frozen_model_contract": {
+    "footprint_margin_m": 0.35,
+    "outcome_aligned_window": false,
+    "post_encounter_delay_s": 0.3,
+    "proprio_dimension": 80,
+    "scene_or_operator_metadata_allowed": false,
+    "selected_method": "structured_post_interaction_router_v5",
+    "window_samples": 21
+  },
+  "model_predictions_available_at_freeze": false,
+  "protocol_id": "kinofail-realistic-c2-bidirectional-confirmation-v5-amendment1",
+  "scene_registry_sha256": "6665a1accf81446b74d8eda81dc736f0077a17b292e9ec3041c2c4f40ae757f5",
+  "schema_version": "kinofail.realistic-c2-bidirectional-protocol.v5",
+  "status": "frozen_amendment1_before_full_t3_recollection",
+  "t2_collection_protocol_sha256": "fc00aedd1a3868ba1a8f36cb90506b5ed2e05eab0df51e3c0cf64322498581b4",
+  "t2_schedule_sha256": "f8f4eed77de3c88df768cd94d9a5730b60eaeb7a70ab07b178128ebdee1c8863",
+  "t3_collection_protocol_sha256": "27d02c5d0932be6f11ef17353aa0f7362d0fa6478597d8965b52feb505d7e235",
+  "t3_schedule_sha256": "9bd80a2eafbac477b1ddfa25c2d8e0d57678421e19ed7bd67e0ee6d28d1b5e6b",
+  "temporal_contract_sha256": "922170d93840e039a91da1718e41d4e55a73c81c9d44a4cf9bbcd9076a282e89",
+  "v5_confirmation_outcomes_available_at_freeze": false
+}

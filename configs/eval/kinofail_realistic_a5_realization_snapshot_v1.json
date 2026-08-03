@@ -1,0 +1,51 @@
+{
+  "schema_version": "kinofail.realistic-snapshot-protocol.v2",
+  "protocol_id": "realistic_a5_alternate_realization_snapshot_v1",
+  "status": "frozen_before_collection_outcomes",
+  "development_only": false,
+  "source_schedule": "outputs/kinofail_realistic/design_a5_realization_v1/schedule.jsonl",
+  "source_schedule_sha256": "662d0316bdf860affb73d74b71a5c35c6716376613f94df2105f502ef388c37c",
+  "source_corpus_root": "outputs/kinofail_realistic/corpus_a5_realization_v1",
+  "output_dir": "outputs/eval/realistic_a0_a7_v4/a5_realization_snapshots",
+  "selection": {
+    "operators_with_admitted_event_adapter": [
+      "O8_invisible_collider",
+      "O9_high_centering"
+    ],
+    "require_complete_counterfactual_pair": true,
+    "require_evaluation_eligible": false,
+    "require_runtime_validation_passed": true,
+    "allow_nonblocking_runtime_issue_suffixes": [
+      "appearance_effect_too_small",
+      "rgb_spatial_contrast_too_low"
+    ],
+    "required_collection_protocol_id": "kinofail_realistic_a5_realization_360_v2"
+  },
+  "appearance_interventions": {
+    "include_all_manifest_views": true,
+    "share_proprio_across_views": true,
+    "require_timestamp_identity_across_views": true,
+    "count_views_as_independent_physical_samples": false
+  },
+  "operator_event_adapters": {
+    "coverage": "O8/O9",
+    "selection_rule": "first predeclared measured region exposure; no outcome-maximum heuristic"
+  },
+  "temporal_alignment": {
+    "anchor": "first_predeclared_privileged_operator_event_in_anomaly_only",
+    "decision_delay_s": 0.0,
+    "decision_delay_s_by_operator": {},
+    "minimum_decision_time_s": 0.42,
+    "nominal_alignment": "reuse_anomaly_event_and_decision_times_exactly",
+    "rgb_offsets_from_decision_s": [-0.4, -0.3, -0.2, -0.1, 0.0],
+    "max_rgb_target_skew_s": 0.041,
+    "proprio_window_s": 0.5,
+    "proprio_samples": 21,
+    "max_proprio_end_skew_s": 0.021
+  },
+  "publication_guard": {
+    "may_satisfy_realistic_a5_physical_realization_axis": true,
+    "reason": "Frozen O8/O9 alternate geometry mechanisms across nine scenes, two severities and five seeds; scope may not be generalized to all eleven operators."
+  },
+  "a8_in_scope": false
+}

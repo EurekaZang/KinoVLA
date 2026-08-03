@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from kino_vla.sim.backend import LocomotionBackend
 from kino_vla.sim.operators.base import FailureOperator
+from kino_vla.sim.terramechanics import FootTerramechanicsConfig
 from kino_vla.sim.types import ResistanceRegion
 from kino_vla.utils.geometry import Rect
 
@@ -44,6 +45,11 @@ class ComplianceField(FailureOperator):
         d_sink: float,
         appearance_class: str = "brown_mud",
         visual_cost: float = 0.3,
+        *,
+        realistic_foot_model: bool = False,
+        shear_velocity_scale_mps: float = 0.12,
+        matched_control: bool = False,
+        longitudinal_axis: str = "x",
     ) -> None:
         if k_c < 0.0 or c_c < 0.0:
             raise ValueError("compliance stiffness/damping must be non-negative")
@@ -55,12 +61,36 @@ class ComplianceField(FailureOperator):
         self._d_sink = float(d_sink)
         self._appearance = appearance_class
         self._visual_cost = float(visual_cost)
+        self._realistic_foot_model = bool(realistic_foot_model)
+        self._shear_velocity_scale_mps = float(shear_velocity_scale_mps)
+        self._matched_control = bool(matched_control)
+        self._longitudinal_axis = str(longitudinal_axis)
+        if self._longitudinal_axis not in {"x", "y"}:
+            raise ValueError("longitudinal_axis must be 'x' or 'y'")
+        if self._matched_control and not self._realistic_foot_model:
+            raise ValueError("matched O2 control requires the realistic per-foot model")
 
     @property
     def region(self) -> Rect:
         return self._region
 
     def on_reset(self, backend: LocomotionBackend) -> None:
+        if self._realistic_foot_model:
+            add_foot_compliance = getattr(backend, "add_foot_compliance", None)
+            if not callable(add_foot_compliance):
+                raise TypeError("realistic O2 requires a backend with add_foot_compliance")
+            add_foot_compliance(
+                FootTerramechanicsConfig(
+                    region=self._region,
+                    max_sink_depth_m=self._d_sink,
+                    shear_retention=self._c_c,
+                    vertical_stiffness_n_per_m=self._k_c,
+                    shear_velocity_scale_mps=self._shear_velocity_scale_mps,
+                    longitudinal_axis=self._longitudinal_axis,
+                ),
+                matched_control=self._matched_control,
+            )
+            return
         backend.add_resistance_regions(
             [
                 ResistanceRegion(
@@ -91,4 +121,8 @@ class ComplianceField(FailureOperator):
             "region_cy": self._region.cy,
             "region_hx": self._region.hx,
             "region_hy": self._region.hy,
+            "realistic_foot_model": float(self._realistic_foot_model),
+            "shear_retention": self._c_c,
+            "matched_control": float(self._matched_control),
+            "longitudinal_axis_is_y": float(self._longitudinal_axis == "y"),
         }

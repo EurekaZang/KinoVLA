@@ -1,0 +1,30 @@
+{
+  "schema_version": "kinofail.realistic-a6-analysis-protocol.v1",
+  "protocol_id": "kinofail_realistic_a6_analysis_v1",
+  "status": "frozen_before_a6_simulation",
+  "collection_protocol": "configs/data/kinofail_realistic_a6_boundary_formal_v2.json",
+  "schedule": "outputs/kinofail_realistic/design_a6_boundary_v2/schedule.jsonl",
+  "corpus_root": "outputs/kinofail_realistic/corpus_a6_boundary_v2",
+  "parameter_scalar": {
+    "O1_mu_field": {"field": "mu_d", "worse_direction": "decreasing"},
+    "O2_compliance": {"field": "sink_depth_m", "worse_direction": "increasing"},
+    "O4_tether": {"field": "tangential_force_cap_n", "worse_direction": "increasing"},
+    "O5_payload": {"field": "mass_kg", "worse_direction": "increasing"},
+    "O10_effort_decay": {"field": "effort_floor", "worse_direction": "decreasing"}
+  },
+  "effect_event": {
+    "paired_excess_fall": true,
+    "or_route_progress_loss_m_ge": 0.25,
+    "or_max_tilt_increase_rad_ge": 0.20
+  },
+  "boundary": "first adjacent nominal/mild/moderate/severe interval whose seed-level effect rate crosses 0.5; otherwise report one-sided/unidentified bracket",
+  "bootstrap": {"repetitions": 10000, "seed": 20260723, "unit": "paired scene seed within level"},
+  "acceptance": {
+    "operator_parameter_families": 5,
+    "levels_per_family": 4,
+    "independent_seeds_per_level": 5,
+    "interval_estimates_required": true,
+    "interpolated_point_forbidden_without_identified_bracket": true
+  },
+  "a8_in_scope": false
+}

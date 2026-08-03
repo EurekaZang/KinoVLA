@@ -11,6 +11,7 @@ from kino_vla.data.taxonomy import FailureTaxonomy
 from kino_vla.shield.primitive_compiler import (
     AdjustPosture,
     Backstep,
+    Continue,
     HoldAndRequest,
     ReplanWaypoint,
     SetConstraint,
@@ -120,6 +121,7 @@ def test_parse_or_reject_is_total(vocab):
 
 # --------------------------------------------------------------- compiler mapping
 def test_to_compiler_primitive_context_free():
+    assert to_compiler_primitive(RecoveryPrimitive("continue", {})) == Continue()
     assert to_compiler_primitive(RecoveryPrimitive("Backstep", {"distance_m": 0.5})) == Backstep(
         0.5
     )
@@ -135,6 +137,27 @@ def test_to_compiler_primitive_context_free():
     assert to_compiler_primitive(
         RecoveryPrimitive("Hold_and_Request", {"reason": "saturated"})
     ) == HoldAndRequest("saturated")
+
+
+def test_continue_round_trips_as_nominal(vocab):
+    syn, cats = vocab
+    out = parse_vla_decision(
+        _action("nominal", "continue", {}), synonyms=syn, valid_categories=cats
+    )
+    assert out.ok
+    assert out.attribution == "nominal"
+    assert out.primitive_name == "continue"
+
+
+def test_continue_rejects_parameters(vocab):
+    syn, cats = vocab
+    out = parse_vla_decision(
+        _action("nominal", "continue", {"reason": "not needed"}),
+        synonyms=syn,
+        valid_categories=cats,
+    )
+    assert not out.ok
+    assert out.reject_code.startswith(REJECT_SCHEMA)
 
 
 def test_replan_needs_unprojected_point():

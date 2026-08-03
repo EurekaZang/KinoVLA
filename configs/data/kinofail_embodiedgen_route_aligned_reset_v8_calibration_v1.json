@@ -1,0 +1,73 @@
+{
+  "schema_version": "kinofail.embodiedgen-route-aligned-reset-v8-calibration.v1",
+  "purpose": "Test route-aligned proportional tracking from a deterministic shared lane reset on the previously failing Kitchen31 O2 nominal lane.",
+  "evidence_boundary": {
+    "evidence_role": "controller_architecture_calibration_only",
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "completion_requires_new_realistic_corpus_training_inference_and_a0_a7": true
+  },
+  "calibration_basis": {
+    "failed_preflight_metadata_typo": {"path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_route_aligned_reset_v8_calibration_v1/preflight_audit.json", "sha256": "e5b3fe8f4904573800005ba0e7cbd87fd8326dfcc9315f88b859d6c6f1de01f1"},
+    "v5_o2_nominal_manifest": {"path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_terrain_operator_v5_calibration_v1/kitchen31/o2/nominal/lane_manifest.json", "sha256": "726c6054f58f9e96c87e94f0d05609312cddefe108526d1d354dc4600dd653ba"},
+    "failed_v7_v2_manifest": {"path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_settled_lookahead_v7_calibration_v2/kitchen31/o2_nominal_attempt1/lane_manifest.json", "sha256": "ebaae9adf4bf98574e74de065da85ab5ef0bafeccf0d1b1a3bddf90afdef3666"},
+    "failed_v7_v2_telemetry": {"path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_settled_lookahead_v7_calibration_v2/kitchen31/o2_nominal_attempt1/telemetry.jsonl", "sha256": "e8b2dd29445991caa0b9d8c220c39cccfb595591fbaa757b81115dc2dbd4ca86"},
+    "observed_v5_result": "route_aligned_p_completed_without_fall_but_exceeded_0.30_m_tracking_budget_by_0.043022_m",
+    "observed_v7_result": "lookahead_yaw_phase_lag_caused_fall_before_operator_contact",
+    "single_change": "start_on_the_same_frozen_target_lane_instead_of_acquiring_it_during_forward_motion"
+  },
+  "source_freeze": {
+    "collector_wrapper": {"path": "scripts/isaac_collect_realistic_route_operator_lane_v8.py", "sha256": "544b2d480911c9292698901896a1235577a81f969611c15b3bc4b81bfd4ae5eb"},
+    "collector_engine": {"path": "scripts/isaac_collect_realistic_route_operator_lane_v6.py", "sha256": "0e8c8b5e3a9abe25b1f3be4b8e49e0111b556c9f6f0bebf9a1794c9b208db5ee"},
+    "controller": {"path": "kino_vla/sim/realistic_route_controller_v3.py", "sha256": "7e0f8281cd394cf6faa57bfc49aedc29444c1928358a8a7bf033b5499f12bf8d"},
+    "runtime_gate": {"path": "kino_vla/eval/realistic_route_runtime_gate.py", "sha256": "9148478366022e4ae3db4a0bfe45218a272d5b57ceede1cce8593db41c146bb5"},
+    "scene_contract": {"path": "kino_vla/eval/realistic_route_scene_contract.py", "sha256": "c466a8a6aa5b29d70cbe426e5c092a5cbac1e7792bcdf51812d3f5e7125e0022"},
+    "route_protocol": {"path": "kino_vla/sim/realistic_route_protocol_v2.py", "sha256": "10256042d810456526a6ab5b93f291a612ff4ebd642adda7fd9d0de3d750572e"},
+    "backend": {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "4f602d4f178c08e685ba9bd4a69bab6dbf111f7d175142471c3a0e821e7b2bb1"},
+    "o2_operator": {"path": "kino_vla/sim/operators/o2_compliance.py", "sha256": "63abd0dbde8b38d90597e3a6daf7997d3936e9dedfeb72d1ddf715a5de13517e"},
+    "material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"}
+  },
+  "scene": {
+    "scene_id": "indoor_kitchen_31",
+    "scene_family": "Kitchen",
+    "material_id": "test_ground073",
+    "route_surface_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/route_surface_v7_admission_audit.json", "sha256": "492729e6bc7315737976299ba0eb24b540480216a3be6816d62a5b185f2c45d9"},
+    "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/compiled_scene_audit.json", "sha256": "81155f31d69c0f05f8d5d55a51061589e3bc1a2e574a05444069788889141cf3"},
+    "terrain_episode": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/episode_terrain_v2.usda", "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"},
+    "offline_usd_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/offline_usd_audit.json", "sha256": "5f07c3fb7a45e10b3ef1bdbf5685fde0410fba1a9cf46e5cc498ac5ab8d334e3"}
+  },
+  "execution_policy": {
+    "fresh_isaac_process": true,
+    "one_attempt": true,
+    "failed_attempt_retained": true,
+    "run_o2_anomaly_only_after_nominal_passes": true,
+    "run_unseen_scenes_only_after_kitchen_nominal_passes": true,
+    "same_start_and_controller_required_for_all_operators_and_lanes": true,
+    "start_state_may_not_depend_on_operator_or_lane": true
+  },
+  "runtime": {
+    "operator": "o2",
+    "lane": "nominal",
+    "seed": 20261062,
+    "camera_profile": "go2_front_calib_b",
+    "steps": 650,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": 0.0,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.6,
+    "start_lateral_offset_m": -0.25,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": -0.25,
+    "forward_speed_mps": 0.2,
+    "maximum_route_deviation_m": 0.3,
+    "minimum_nominal_region_samples": 40,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.16,
+    "yaw_rate_limit_radps": 0.6
+  },
+  "planned_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_route_aligned_reset_v8_calibration_v1/kitchen31/o2_nominal_attempt1"
+}

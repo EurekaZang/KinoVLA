@@ -172,6 +172,27 @@ def test_o8_no_wall_robot_passes():
     assert obs.pos[0] > 2.0  # without the wall it sails past x = 2
 
 
+def test_o8_collision_disabled_counterfactual_retains_visual_parameters():
+    wall = Rect(cx=2.0, cy=0.0, hx=0.03, hy=2.0)
+    op = InvisibleCollider(
+        region=wall,
+        height_m=0.22,
+        collision_enabled=False,
+        geometry_kind="transparent_acrylic",
+        optical_transmission=0.96,
+    )
+    backend = make_backend(start=(0.0, 0.0))
+    backend.reset(0)
+    op.on_reset(backend)
+    obs = drive(backend, op, cmd=(0.8, 0.0, 0.0), n_steps=400)
+    assert obs.pos[0] > 2.0
+    theta = op.get_privileged_state()
+    assert theta["height_m"] == pytest.approx(0.22)
+    assert theta["collision_enabled"] == pytest.approx(0.0)
+    assert theta["rendered"] == pytest.approx(1.0)
+    assert theta["optical_transmission"] == pytest.approx(0.96)
+
+
 def test_o8_determinism_gate():
     stack = OperatorStack([InvisibleCollider(region=Rect(cx=2.0, cy=0.0, hx=0.3, hy=2.0))])
     h1, _ = run_stack(stack, seed=9, cmd=(0.8, 0.0, 0.0))

@@ -50,6 +50,11 @@ def main() -> int:
 
     AppLauncher.add_app_launcher_args(ap)
     ap.add_argument("--out", default="outputs/eval/a3/corpus_t3")
+    ap.add_argument("--appearance-config", default="eval/appearance_library.yaml")
+    ap.add_argument("--directions", choices=("all", "looks_safe", "reverse"), default="all")
+    ap.add_argument("--appearance-split", choices=("all", "train", "test"), default="all")
+    ap.add_argument("--seed-base", type=int, default=SEED_BASE)
+    ap.add_argument("--seeds-per-cell", type=int, default=SEEDS_PER_CELL)
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--cruise", type=float, default=0.6)
     ap.add_argument("--steps", type=int, default=300)
@@ -79,7 +84,7 @@ def main() -> int:
     from kino_vla.vla import scenarios as S
 
     reg = load_registry()
-    lib = load_appearance_library(register=True)
+    lib = load_appearance_library(args.appearance_config, register=True)
     hcfg = load_config("data/hindsight.yaml")
     lane_y = 4.0
 
@@ -90,10 +95,14 @@ def main() -> int:
         """The library appearances to sweep for a scenario's appearance_class. Handles both
         appearance-ids and class-names (e.g. hazard_decal_benign, a class not an id)."""
         if canonical_app in lib._appearances:
-            return lib.appearances(lib.semantic_class(canonical_app))
-        if canonical_app in lib.classes():           # it IS a class name (hazard_decal_benign)
-            return lib.appearances(canonical_app)
-        return lib.appearances(_APP_CLASS_FALLBACK[canonical_app])
+            values = lib.appearances(lib.semantic_class(canonical_app))
+        elif canonical_app in lib.classes():         # it IS a class name (hazard_decal_benign)
+            values = lib.appearances(canonical_app)
+        else:
+            values = lib.appearances(_APP_CLASS_FALLBACK[canonical_app])
+        if args.appearance_split != "all":
+            values = [item for item in values if item.split == args.appearance_split]
+        return values
 
     backend = IsaacPolicyBackend(load_config("sim/go2_skeleton.yaml"), np.array([0.0, 0.0]), 0.0)
     dt = backend.dt
@@ -200,38 +209,53 @@ def main() -> int:
                 f"{sid}__binding": bind_arr}
 
     batch: dict[str, np.ndarray] = {}
-    seeds = range(1 if args.quick else SEEDS_PER_CELL)
+    seeds = range(1 if args.quick else args.seeds_per_cell)
 
     # O7 looks_safe: μ sweep (dose–response + the μ=0.09 heatmap point)
-    spec = reg["O7_looks_safe"]
-    for mu in (O7_MU_SWEEP[:1] if args.quick else O7_MU_SWEEP):
-        for app in appearances_for(spec.appearance_class):
-            for si in seeds:
-                scn = S.o7_visual_remap(lane_y, mu_s=mu, mu_d=mu)
-                fr = collect("O7_looks_safe", scn, spec, app.id, SEED_BASE + si, mu_label=mu)
-                if fr:
-                    batch.update(fr)
-        print(f"[a3] O7_looks_safe μ={mu}: collected (fire {n_fire}/{n_total})", flush=True)
+    if args.directions in {"all", "looks_safe"}:
+        spec = reg["O7_looks_safe"]
+        for mu in (O7_MU_SWEEP[:1] if args.quick else O7_MU_SWEEP):
+            for app in appearances_for(spec.appearance_class):
+                for si in seeds:
+                    scn = S.o7_visual_remap(lane_y, mu_s=mu, mu_d=mu)
+                    fr = collect(
+                        "O7_looks_safe",
+                        scn,
+                        spec,
+                        app.id,
+                        args.seed_base + si,
+                        mu_label=mu,
+                    )
+                    if fr:
+                        batch.update(fr)
+            print(f"[a3] O7_looks_safe μ={mu}: collected (fire {n_fire}/{n_total})", flush=True)
 
     # O7 reverse probe (hazard decal, nominal → continue)
-    spec = reg["O7_reverse"]
-    for app in appearances_for(spec.appearance_class):
-        for si in seeds:
-            scn = S.o7_visual_remap_reverse(lane_y, appearance_class=app.id)
-            fr = collect("O7_reverse", scn, spec, app.id, SEED_BASE + si, mu_label=None)
-            if fr:
-                batch.update(fr)
-    print(f"[a3] O7_reverse: collected (fire {n_fire}/{n_total})", flush=True)
+    if args.directions in {"all", "reverse"}:
+        spec = reg["O7_reverse"]
+        for app in appearances_for(spec.appearance_class):
+            for si in seeds:
+                scn = S.o7_visual_remap_reverse(lane_y, appearance_class=app.id)
+                fr = collect(
+                    "O7_reverse", scn, spec, app.id, args.seed_base + si, mu_label=None
+                )
+                if fr:
+                    batch.update(fr)
+        print(f"[a3] O7_reverse: collected (fire {n_fire}/{n_total})", flush=True)
 
     np.savez_compressed(out_dir / "frames.npz", **batch)
     card = {
-        "commit": git_commit(), "seed_base": SEED_BASE, "cruise": args.cruise, "dt": float(dt),
+        "commit": git_commit(), "seed_base": args.seed_base, "cruise": args.cruise,
+        "dt": float(dt), "appearance_config": args.appearance_config,
+        "appearance_split": args.appearance_split, "directions": args.directions,
         "drive": "bang-bang(M4 speed_hi/lo)" if args.bang_bang else f"cruise({args.cruise})",
         "binding_t": args.binding_t, "arm_s": args.arm, "n_snapshots": n_fire, "n_lanes": n_total,
-        "o7_mu_sweep": list(O7_MU_SWEEP), "seeds_per_cell": SEEDS_PER_CELL,
+        "o7_mu_sweep": list(O7_MU_SWEEP), "seeds_per_cell": args.seeds_per_cell,
         "deterministic": "deep_reset(A0.1) + fixed lane_y=4.0",
-        "plan": {"O7_looks_safe": f"μ∈{O7_MU_SWEEP} × solid_ground × {SEEDS_PER_CELL} seeds",
-                 "O7_reverse": f"hazard_decal_benign × {SEEDS_PER_CELL} seeds"},
+        "plan": {
+            "O7_looks_safe": f"μ∈{O7_MU_SWEEP} × solid_ground × {args.seeds_per_cell} seeds",
+            "O7_reverse": f"hazard_decal_benign × {args.seeds_per_cell} seeds",
+        },
     }
     (out_dir / "collection_card.json").write_text(json.dumps(card, indent=2))
     print(f"\n[a3] DONE: {n_fire}/{n_total} T3 snapshots → {out_dir}", flush=True)

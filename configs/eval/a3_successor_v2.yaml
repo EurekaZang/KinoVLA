@@ -1,0 +1,52 @@
+experiment: A3.4-structured-evidence-router-v2
+revision_reason: first untouched confirmation invalidated high-capacity conflict-VLA routing
+
+sources:
+  original_main: outputs/eval/a0/corpus
+  original_t3: outputs/eval/a3/corpus_t3
+  reverse_calibration: outputs/eval/a3_successor/reverse_train_v1
+  failed_confirmation_main: outputs/eval/a3_successor/confirmatory_main
+  failed_confirmation_t3: outputs/eval/a3_successor/confirmatory_t3
+  material_checkpoint: outputs/eval/a3_successor/seed0/router.pt
+
+output_dir: outputs/eval/a3_successor_v2
+
+protocol:
+  failed_confirmation_role: method_development_after_preserved_negative_result
+  cluster_development_fraction: 0.25
+  forbidden_deployment_inputs:
+    [operator_name, scenario, appearance_id, appearance_split, taxonomy_cell, truth, theta]
+
+model:
+  family: ExtraTreesClassifier
+  n_estimators: 256
+  max_features: sqrt
+  class_weight: balanced
+  min_samples_leaf: 1
+  material_pair_logit_scale: 8.0
+
+training:
+  seeds: [0, 1, 2, 3, 4]
+
+selection:
+  continue_thresholds: [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
+                        0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90]
+  objective: cluster_dev_lexicographic_worst_cell_then_macro
+
+acceptance:
+  T1: 0.90
+  T2: 1.00
+  T3_strictly_greater_than: 0.917
+  T4: 1.00
+  T5: 0.90
+  t3_subcells: {looks_safe: 0.90, O8: 0.90, reverse: 0.90}
+  worst_cell: 0.90
+  macro: 0.95
+  n_train_seeds: 5
+  require_every_seed: true
+
+statistics:
+  bootstrap_unit: appearance_cluster_within_cell
+  bootstrap_reps: 10000
+  bootstrap_seed: 20260720
+  paired_test: exact_paired_sign_test_over_appearance_clusters

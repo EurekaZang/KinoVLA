@@ -1,0 +1,114 @@
+{
+  "allowed": {
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_0a164a4712080c217930",
+      "cf_540a87ab230569db419a",
+      "cf_5fb5d0b4a602254347ba",
+      "cf_67462448cf640f1d8d90",
+      "cf_90c180c6e040ad32d292",
+      "cf_fbca6df84058eb5d110e"
+    ],
+    "scene_families": [
+      "indoor_bedroom_118",
+      "indoor_kitchen_140",
+      "indoor_office_162"
+    ],
+    "severity_ids": [
+      "moderate",
+      "severe"
+    ],
+    "target_operators": [
+      "O9_high_centering"
+    ]
+  },
+  "amendment": {
+    "changed": "O9 ridge route center 0.35 m -> 0.50 m",
+    "selection_basis": [
+      {
+        "episode_id": "cf_fbca6df84058eb5d110e_anomaly",
+        "issues": [
+          "rgb_view_swap_01_appearance_effect_too_small",
+          "rgb_view_swap_02_appearance_effect_too_small",
+          "operator_local_qa_failed"
+        ],
+        "source_manifest_sha256": "45cd5846c9395a07429fe21748dfa49af38a59dcba95ef2ac5911739567b285e"
+      },
+      {
+        "episode_id": "cf_90c180c6e040ad32d292_anomaly",
+        "issues": [
+          "rgb_view_swap_01_appearance_effect_too_small",
+          "rgb_view_swap_02_appearance_effect_too_small",
+          "operator_local_qa_failed"
+        ],
+        "source_manifest_sha256": "48c08b8a328b699980bca833edca436a41c11a0a29e64b98b1ae7ac62fb74a27"
+      },
+      {
+        "episode_id": "cf_67462448cf640f1d8d90_anomaly",
+        "issues": [
+          "operator_local_qa_failed"
+        ],
+        "source_manifest_sha256": "490cfe5c44a470529da4a33746e2cb4353c7d5c1cb035391871c180b70d0303a"
+      },
+      {
+        "episode_id": "cf_5fb5d0b4a602254347ba_anomaly",
+        "issues": [
+          "rgb_view_swap_01_appearance_effect_too_small",
+          "rgb_view_swap_02_appearance_effect_too_small",
+          "operator_local_qa_failed"
+        ],
+        "source_manifest_sha256": "7621e539a54603b793835e1e939e5a115d1943838d0b88d1858575fa53fa42c6"
+      },
+      {
+        "episode_id": "cf_0a164a4712080c217930_anomaly",
+        "issues": [
+          "rgb_view_swap_01_appearance_effect_too_small",
+          "operator_local_qa_failed"
+        ],
+        "source_manifest_sha256": "0c59e979a62351786f5503ead46d62e680e2d5040ee13426d8ed9a06554500d4"
+      },
+      {
+        "episode_id": "cf_540a87ab230569db419a_anomaly",
+        "issues": [
+          "operator_local_qa_failed"
+        ],
+        "source_manifest_sha256": "abaabaf0c659f1864487e2ebcbd5279b23fca86a9172e80342e9b1d37aff9685"
+      }
+    ],
+    "selection_is_runtime_qa_not_outcome_strength": true,
+    "unchanged": [
+      "scheduled severity parameters",
+      "geometry kind",
+      "controller",
+      "camera",
+      "appearance",
+      "10 Hz capture",
+      "counterfactual pairing"
+    ]
+  },
+  "base_protocol": "configs/data/kinofail_realistic_scale_formal_pilot_v7.json",
+  "benchmark_id": "kinofail_realistic_scale_v2",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "counterfactual_pairs": 6,
+    "physical_episodes": 12,
+    "separate_repair_root_required": true
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_o9_repair_v1.py",
+  "collector_sha256": "e01e20985895da9cac275febb9e50f692256b54094d42666467ac3b86c2b2ba2",
+  "frozen_utc": "2026-07-23T14:53:29.779327+00:00",
+  "protocol_id": "kinofail_realistic_scale_v7_o9_repair_v1",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule_path": "outputs/kinofail_realistic/design_scale_v2/pilot_schedule.jsonl",
+  "schedule_sha256": "625b2e23a15e7400ae0e4468071d2724c4d28c266ad9446a0cfaeb8f03762385",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "Targeted repair of scale-v7 O9 pairs whose front feet stopped at the early ridge before base-region/belly-contact exposure; no other pair is admitted.",
+  "status": "frozen"
+}

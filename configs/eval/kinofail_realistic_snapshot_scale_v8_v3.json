@@ -1,0 +1,110 @@
+{
+  "a8_in_scope": false,
+  "amendment": {
+    "base_snapshot_protocol": "configs/eval/kinofail_realistic_snapshot_scale_v8_v2.json",
+    "base_snapshot_protocol_sha256": "96c7397799048783f3cf84729cad10ea5090093eb03996fe3f149a05eb143678",
+    "created_utc": "2026-07-23T19:07:43+00:00",
+    "model_architecture_or_split_changed": false,
+    "model_outcomes_available_at_freeze": false,
+    "repair_protocol": "configs/data/kinofail_realistic_o3_temporal_repair_formal_v1.json",
+    "repair_protocol_sha256": "13b50fb21eadf11b682dba923b3391386c5170fcada481f795b75592b19b4c31",
+    "scope": "Use the uniformly delayed O3 severe/profile-1 repair overlay for the complete nine-scene design cell; use the immutable scale-v8 corpus for every other pair.",
+    "selection_uses_model_outcomes": false
+  },
+  "appearance_interventions": {
+    "count_views_as_independent_physical_samples": false,
+    "include_all_manifest_views": true,
+    "require_timestamp_identity_across_views": true,
+    "share_proprio_across_views": true
+  },
+  "development_only": false,
+  "freeze_provenance": {
+    "collection_protocol": "configs/data/kinofail_realistic_scale_v8_replication_formal_v3.json",
+    "collection_protocol_sha256": "544e02136858e0613275aa5a78db1db6d2df7943bafaeb5c71afe73a532e2cba",
+    "contract": "configs/eval/kinofail_realistic_a0_a7_v6.json",
+    "contract_sha256": "56307c6d61376536c596b06fc33491f13224457e270ff3f839f4043bc1b69310",
+    "model_outcomes_available_at_freeze": false,
+    "physical_collection_started_at_base_freeze": false,
+    "physical_nuisance_audit": "outputs/kinofail_realistic/design_scale_v8_replication_v1/scale_v8_physical_nuisance_audit.json",
+    "physical_nuisance_audit_sha256": "727591633898e222752f2f4e6397ca4eb3e4f75f50e0a40d520c78fa7f7441c5"
+  },
+  "operator_event_adapters": {
+    "coverage": "O1-O11",
+    "selection_rule": "predeclared measured mechanism events only; no outcome-maximum heuristic"
+  },
+  "output_dir": "outputs/eval/realistic_a0_a7_v6/snapshots",
+  "protocol_id": "realistic_snapshot_scale_v8_o3_temporal_overlay_v3",
+  "publication_guard": {
+    "may_satisfy_realistic_a0_a7": true,
+    "reason": "Five balanced physical profiles remain represented; the full O3 severe/profile-1 cell receives a uniform pre-outcome temporal repair before model training."
+  },
+  "schema_version": "kinofail.realistic-snapshot-protocol.v2",
+  "selection": {
+    "allow_nonblocking_runtime_issue_suffixes": [
+      "appearance_effect_too_small",
+      "rgb_spatial_contrast_too_low"
+    ],
+    "operators_with_admitted_event_adapter": [
+      "O1_mu_field",
+      "O2_compliance",
+      "O3_collapse",
+      "O4_tether",
+      "O5_payload",
+      "O6_push",
+      "O7_visual_remap",
+      "O8_invisible_collider",
+      "O9_high_centering",
+      "O10_effort_decay",
+      "O11_obs_bias"
+    ],
+    "require_complete_counterfactual_pair": true,
+    "require_evaluation_eligible": false,
+    "require_runtime_validation_passed": true,
+    "required_collection_protocol_id": "kinofail_realistic_scale_1980_v8_replication_v3"
+  },
+  "source_corpus_overlays": [
+    {
+      "corpus_root": "outputs/kinofail_realistic/corpus_scale_v8_o3_temporal_repair_v1",
+      "counterfactual_group_ids": [
+        "cf_073986c105277723f35d",
+        "cf_0794376c1852a73c66ba",
+        "cf_0872d6613640168f9629",
+        "cf_139c67dd02a8f5c33053",
+        "cf_42d2cd2e63eaa6b6bcb2",
+        "cf_49086157f12f126810e5",
+        "cf_a24952e200d5ec6a5478",
+        "cf_b433b25072edb8afec49",
+        "cf_e8ccdbefae66c143cdf6"
+      ],
+      "repair_protocol": "configs/data/kinofail_realistic_o3_temporal_repair_formal_v1.json",
+      "repair_protocol_sha256": "13b50fb21eadf11b682dba923b3391386c5170fcada481f795b75592b19b4c31",
+      "required_collection_protocol_id": "kinofail_realistic_scale_v8_o3_temporal_repair_v1"
+    }
+  ],
+  "source_corpus_root": "outputs/kinofail_realistic/corpus_scale_v8_replication_v1",
+  "source_schedule": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+  "source_schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+  "status": "frozen_after_runtime_qa_before_model_training",
+  "temporal_alignment": {
+    "anchor": "first_predeclared_privileged_operator_event_in_anomaly_only",
+    "decision_delay_s": 0.0,
+    "decision_delay_s_by_operator": {
+      "O10_effort_decay": 0.7,
+      "O11_obs_bias": 0.4,
+      "O5_payload": 0.4
+    },
+    "max_proprio_end_skew_s": 0.021,
+    "max_rgb_target_skew_s": 0.041,
+    "minimum_decision_time_s": 0.42,
+    "nominal_alignment": "reuse_anomaly_event_and_decision_times_exactly",
+    "proprio_samples": 21,
+    "proprio_window_s": 0.5,
+    "rgb_offsets_from_decision_s": [
+      -0.4,
+      -0.3,
+      -0.2,
+      -0.1,
+      0.0
+    ]
+  }
+}

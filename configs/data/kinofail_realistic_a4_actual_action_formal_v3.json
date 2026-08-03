@@ -1,0 +1,62 @@
+{
+  "case_count": 50,
+  "collector": "scripts/isaac_collect_kinofail_realistic_a4_action_v1.py",
+  "collector_sha256": "e65114068df6d32548a35c56566643c5b97eedbe48aa051e9a68f3e1796bd9d4",
+  "created_utc": "2026-07-23T16:35:39.676190+00:00",
+  "excluded_preflight_roots": [
+    "outputs/kinofail_realistic/corpus_a4_actual_action_v1",
+    "outputs/kinofail_realistic/corpus_a4_actual_action_v2"
+  ],
+  "final_amendments": [
+    "O5 branches at 0.5 s with payload readback active",
+    "paired physical prefixes use 1e-3 numerical quantization before SHA256",
+    "unquantized raw telemetry remains stored for post-run maximum-difference audit"
+  ],
+  "launcher": "scripts/isaac_collect_kinofail_realistic_a4_action_v3.py",
+  "launcher_sha256": "c98a2217998b7b3fd96a7efa9993f2c8e504a2d8b0d2fb2d09fbac12f6eb5828",
+  "minimum_episode_seeds_per_action_cell": 10,
+  "o5_amendment": "scripts/isaac_collect_kinofail_realistic_a4_action_v2.py",
+  "o5_amendment_sha256": "f7dbfae000bb2b842a5cab72fc8e47244387d86af609706e9e8e553664dfbda6",
+  "operators": [
+    "O2_compliance",
+    "O4_tether",
+    "O5_payload",
+    "O8_invisible_collider",
+    "O9_high_centering"
+  ],
+  "outcome_policy": "retain all weak, null, and unfavorable cells; no further tuning",
+  "paired_prefix_gate": "same decision step and 1e-3-quantized physical-prefix SHA256",
+  "physical_episode_count": 100,
+  "preflight_findings": {
+    "v1": "O5 severe payload fell before the 2.2 s action branch",
+    "v2": {
+      "finding": "O5 raw prefix SHA mismatch was GPU floating-point noise",
+      "maximum_position_difference_m": 2.384185791015625e-06,
+      "maximum_slip_ratio_difference": 6.760470569133759e-05,
+      "maximum_tilt_difference_rad": 5.175458581085923e-06,
+      "maximum_velocity_difference_mps": 7.860362529754639e-06
+    }
+  },
+  "protocol_id": "kinofail-realistic-a4-actual-action-v3",
+  "scene_clusters": [
+    "forest_river_walk_metric_g07",
+    "forest_trail_metric_g03",
+    "indoor_livingroom_139",
+    "indoor_office_162",
+    "indoor_office_186"
+  ],
+  "schedule": "outputs/kinofail_realistic/design_a4_actual_action_v1/schedule.jsonl",
+  "schedule_sha256": "c90593c5a680a58cc5a2b29275bbdd9152acbea9616d05968df67305cf795e9a",
+  "schema_version": "kinofail.realistic-a4-actual-action-protocol.v3",
+  "statistics": "scene-cluster paired bootstrap with case-level paired differences",
+  "status": "final_scale_freeze_after_runtime_preflight_before_any_v3_outcome",
+  "supersedes": "configs/data/kinofail_realistic_a4_actual_action_formal_v2.json",
+  "unchanged": [
+    "scene clusters",
+    "reset seeds",
+    "operator severity",
+    "action definitions",
+    "outcome rules",
+    "statistics"
+  ]
+}

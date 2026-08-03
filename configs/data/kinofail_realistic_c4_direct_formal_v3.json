@@ -1,0 +1,223 @@
+{
+  "acceptance": {
+    "minimum_domains": 3,
+    "minimum_paired_cases": 75,
+    "minimum_release_coverage": 0.15,
+    "minimum_released_attribution_precision": 0.95,
+    "minimum_scene_clusters": 3
+  },
+  "allowed_decision_inputs": [
+    "rgb_window",
+    "proprio_window"
+  ],
+  "bootstrap": {
+    "draws": 20000,
+    "seed": 2026072405
+  },
+  "case_count": 75,
+  "cases_per_scene": 25,
+  "claim_boundary": "Primary C4 is a supported-action claim on the five predeclared operators in three held-out realistic scene clusters. It does not claim arbitrary open-world recovery or universal physical safety.",
+  "collector": "scripts/isaac_collect_kinofail_realistic_c4_direct_v1.py",
+  "collector_sha256": "21ca52d51dcc2a1c7633b48c4e8978951b2120b1b99b89ee3a48bb6e2713702d",
+  "created_utc": "2026-07-24T08:57:23.597884+00:00",
+  "domains": [
+    "life",
+    "production",
+    "wild"
+  ],
+  "estimand": "selective_policy_minus_always_safe_policy",
+  "evaluator": "kino_vla/eval/realistic_c4.py",
+  "evaluator_sha256": "0e553bf679c32f29b0b30c542beaa6a9e37a4cb7bb8c4d2e24979e1ecf695981",
+  "excluded_preflight": {
+    "counts_as_c4_evidence": false,
+    "decisions_actions_cases_or_outcome_rules_changed": false,
+    "finding": "O5 has discontinuous slip-ratio noise while the largest controller-relevant state/command difference is 0.001610 m/s",
+    "result_path": "outputs/kinofail_realistic/corpus_c4_direct_v1/indoor_kitchen_140/results.jsonl",
+    "result_sha256": "c62001932fdb638ead24507e26775dab75fb94c12198b383dfc35bc12a1234a6",
+    "root": "outputs/kinofail_realistic/corpus_c4_direct_v1"
+  },
+  "excluded_preflights": [
+    {
+      "reason": "strict byte hash exposed GPU prefix noise",
+      "root": "outputs/kinofail_realistic/corpus_c4_direct_v1"
+    },
+    {
+      "reason": "multi-case process accumulated operator state and fixed selective-first order could amplify numerical noise",
+      "result_path": "outputs/kinofail_realistic/corpus_c4_direct_v2/indoor_kitchen_140/results.jsonl",
+      "result_sha256": "9f4624de4834b65883418d964a1b572ad391cd7b9ba6765658233705dbd49d8d",
+      "root": "outputs/kinofail_realistic/corpus_c4_direct_v2"
+    }
+  ],
+  "execution_design": {
+    "branch_order_counterbalanced": true,
+    "first_branch_counts": {
+      "always_safe": 37,
+      "selective": 38
+    },
+    "fresh_isaac_application_per_case_pair": true,
+    "maximum_global_order_imbalance": 1,
+    "new_reset_seed_for_every_v3_case": true,
+    "paired_branches_share_one_fresh_application": true
+  },
+  "feature_manifest": "outputs/eval/realistic_a0_a7_v6/features/feature_manifest.json",
+  "feature_manifest_sha256": "72b4541aa7d38c9638d89d043172266777bc19ed3f893185b4b5499f27ccdaaa",
+  "forbidden_decision_inputs": [
+    "truth_attribution",
+    "operator",
+    "scene_cluster",
+    "domain",
+    "split",
+    "severity",
+    "nuisance_id",
+    "test_outcome",
+    "terminal_cost"
+  ],
+  "freeze_audit": {
+    "all_predeclared_cases_retained": true,
+    "release_cell_counts": {
+      "forest_river_walk_metric_g07|O2_compliance|False": 5,
+      "forest_river_walk_metric_g07|O4_tether|True": 5,
+      "forest_river_walk_metric_g07|O5_payload|False": 5,
+      "forest_river_walk_metric_g07|O8_invisible_collider|False": 5,
+      "forest_river_walk_metric_g07|O9_high_centering|False": 5,
+      "indoor_kitchen_140|O2_compliance|False": 5,
+      "indoor_kitchen_140|O4_tether|True": 5,
+      "indoor_kitchen_140|O5_payload|False": 5,
+      "indoor_kitchen_140|O8_invisible_collider|False": 5,
+      "indoor_kitchen_140|O9_high_centering|False": 5,
+      "indoor_office_186|O2_compliance|False": 5,
+      "indoor_office_186|O4_tether|True": 5,
+      "indoor_office_186|O5_payload|False": 5,
+      "indoor_office_186|O8_invisible_collider|False": 5,
+      "indoor_office_186|O9_high_centering|False": 5
+    },
+    "release_count": 15,
+    "release_coverage": 0.2,
+    "selection_uses_model_output": false,
+    "selection_uses_test_truth": false
+  },
+  "frozen_decision_rule": {
+    "direct_test_outcomes_available_at_freeze": false,
+    "direct_v2_test_outcomes_available_at_freeze": false,
+    "direct_v3_test_outcomes_available_at_freeze": false,
+    "fallback_action": "hold_and_request",
+    "minimum_seed_agreement": 5,
+    "model": "mean probability from five structured_bidirectional seeds",
+    "probability_threshold": 0.5,
+    "release_action": "backstep_release",
+    "rule_selected_from_direct_test_outcomes": false,
+    "target": "adhesion"
+  },
+  "launcher": "scripts/isaac_collect_kinofail_realistic_c4_direct_v3.py",
+  "launcher_sha256": "5d197c501c70e88ee75c9e25ff4fc60a61de1f4af3739c23e197e92392e37206",
+  "model_checkpoints": [
+    {
+      "path": "outputs/eval/realistic_a0_a7_v6/checkpoints/scene_and_material/seed0/structured_bidirectional.pkl",
+      "sha256": "31c7f28be4d6e9a84bd2c8a11594cab882a6210c3b4b5a002fcb21305a460204"
+    },
+    {
+      "path": "outputs/eval/realistic_a0_a7_v6/checkpoints/scene_and_material/seed1/structured_bidirectional.pkl",
+      "sha256": "8d026a2fa1aaefe02bc1f4137bb4c596af9109b2482e733e05a7a9c8ee7ecbd0"
+    },
+    {
+      "path": "outputs/eval/realistic_a0_a7_v6/checkpoints/scene_and_material/seed2/structured_bidirectional.pkl",
+      "sha256": "d3c39b64696985dbd964b1bece4f5b4a758488afe59651b8008014d63b08355a"
+    },
+    {
+      "path": "outputs/eval/realistic_a0_a7_v6/checkpoints/scene_and_material/seed3/structured_bidirectional.pkl",
+      "sha256": "54b2db5b3ad220901593703cdf99ffda8f66602991349e2c93bde293bc169531"
+    },
+    {
+      "path": "outputs/eval/realistic_a0_a7_v6/checkpoints/scene_and_material/seed4/structured_bidirectional.pkl",
+      "sha256": "e37ed1a087d89b9c9a9e6ea172841d049b755fc7e9ad58cf64f1c0b7c8635e50"
+    }
+  ],
+  "nuisance_realizations_per_scene_operator": 5,
+  "operators": [
+    "O2_compliance",
+    "O4_tether",
+    "O5_payload",
+    "O8_invisible_collider",
+    "O9_high_centering"
+  ],
+  "outcome_policy": "retain all weak, null, harmful, fallen and failed cases; no threshold, action, severity, scene or case changes after this freeze",
+  "paired_prefix_audit": {
+    "array_fields": [
+      "position_xy_m",
+      "velocity_body_mps",
+      "command_body"
+    ],
+    "excluded_discontinuous_diagnostics": [
+      "slip_ratio",
+      "operator_telemetry"
+    ],
+    "mode": "raw controller-relevant physical state",
+    "required": true,
+    "scalar_fields": [
+      "time_s",
+      "progress_m",
+      "lateral_m",
+      "heading_rad",
+      "base_height_m",
+      "tilt_rad",
+      "effort_ratio",
+      "support_ratio"
+    ],
+    "tolerance": 0.002
+  },
+  "physical_episode_count": 150,
+  "prediction_artifact": "outputs/eval/realistic_a0_a7_v6/predictions.jsonl",
+  "prediction_artifact_sha256": "8d5811eeb2e3b807dc5737783aa2efede786261b802ecc20dcd43564f02fd4e4",
+  "protocol_id": "kinofail-realistic-c4-direct-final-v3",
+  "runner": "scripts/run_kinofail_realistic_c4_direct_v3.py",
+  "runner_sha256": "74abfc991eaef46f5dd97605a1dbee636f672ddabd52005dcec165571b5ecb74",
+  "scene_clusters": [
+    "forest_river_walk_metric_g07",
+    "indoor_kitchen_140",
+    "indoor_office_186"
+  ],
+  "scene_registry": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule": "outputs/kinofail_realistic/design_c4_direct_v3/schedule.jsonl",
+  "schedule_sha256": "a012ff74da9a08839d479bf31160e4a781af23a9aa9b387d67b454845e6eed4b",
+  "schema_version": "kinofail.realistic-c4-direct-protocol.v3",
+  "shared_actor": "outputs/locomotion/recovery_route_v1/policy.pt",
+  "shared_actor_sha256": "7beff6694107f02ea16959b779c44308b6aab08478fac4f763cedc7885067301",
+  "snapshot_records": "outputs/eval/realistic_a0_a7_v6/snapshots/snapshot_records.jsonl",
+  "snapshot_records_sha256": "0c0bcbc2851d96e5742260dc3c2842127cee09ac0ec2e9d871548e56519ddbe4",
+  "source_schedule": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+  "source_schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+  "status": "frozen_after_excluded_order_isolation_preflight_before_any_v3_outcome",
+  "supersedes": "configs/data/kinofail_realistic_c4_direct_formal_v2.json",
+  "unchanged_from_v1": [
+    "all 75 source RGB/proprio snapshots",
+    "all five model checkpoints",
+    "five-seed decisions and 0.5 threshold",
+    "release coverage",
+    "test scenes, domains, operators and nuisance realizations",
+    "shared recovery actor",
+    "selective and always-safe actions",
+    "horizon, terminal cost and success rules",
+    "acceptance criteria and bootstrap"
+  ],
+  "unchanged_from_v1_v2": [
+    "all 75 source RGB/proprio snapshots and decisions",
+    "five model checkpoints, ensemble and 0.5 threshold",
+    "release coverage",
+    "test scenes, domains, operators and nuisance realizations",
+    "shared recovery actor",
+    "selective and always-safe action definitions",
+    "horizon, terminal cost and success rules",
+    "acceptance criteria and bootstrap",
+    "2e-3 controller-state prefix tolerance"
+  ],
+  "v2_changes": [
+    "fresh reset seed for every case",
+    "raw physical-prefix tolerance certificate"
+  ],
+  "v3_changes": [
+    "fresh Isaac application for each case pair",
+    "globally and within-cell alternating branch order",
+    "fresh reset seed for every case"
+  ]
+}

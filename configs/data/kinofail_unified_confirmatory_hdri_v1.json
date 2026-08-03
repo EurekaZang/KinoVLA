@@ -1,0 +1,103 @@
+{
+  "schema_version": "kinofail.forest-hdri-assets.v1",
+  "status": "confirmatory_f0_input_selected_before_any_asset_download",
+  "provider": {
+    "name": "Poly Haven",
+    "api": "https://api.polyhaven.com",
+    "license": "CC0",
+    "license_url": "https://polyhaven.com/license",
+    "api_terms_url": "https://polyhaven.com/our-api"
+  },
+  "selection_policy": {
+    "purpose": "Five previously unused photographic wild-domain backgrounds for ten new metric near-field scene geometries.",
+    "resolution": "4k",
+    "format": "hdr",
+    "selection_uses_model_results": false,
+    "candidate_reason": "The fixed set spans humid rainforest, dry scrub, dense dirt trail, snow, and bamboo while the benchmark retains Kino-Fail-owned metric collision geometry."
+  },
+  "assets": [
+    {
+      "id": "rainforest_trail",
+      "display_name": "Rainforest Trail",
+      "asset_page": "https://polyhaven.com/a/rainforest_trail",
+      "metadata_api": "https://api.polyhaven.com/info/rainforest_trail",
+      "files_api": "https://api.polyhaven.com/files/rainforest_trail",
+      "categories": ["outdoor", "nature", "midday", "natural light"],
+      "tags": ["tree", "forest", "planks", "path", "bush", "rock", "walkway"],
+      "file": {
+        "relative_path": "rainforest_trail/rainforest_trail_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/rainforest_trail_4k.hdr",
+        "bytes": 29890662,
+        "md5": "3ae5fc4298ba836105b233412296acb3"
+      }
+    },
+    {
+      "id": "pathway_morning",
+      "display_name": "Pathway Morning",
+      "asset_page": "https://polyhaven.com/a/pathway_morning",
+      "metadata_api": "https://api.polyhaven.com/info/pathway_morning",
+      "files_api": "https://api.polyhaven.com/files/pathway_morning",
+      "categories": ["outdoor", "nature", "sunrise-sunset", "natural light"],
+      "tags": ["dry grass", "bush", "pathway", "bare trees", "safari", "veld", "thicket"],
+      "file": {
+        "relative_path": "pathway_morning/pathway_morning_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/pathway_morning_4k.hdr",
+        "bytes": 28382320,
+        "md5": "1499b859711cd5dae11e9844ad271e23"
+      }
+    },
+    {
+      "id": "lush_dirt_path",
+      "display_name": "Lush Dirt Path",
+      "asset_page": "https://polyhaven.com/a/lush_dirt_path",
+      "metadata_api": "https://api.polyhaven.com/info/lush_dirt_path",
+      "files_api": "https://api.polyhaven.com/files/lush_dirt_path",
+      "categories": ["outdoor", "nature", "midday", "partly cloudy", "natural light"],
+      "tags": ["dense", "forest", "bush", "dirt road", "path"],
+      "file": {
+        "relative_path": "lush_dirt_path/lush_dirt_path_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/lush_dirt_path_4k.hdr",
+        "bytes": 28590059,
+        "md5": "fe0d2b3fd1aeb6e26e46ac5e6a9ab3a1"
+      }
+    },
+    {
+      "id": "snowy_forest_path_02",
+      "display_name": "Snowy Forest Path 02",
+      "asset_page": "https://polyhaven.com/a/snowy_forest_path_02",
+      "metadata_api": "https://api.polyhaven.com/info/snowy_forest_path_02",
+      "files_api": "https://api.polyhaven.com/files/snowy_forest_path_02",
+      "categories": ["outdoor", "nature", "morning-afternoon", "clear", "natural light"],
+      "tags": ["tree", "forest", "snow", "winter", "path"],
+      "file": {
+        "relative_path": "snowy_forest_path_02/snowy_forest_path_02_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/snowy_forest_path_02_4k.hdr",
+        "bytes": 26802277,
+        "md5": "c6b6a770126e73e6c2bbce4cfbb12abb"
+      }
+    },
+    {
+      "id": "bamboo_tunnel",
+      "display_name": "Bamboo Tunnel",
+      "asset_page": "https://polyhaven.com/a/bamboo_tunnel",
+      "metadata_api": "https://api.polyhaven.com/info/bamboo_tunnel",
+      "files_api": "https://api.polyhaven.com/files/bamboo_tunnel",
+      "categories": ["outdoor", "nature", "midday", "natural light"],
+      "tags": ["tunnel", "dry", "dense", "pathway", "arched canopy"],
+      "file": {
+        "relative_path": "bamboo_tunnel/bamboo_tunnel_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/bamboo_tunnel_4k.hdr",
+        "bytes": 30192256,
+        "md5": "e5a806d77a1a882eaa7e6df4971d90cf"
+      }
+    }
+  ],
+  "interpretation_policy": {
+    "photographic_hdri_is_not_embodiedgen_output": true,
+    "kino_fail_owns_metric_near_field_collision_and_operators": true,
+    "two_metric_geometries_per_hdri_are_independent_scene_instances": true,
+    "appearance_views_within_a_physical_case_are_not_independent_units": true,
+    "selected_before_model_evaluation": true,
+    "counts_as_prior_a0_a7_evidence": false
+  }
+}

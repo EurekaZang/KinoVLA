@@ -32,6 +32,7 @@ import numpy as np
 # ``kino_vla.shield.primitive_compiler``; that compiler is what M7's planner emits into).
 PRIMITIVE_NAMES: frozenset[str] = frozenset(
     {
+        "continue",
         "Backstep",
         "Replan_Waypoint",
         "Switch_Gait",
@@ -79,7 +80,10 @@ class RecoveryPrimitive:
     def _validate(self) -> None:
         """Per-primitive schema (the spec's atomic-action / 2D-pixel output constraints)."""
         p = self.params
-        if self.name == "Backstep":
+        if self.name == "continue":
+            if p:
+                raise CoTParseError("continue takes no parameters")
+        elif self.name == "Backstep":
             if not _is_pos_number(p.get("distance_m")):
                 raise CoTParseError("Backstep requires distance_m > 0")
         elif self.name == "Replan_Waypoint":

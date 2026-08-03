@@ -1,0 +1,43 @@
+{
+  "schema_version": "kinofail.forest-hdri-assets.v1",
+  "status": "development_asset_lock_input",
+  "provider": {
+    "name": "Poly Haven",
+    "api": "https://api.polyhaven.com",
+    "license": "CC0",
+    "license_url": "https://polyhaven.com/license",
+    "api_terms_url": "https://polyhaven.com/our-api"
+  },
+  "selection_policy": {
+    "purpose": "Photographic distant background and image-based lighting for the realistic wild-domain scene; it does not own walkable geometry or operator physics.",
+    "resolution": "4k",
+    "format": "hdr",
+    "selection_uses_model_results": false,
+    "candidate_reason": "A real forest path with natural medium-contrast lighting and no generated panorama blur; selected before any A0-A7 model evaluation."
+  },
+  "assets": [
+    {
+      "id": "monks_forest",
+      "display_name": "Monk's forest",
+      "asset_page": "https://polyhaven.com/a/monks_forest",
+      "metadata_api": "https://api.polyhaven.com/info/monks_forest",
+      "files_api": "https://api.polyhaven.com/files/monks_forest",
+      "author": "Greg Zaal",
+      "categories": ["outdoor", "nature", "morning-afternoon", "medium contrast", "natural light"],
+      "tags": ["tree", "forest", "path"],
+      "file": {
+        "relative_path": "monks_forest/monks_forest_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/monks_forest_4k.hdr",
+        "bytes": 29851702,
+        "md5": "83fb8d8727ec4c1e04a2362b41cbd265"
+      }
+    }
+  ],
+  "interpretation_policy": {
+    "photographic_hdri_is_not_embodiedgen_output": true,
+    "embodiedgen_remains_one_visual_domain_randomization_source": true,
+    "kino_fail_owns_metric_near_field_collision_and_operators": true,
+    "hdri_does_not_count_as_an_independent_physical_scene": true,
+    "counts_as_a0_a7_evidence": false
+  }
+}

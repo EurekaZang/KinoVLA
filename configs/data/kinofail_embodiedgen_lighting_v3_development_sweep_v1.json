@@ -1,0 +1,95 @@
+{
+  "schema_version": "kinofail.embodiedgen-lighting-v3-development-sweep.v1",
+  "sweep_id": "lighting-v3-pitch-aware-minimax-20260721",
+  "status": "frozen_before_any_v3_rtx_render",
+  "pre_render_implementation_corrections": [
+    {
+      "scope": "corridor-v2 parent file path resolution only",
+      "old_scene_v3_sha256": "a2ba6fa00900a397e2da817360f638653034fdef25d0bb1a83c6982b307431d7",
+      "new_scene_v3_sha256": "a691163c991ec0b971ef585a35827535e5d7d8dfe7483d0508ed64c061a662eb",
+      "v3_episode_created_before_correction": false,
+      "v3_rtx_render_executed_before_correction": false,
+      "candidate_or_threshold_changed": false
+    }
+  ],
+  "objective": "Select one scene-independent, visual-only lighting contract that passes canonical and 45/70/80-degree Go2 body-pitch views on three development-only scene families.",
+  "inference_scope": "development only; no result from this sweep is formal benchmark evidence",
+  "development_scenes": [
+    {
+      "role": "dark-floor failure reproduction",
+      "scene_id": "indoor_kitchen_07",
+      "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260811/kinofail_corridor_v2_tracking030/compiled_scene_audit.json",
+      "sha256": "f8c23ff135f521dc19fb80cd3b1985a74cfe30be6438a951c246667e53757d13",
+      "excluded_from_future_confirmation": true
+    },
+    {
+      "role": "balanced-light guard scene",
+      "scene_id": "indoor_livingroom_08",
+      "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260813/kinofail_corridor_v2_tracking030/compiled_scene_audit.json",
+      "sha256": "eececf7f3f5a1fb74565291bdd023c2ad39752d29dbb16bb3691aa047adf3904",
+      "excluded_from_future_confirmation": true
+    },
+    {
+      "role": "bright-floor overexposure guard scene",
+      "scene_id": "indoor_diningroom_09",
+      "corridor_v2_audit": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/DiningRoom_seed20260815/kinofail_corridor_v2_tracking030/compiled_scene_audit.json",
+      "sha256": "b0b9cca26f22cc746087d79f8fc1f2cde085b36d2a0e4ec7052073c257d36262",
+      "excluded_from_future_confirmation": true
+    }
+  ],
+  "candidates": [
+    {
+      "candidate_id": "c1_d350_s1500",
+      "dome_intensity": 350.0,
+      "ceiling_sphere_intensity": 1500.0
+    },
+    {
+      "candidate_id": "c2_d600_s3000",
+      "dome_intensity": 600.0,
+      "ceiling_sphere_intensity": 3000.0
+    },
+    {
+      "candidate_id": "c3_d900_s4500",
+      "dome_intensity": 900.0,
+      "ceiling_sphere_intensity": 4500.0
+    }
+  ],
+  "execution_contract": {
+    "exact_render_count": 9,
+    "one_render_per_scene_candidate_cell": true,
+    "replacement_candidate_forbidden": true,
+    "threshold_change_after_render_forbidden": true,
+    "renderer_resolution": [960, 540],
+    "warmup_frames_per_view": 36,
+    "view_count_per_render": 7,
+    "pitch_stress_degrees": [45.0, 70.0, 80.0]
+  },
+  "selection_rule": {
+    "eligibility": "all eight pitch-aware RTX checks pass on all three scenes",
+    "primary_rank": "maximize the minimum std_luminance across all 21 scene-view cells",
+    "tie_break_1": "maximize the minimum p99_luminance_minus_p01_luminance across all 21 cells",
+    "tie_break_2": "select the lower sum of dome_intensity and ceiling_sphere_intensity",
+    "if_none_eligible": "freeze the sweep as failed and do not add a fourth candidate in this sweep"
+  },
+  "frozen_code": {
+    "scene_v3": {
+      "path": "kino_vla/sim/embodiedgen_scene_v3.py",
+      "sha256": "a691163c991ec0b971ef585a35827535e5d7d8dfe7483d0508ed64c061a662eb"
+    },
+    "refiner_v3": {
+      "path": "scripts/refine_embodiedgen_kinofail_scene_v3.py",
+      "sha256": "5af819078a1fb6dfdc1b66bd0da60889048311f18e04a4200d5f90e1d9b68da5"
+    },
+    "rtx_qa_v3": {
+      "path": "scripts/isaac_render_embodiedgen_scene_qa_v3.py",
+      "sha256": "bbf094828f916af497ddd9e48d1dbe1a72d72b18e6e6f9604eea8dca1d9638f9"
+    }
+  },
+  "future_confirmation_exclusion": [
+    "indoor_kitchen_07",
+    "indoor_livingroom_08",
+    "indoor_diningroom_09",
+    "indoor_office_05",
+    "indoor_bedroom_06"
+  ]
+}

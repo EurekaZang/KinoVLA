@@ -1,0 +1,123 @@
+{
+  "schema_version": "kinofail.embodiedgen-o4-confirmation-batch.v1",
+  "batch_id": "embodiedgen-o4-three-heldout-families-20260721-v1",
+  "status": "frozen_before_new_scene_generation",
+  "frozen_utc": "2026-07-21T12:35:34Z",
+  "objective": "Extend the already admitted Kitchen O4 result to three independently generated held-out scene families without post-generation parameter selection.",
+  "parent_formal_result": {
+    "scene_id": "indoor_kitchen_01",
+    "scene_family": "EmbodiedGen-v2-Kitchen",
+    "formal_episode_seed": 20260728,
+    "protocol": {
+      "path": "configs/data/kinofail_embodiedgen_kitchen_20260727_o4_formal_v4.json",
+      "sha256": "ec34300eff1432e1e9955d5ab89f88cc25cf76d43c2b5eba35829560c8f1481a"
+    },
+    "status_at_batch_freeze": "passed_and_independently_admitted"
+  },
+  "new_scene_requests": [
+    {
+      "scene_id": "indoor_diningroom_02",
+      "scene_family": "EmbodiedGen-v2-DiningRoom",
+      "room_type": "DiningRoom",
+      "complexity": "simple",
+      "source_scene_seed": 20260729,
+      "formal_episode_seed": 20260730,
+      "planned_role": "confirmatory_heldout_scene_2_of_3"
+    },
+    {
+      "scene_id": "indoor_house_03",
+      "scene_family": "EmbodiedGen-v2-House",
+      "room_type": "House",
+      "complexity": "simple",
+      "source_scene_seed": 20260731,
+      "formal_episode_seed": 20260801,
+      "planned_role": "confirmatory_heldout_scene_3_of_3"
+    }
+  ],
+  "selection_policy": {
+    "scene_generation_attempts_per_request": 1,
+    "formal_runs_per_admitted_scene": 1,
+    "count_generation_or_route_qa_failure": true,
+    "allow_replacement_seed": false,
+    "allow_parameter_tuning_after_generation": false,
+    "allow_formal_rerun": false,
+    "report_all_requested_scenes": true
+  },
+  "run_contract": {
+    "forward_s": 2.14,
+    "peel_pulse_s": 0.1,
+    "recovery_s": 1.0,
+    "reverse_s": 3.0,
+    "stop_s": 1.0,
+    "rgb_fps": 5.0
+  },
+  "operator_contract": {
+    "id": "O4",
+    "name": "foot_adhesion",
+    "fidelity": "per-foot world-anchor force constraint",
+    "parameters": {
+      "attach_contact_force_n": 5.0,
+      "attach_height_tolerance_m": 0.08,
+      "stiffness_xy_n_per_m": 150.0,
+      "damping_xy_ns_per_m": 3.0,
+      "stiffness_z_n_per_m": 120.0,
+      "damping_z_ns_per_m": 2.0,
+      "force_cap_n": 35.0,
+      "break_force_n": 105.0,
+      "peel_release_force_n": 10.0,
+      "peel_velocity_threshold_mps": 0.03,
+      "max_active_feet": 1
+    },
+    "placement_contract": "route_relative_from_collector_start_v2"
+  },
+  "consequence_contract": {
+    "minimum_effect_window_s": 1.0,
+    "minimum_progress_gain_lag_m": 0.1,
+    "minimum_relative_speed_suppression": 0.08,
+    "minimum_tilt_increase_rad": 0.12,
+    "minimum_base_height_drop_m": 0.04
+  },
+  "terminal_outcome_contract": {
+    "recoverable_path": "both takes complete the frozen horizon without a fall",
+    "terminal_failure_path": "nominal completes without fall; O4 has a complete paired forward-effect window, then an observed peel, then a captured terminal fall",
+    "invalid": "nominal fall, missing attachment/effect/peel, fall before the completed effect window, or an uncaptured/otherwise early termination"
+  },
+  "calibration_exclusions": [
+    {
+      "scene_id": "indoor_bedroom_01",
+      "scene_family": "EmbodiedGen-v2-Bedroom",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260724/kinofail_route_relative_v2/o4_pairs/calibration_registered_terminal_seed20260726_v4/pair_manifest.json",
+      "sha256": "837f76c744271a45802f5f7f12a38f8a49b608250fde27ab1ec8db1ec743db07"
+    },
+    {
+      "scene_id": "indoor_livingroom_01",
+      "scene_family": "EmbodiedGen-v2-LivingRoom",
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/LivingRoom_seed20260723/kinofail_route_relative_v2/o4_pairs/calibration_registered_terminal_seed20260726_v4/pair_manifest.json",
+      "sha256": "fd51177d28d3b3c2817b48a5dea61f952d0b9582995e71e9039c3c1afaf4792c"
+    }
+  ],
+  "frozen_code": {
+    "room_generator": {"path": "scripts/generate_embodiedgen_room_source.py", "sha256": "eee7a8deca19805793b26c2600364688ea52e94fb481affd87e7b7fc8c803140"},
+    "scene_compiler": {"path": "scripts/compile_embodiedgen_kinofail_scene.py", "sha256": "a39ce1138cbdef9bb2ba9b0b52abd5ef8cb72e2e73633fadad2a2bdca3c61564"},
+    "rtx_qa": {"path": "scripts/isaac_render_embodiedgen_scene_qa.py", "sha256": "6f1dd81a642250b651866bc4299d96cabea0d253d5b28208ed1db4bdd930971a"},
+    "go2_qa": {"path": "scripts/isaac_embodiedgen_go2_scene_qa.py", "sha256": "bf50c1d32584e87abdb2acf42dbefa850f1cb1049279e472034ef5de7ee8c593"},
+    "protocol_freezer": {"path": "scripts/freeze_embodiedgen_o4_protocol.py", "sha256": "4749e326d4a868fd9b29be9019321b826e5a58a30e8914eb19ef4db55b98fb4c"},
+    "pair_collector": {"path": "scripts/isaac_collect_embodiedgen_o4_pair.py", "sha256": "8fe8ab7e3b81ac640a7ca168742b74cfb23c98a3108775dbd222d66f1f4d7830"},
+    "source_contract": {"path": "kino_vla/sim/embodiedgen_asset.py", "sha256": "78666c1b441a40ac9d1d93ea2da2c47df1266da1ea166913a14304ee5feafd88"},
+    "scene_contract": {"path": "kino_vla/sim/embodiedgen_scene.py", "sha256": "eb49fc1b261faacd8552fa3493acdb1ddbecea415b77512483f22ec950f8a719"},
+    "backend": {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "cb3a51fa1ef935388d184b609dc1b956c63f331851615ac26b895f5b5df2ed5b"},
+    "adhesion_model": {"path": "kino_vla/sim/adhesion.py", "sha256": "3a6d7232c2186087bde15b72b39907b0b32197ad141ac06816f19a2e148e636e"}
+  },
+  "inference_scope": {
+    "unit": "independently generated scene family",
+    "planned_heldout_scene_families_total_including_parent": 3,
+    "episode_seeds_within_scene_are_not_independent_scene_replicates": true,
+    "claim_if_all_three_pass": "O4 vertical-slice consequence generalizes across three held-out everyday indoor scene families under the frozen route-relative contract",
+    "not_claimed": [
+      "all 11 operators are benchmark-ready",
+      "production or wild domain generalization",
+      "real-Go2 sim2real validity",
+      "A0-A7 model performance"
+    ]
+  }
+}

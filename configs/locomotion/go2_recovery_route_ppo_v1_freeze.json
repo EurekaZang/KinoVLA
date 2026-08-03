@@ -1,0 +1,42 @@
+{
+  "schema_version": "kinovla.locomotion-training-freeze.v1",
+  "protocol_id": "go2-recovery-route-v1-20260724",
+  "status": "frozen_before_training",
+  "created_utc": "2026-07-24T08:15:00+00:00",
+  "config": "configs/locomotion/go2_recovery_route_ppo_v1.yaml",
+  "config_sha256": "f7bba738c5c10c10f68586d5813b44b3576838ae429aeb84e036fe01eaed0507",
+  "training_script": "scripts/train_locomotion.py",
+  "training_script_sha256": "ca36762dbb5eeec642c1bc12baf4f6bcfc178d0e51ed609cd91e48fa3eccf2f5",
+  "purpose": "Shared low-level action executor for direct realistic C4; never an attribution input.",
+  "allowed_training_inputs": [
+    "stock Isaac Lab flat locomotion state",
+    "sampled body velocity command",
+    "domain-randomized friction",
+    "domain-randomized base mass",
+    "domain-randomized external pushes"
+  ],
+  "forbidden_training_inputs": [
+    "Kino-Fail attribution labels",
+    "Kino-Fail RGB",
+    "Kino-Fail scene identity",
+    "Kino-Fail operator identity",
+    "C4 test outcomes",
+    "C4 test split"
+  ],
+  "shared_across_policy_arms": true,
+  "command_support_rationale": {
+    "backstep": "lin_vel_x lower bound -0.36 m/s",
+    "hold_and_request": "15% standing environments",
+    "slow_crossing": "positive low-speed commands remain in the same compact range",
+    "lateral_detour": "lin_vel_y up to +/-0.50 m/s",
+    "rejoin": "yaw rate up to +/-0.80 rad/s"
+  },
+  "post_training_gate": [
+    "forward tracking on development routes",
+    "reverse without fall",
+    "stand without fall",
+    "lateral detour without fall",
+    "loaded stand without fall"
+  ],
+  "evidence_boundary": "Training and development gates do not count as C4 evidence. A new untouched scene/appearance extension is required after the decision gate and action protocol are frozen."
+}

@@ -1,0 +1,129 @@
+{
+  "schema_version": "kinofail.embodiedgen-realistic-route-policy-v14-unseen-generation-freeze.v1",
+  "frozen_before_generation_utc": "2026-07-22",
+  "purpose": "Freeze a genuinely untouched two-family nominal confirmation for the new realistic-route locomotion policy before generating or rendering the second scene.",
+  "evidence_boundary": {
+    "evidence_role": "locomotion_policy_unseen_nominal_confirmation_only",
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_realistic_corpus_evidence": false,
+    "counts_as_a0_a7_evidence": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "old_a0_a7_results_are_reference_only": true,
+    "completion_requires_new_realistic_corpus_training_inference_and_a0_a7": true
+  },
+  "selection_policy": {
+    "fixed_order": [
+      "indoor_bedroom_28",
+      "indoor_bathroom_33"
+    ],
+    "one_generation_attempt_for_new_scene": true,
+    "replacement_seed_allowed": false,
+    "post_generation_source_repair_allowed": false,
+    "post_generation_route_camera_lighting_or_threshold_tuning_allowed": false,
+    "fresh_isaac_process_per_scene": true,
+    "one_runtime_attempt_per_scene": true,
+    "stop_on_first_failure": true,
+    "nominal_only": true,
+    "no_anomaly_before_both_nominals_pass": true,
+    "both_scenes_count_in_denominator": true,
+    "office27_excluded_as_exposed_diagnostic": true,
+    "house_excluded_for_preregistered_upstream_world_transform_failure": true,
+    "house_exclusion_evidence": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/House_seed20260833/source_geometry_preflight_v1/source_geometry_preflight_audit.json",
+      "sha256": "dc98c99a2b72f5627f1eb18c48ef081766524324c4550b83c5a5577b8d163269"
+    }
+  },
+  "existing_untouched_scene": {
+    "scene_id": "indoor_bedroom_28",
+    "scene_family": "Bedroom",
+    "source_seed": 20260855,
+    "material_id": "test_concrete039",
+    "route_surface_admission": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/route_surface_v7_admission_audit.json",
+      "sha256": "a8909eed4208ee480b65a89d2a4d508f5105d073e4e2c16b515614a46785a563"
+    },
+    "terrain_compiled_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/terrain_route_v2/compiled_scene_audit.json",
+      "sha256": "3d086926fe790303a19b3ad97b79f9db011682dd5672c4bb9c93bbda298fb833"
+    },
+    "terrain_episode": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/terrain_route_v2/episode_terrain_v2.usda",
+      "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"
+    },
+    "offline_usd_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bedroom_seed20260855/route_surface_v7_confirmation/test_concrete039/terrain_route_v2/offline_usd_audit.json",
+      "sha256": "78e49770cd17304f47dd98db6fef4eae2444b40f6e2370c624cd9e11d8eea5ea"
+    },
+    "planned_runtime_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_realistic_route_policy_v14_unseen_confirmation_v1/bedroom28/o2_nominal"
+  },
+  "new_untouched_scene_request": {
+    "scene_id": "indoor_bathroom_33",
+    "output_directory": "Bathroom_seed20261213",
+    "room_type": "Bathroom",
+    "complexity": "simple",
+    "source_scene_seed": 20261213,
+    "formal_episode_seed": 20261214,
+    "material_id": "test_pathway002",
+    "material_split": "test",
+    "source_output": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261213",
+    "route_surface_output": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Bathroom_seed20261213/route_surface_v7_unseen_confirmation/test_pathway002",
+    "planned_runtime_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_realistic_route_policy_v14_unseen_confirmation_v1/bathroom33/o2_nominal",
+    "generation_command": [
+      "/home/eureka/miniconda3/envs/kinovla/bin/python",
+      "scripts/generate_embodiedgen_room_source.py",
+      "--output-root",
+      "outputs/kinofail_realistic/scene_sources/embodiedgen_v2",
+      "--scene-id",
+      "indoor_bathroom_33",
+      "--room-type",
+      "Bathroom",
+      "--seed",
+      "20261213",
+      "--complexity",
+      "simple"
+    ]
+  },
+  "runtime": {
+    "operator": "o2",
+    "lane": "nominal",
+    "camera_profile": "go2_front_calib_b",
+    "steps": 650,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": 0.0,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.6,
+    "start_lateral_offset_m": 0.0,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": 0.0,
+    "forward_speed_mps": 0.18,
+    "maximum_route_deviation_m": 0.3,
+    "minimum_nominal_region_samples": 40,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.2,
+    "yaw_rate_limit_radps": 0.6
+  },
+  "frozen_files": {
+    "generator_wrapper": {"path": "scripts/generate_embodiedgen_room_source.py", "sha256": "eee7a8deca19805793b26c2600364688ea52e94fb481affd87e7b7fc8c803140"},
+    "asset_contract": {"path": "kino_vla/sim/embodiedgen_asset.py", "sha256": "78666c1b441a40ac9d1d93ea2da2c47df1266da1ea166913a14304ee5feafd88"},
+    "source_preflight": {"path": "scripts/audit_embodiedgen_source_preflight_v1.py", "sha256": "41114a2fa21292cba346c2380ecd7a457b72adc8fe13f59117637dcafe5335d0"},
+    "base_compiler_wrapper": {"path": "scripts/compile_embodiedgen_kinofail_scene.py", "sha256": "a39ce1138cbdef9bb2ba9b0b52abd5ef8cb72e2e73633fadad2a2bdca3c61564"},
+    "base_compiler": {"path": "kino_vla/sim/embodiedgen_scene.py", "sha256": "eb49fc1b261faacd8552fa3493acdb1ddbecea415b77512483f22ec950f8a719"},
+    "corridor_wrapper": {"path": "scripts/refine_embodiedgen_kinofail_scene_v2.py", "sha256": "b0cba713dde48c61b98e8a4610687f172e33ac2deb53976d18224131816a8304"},
+    "corridor_logic": {"path": "kino_vla/sim/embodiedgen_scene_v2.py", "sha256": "a8f02462540d7143f8703309d950a46ea49b81ffc5f17a88177fb9bfc9c482ae"},
+    "route_surface_wrapper": {"path": "scripts/refine_embodiedgen_kinofail_scene_v4.py", "sha256": "4ece78e871242723b5bf4a83d1cf4b91ef56effec750def884593c0a2a6d99b9"},
+    "route_surface_logic": {"path": "kino_vla/sim/embodiedgen_scene_v4.py", "sha256": "2e4541d6cc6dcf07adf6c2e441e15c63c43490703b305728a9282827f9881dd3"},
+    "rtx_qa": {"path": "scripts/isaac_render_embodiedgen_scene_qa_v5.py", "sha256": "bd6db19ec7772ab0b7b28d63e909468777fc6189104784e7587e8badac15191f"},
+    "go2_qa": {"path": "scripts/isaac_embodiedgen_go2_scene_qa.py", "sha256": "709d9671af7866b5a3b62807da76ccc9f0769945663990f2de53b2818d766f0e"},
+    "route_surface_admission": {"path": "scripts/audit_embodiedgen_route_surface_v7_admission.py", "sha256": "d8dfdb616f34e19580ac2983f4d57b6e4dc57f65546440025953791d0a520790"},
+    "terrain_compiler_wrapper": {"path": "scripts/compile_embodiedgen_terrain_route_v2.py", "sha256": "82c661978320633d6e80225ca5e4f99c1625031fca1d42f4c630ec2d89b9ed19"},
+    "terrain_compiler": {"path": "kino_vla/sim/embodiedgen_terrain_route_v2.py", "sha256": "50066309bf4fc632459d51697407d60778efff7648d1429763789f6dd8440a3b"},
+    "terrain_auditor": {"path": "scripts/audit_embodiedgen_terrain_route_v2.py", "sha256": "d6249ac7ccee874956ac7c73b321ef918d090ca081a5163391aec71331a2ec9d"},
+    "collector_wrapper": {"path": "scripts/isaac_collect_realistic_route_operator_lane_v14.py", "sha256": "ae0227c81916b1a74fdfab69856eec087464a3f7c05d5340f2029f01bff4acb9"},
+    "collector_engine": {"path": "scripts/isaac_collect_realistic_route_operator_lane_v6.py", "sha256": "dcd4c399407c5ad38c50011326b85a845b19606c23e5a8c38220d90a71d9df5e"},
+    "material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"},
+    "policy": {"path": "outputs/locomotion/realistic_route_v1/policy.pt", "sha256": "fb40283b56ec260fd14d8943684107557f2e49c3372c2fca7804f0879642b61f"}
+  }
+}

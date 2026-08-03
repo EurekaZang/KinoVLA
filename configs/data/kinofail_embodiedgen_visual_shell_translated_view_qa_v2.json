@@ -1,0 +1,40 @@
+{
+  "schema_version": "kinofail.embodiedgen-visual-shell-translated-view-qa.v2",
+  "status": "development_only_not_formal_corpus",
+  "source_mesh_contract": {
+    "path": "configs/data/kinofail_embodiedgen_visual_shell_mesh_development_v1.json",
+    "sha256": "e5ed532d08ad34c6313eff607509642f0a6ddc640c0d1cdcf0f00b9a3d40436d"
+  },
+  "output_subdir": "translated_view_qa_v2",
+  "render": {
+    "image_width": 512,
+    "image_height": 512,
+    "fov_degrees": 90.0,
+    "znear_m": 0.02,
+    "zfar_m": 50.0,
+    "target_distance_m": 3.0,
+    "background_rgb": [255, 255, 255],
+    "requires_nonzero_translation": true,
+    "maximum_translation_m": 0.5,
+    "views": [
+      {"view_id": "center", "eye_offset_xz_m": [0.0, 0.0], "direction_xz": [0.0, 1.0]},
+      {"view_id": "forward35", "eye_offset_xz_m": [0.0, 0.35], "direction_xz": [0.0, 1.0]},
+      {"view_id": "left35", "eye_offset_xz_m": [-0.35, 0.0], "direction_xz": [0.0, 1.0]},
+      {"view_id": "right35", "eye_offset_xz_m": [0.35, 0.0], "direction_xz": [0.0, 1.0]}
+    ]
+  },
+  "machine_preflight": {
+    "minimum_foreground_fraction": 0.7,
+    "minimum_luminance_std": 10.0,
+    "minimum_5bit_colors": 512,
+    "maximum_black_fraction": 0.35,
+    "maximum_white_fraction": 0.35,
+    "minimum_mean_pairwise_rgb_l1": 0.01
+  },
+  "admission_policy": {
+    "machine_render_pass_does_not_admit_scene": true,
+    "independent_human_translated_view_review_required": true,
+    "body_fixed_go2_rtx_qa_still_required": true,
+    "counts_as_a0_a7_evidence": false
+  }
+}

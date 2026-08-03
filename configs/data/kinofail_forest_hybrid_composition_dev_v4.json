@@ -1,0 +1,79 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v4-development",
+  "status": "development_visual_quality_iteration_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v2.json",
+    "sha256": "87db7f5b06cfb805834589006e4898a878a0d2f99048ff5ff14fd0ae402fe01a"
+  },
+  "overrides": {
+    "background": {
+      "panorama": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_sr_v1/forest_trail_shell_sr_dev05_attempt2/pano_image_sr2x.png",
+        "sha256": "7c431c93ecba4600979074cb1f28a65e8b1c8606437ea1dd12d7cbc1a934d3f7"
+      },
+      "preflight": {
+        "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_sr_v1/forest_trail_shell_sr_dev05_attempt2/super_resolution_audit.json",
+        "sha256": "13acd6e03c3ef14da16b4131843efb3b5b5bbb938ba0a0d63e41a03cd6336315"
+      },
+      "intensity": 280.0,
+      "rotation_xyz_deg": [0.0, 0.0, 90.0]
+    },
+    "near_field": {
+      "material_compatibility_mode": "isaac_preview_override_v1",
+      "visual_height_variation": {
+        "enabled": true,
+        "appearance_only": true,
+        "grid_spacing_m": 0.35,
+        "amplitude_m": 0.055,
+        "wavelength_m": 2.3,
+        "route_boundary_fade_m": 0.8,
+        "phase_rad": 0.37
+      },
+      "instances": [
+        {"id": "fir_left_00", "asset_id": "fir_sapling", "xyz_m": [-0.4, 2.0, 0.0], "rotation_xyz_deg": [0.0, 0.0, 18.0], "scale": 1.25},
+        {"id": "fir_right_00", "asset_id": "fir_sapling", "xyz_m": [0.2, -2.1, 0.0], "rotation_xyz_deg": [0.0, 0.0, 201.0], "scale": 1.30},
+        {"id": "fir_left_01", "asset_id": "fir_sapling", "xyz_m": [1.6, 2.5, 0.0], "rotation_xyz_deg": [0.0, 0.0, 151.0], "scale": 1.10},
+        {"id": "fir_right_01", "asset_id": "fir_sapling", "xyz_m": [2.2, -2.3, 0.0], "rotation_xyz_deg": [0.0, 0.0, 322.0], "scale": 1.20},
+        {"id": "fir_left_02", "asset_id": "fir_sapling", "xyz_m": [3.5, 2.0, 0.0], "rotation_xyz_deg": [0.0, 0.0, 78.0], "scale": 1.35},
+        {"id": "fir_right_02", "asset_id": "fir_sapling", "xyz_m": [4.3, -2.4, 0.0], "rotation_xyz_deg": [0.0, 0.0, 267.0], "scale": 1.15},
+        {"id": "fir_left_03", "asset_id": "fir_sapling", "xyz_m": [5.6, 2.7, 0.0], "rotation_xyz_deg": [0.0, 0.0, 223.0], "scale": 1.30},
+        {"id": "fir_right_03", "asset_id": "fir_sapling", "xyz_m": [6.2, -2.1, 0.0], "rotation_xyz_deg": [0.0, 0.0, 42.0], "scale": 1.25},
+        {"id": "roots_left_00", "asset_id": "pine_roots", "xyz_m": [0.5, 1.55, 0.0], "rotation_xyz_deg": [0.0, 0.0, 31.0], "scale": 0.72},
+        {"id": "roots_right_00", "asset_id": "pine_roots", "xyz_m": [3.7, -1.65, 0.0], "rotation_xyz_deg": [0.0, 0.0, 214.0], "scale": 0.62},
+        {"id": "roots_left_01", "asset_id": "pine_roots", "xyz_m": [5.2, 1.55, 0.0], "rotation_xyz_deg": [0.0, 0.0, 126.0], "scale": 0.58},
+        {"id": "rocks_left_00", "asset_id": "rock_moss_set_01", "xyz_m": [2.0, 1.65, 0.08], "rotation_xyz_deg": [0.0, 0.0, 9.0], "scale": 0.22},
+        {"id": "rocks_right_00", "asset_id": "rock_moss_set_01", "xyz_m": [1.2, -1.7, 0.08], "rotation_xyz_deg": [0.0, 0.0, 173.0], "scale": 0.18},
+        {"id": "rocks_right_01", "asset_id": "rock_moss_set_01", "xyz_m": [5.8, -1.5, 0.08], "rotation_xyz_deg": [0.0, 0.0, 245.0], "scale": 0.20},
+        {"id": "stump_left_00", "asset_id": "tree_stump_01", "xyz_m": [4.5, 1.55, 0.10], "rotation_xyz_deg": [0.0, 0.0, 47.0], "scale": 0.72},
+        {"id": "stump_right_00", "asset_id": "tree_stump_01", "xyz_m": [-0.7, -1.7, 0.10], "rotation_xyz_deg": [0.0, 0.0, 249.0], "scale": 0.65},
+        {"id": "fern_left_00", "asset_id": "fern_02", "xyz_m": [0.9, 1.20, 0.02], "rotation_xyz_deg": [0.0, 0.0, 82.0], "scale": 0.52},
+        {"id": "fern_right_00", "asset_id": "fern_02", "xyz_m": [0.6, -1.25, 0.02], "rotation_xyz_deg": [0.0, 0.0, 271.0], "scale": 0.47},
+        {"id": "fern_left_01", "asset_id": "fern_02", "xyz_m": [2.7, 1.15, 0.02], "rotation_xyz_deg": [0.0, 0.0, 195.0], "scale": 0.43},
+        {"id": "fern_right_01", "asset_id": "fern_02", "xyz_m": [3.0, -1.20, 0.02], "rotation_xyz_deg": [0.0, 0.0, 16.0], "scale": 0.50},
+        {"id": "fern_left_02", "asset_id": "fern_02", "xyz_m": [5.7, 1.20, 0.02], "rotation_xyz_deg": [0.0, 0.0, 306.0], "scale": 0.48},
+        {"id": "fern_right_02", "asset_id": "fern_02", "xyz_m": [4.9, -1.25, 0.02], "rotation_xyz_deg": [0.0, 0.0, 140.0], "scale": 0.46},
+        {"id": "shrub_left_00", "asset_id": "shrub_03", "xyz_m": [1.4, 1.35, 0.0], "rotation_xyz_deg": [0.0, 0.0, 110.0], "scale": 0.68},
+        {"id": "shrub_right_00", "asset_id": "shrub_03", "xyz_m": [1.8, -1.35, 0.0], "rotation_xyz_deg": [0.0, 0.0, 286.0], "scale": 0.65},
+        {"id": "shrub_left_01", "asset_id": "shrub_03", "xyz_m": [3.8, 1.30, 0.0], "rotation_xyz_deg": [0.0, 0.0, 32.0], "scale": 0.62},
+        {"id": "shrub_right_01", "asset_id": "shrub_03", "xyz_m": [4.2, -1.30, 0.0], "rotation_xyz_deg": [0.0, 0.0, 188.0], "scale": 0.70},
+        {"id": "shrub_left_02", "asset_id": "shrub_03", "xyz_m": [6.0, 1.35, 0.0], "rotation_xyz_deg": [0.0, 0.0, 258.0], "scale": 0.66},
+        {"id": "shrub_right_02", "asset_id": "shrub_03", "xyz_m": [6.4, -1.35, 0.0], "rotation_xyz_deg": [0.0, 0.0, 74.0], "scale": 0.64}
+      ]
+    },
+    "appearance": {
+      "route_material_id": "train_ground054",
+      "distant_light_intensity": 350.0
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/embodiedgen_visual_shell_sr_v1/forest_trail_shell_sr_dev05_attempt2/isaac_hybrid_composition_dev_v4"
+    }
+  },
+  "quality_policy": {
+    "super_resolution_is_same_scene_not_new_sample": true,
+    "near_field_relief_is_visual_only_and_operator_independent": true,
+    "manual_go2_rtx_review_required": true,
+    "operator_geometry_leak_review_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

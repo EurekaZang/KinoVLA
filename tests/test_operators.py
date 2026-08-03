@@ -167,6 +167,37 @@ def test_o6_fires_once_and_rearms_on_reset():
     assert not push.fired
 
 
+def test_o6_finite_pulse_routes_duration_and_application_point():
+    push = Push(
+        impulse_xy_ns=np.array([0.0, 6.0]),
+        t_push_s=1.0,
+        duration_s=0.12,
+        application_point_body_m=np.array([0.0, -0.085, 0.075]),
+    )
+    backend = make_backend()
+    calls = []
+
+    def record_pulse(impulse, yaw_impulse, duration, application_point):
+        calls.append((impulse.copy(), yaw_impulse, duration, application_point.copy()))
+
+    def reject_legacy(*_args):
+        pytest.fail("finite O6 must not use the legacy instantaneous-velocity path")
+
+    backend.start_push_pulse = record_pulse
+    backend.apply_push = reject_legacy
+    push.on_reset(backend)
+    push.on_step(backend, 1.0)
+    push.on_step(backend, 2.0)
+    assert len(calls) == 1
+    np.testing.assert_allclose(calls[0][0], [0.0, 6.0])
+    assert calls[0][1] == pytest.approx(0.0)
+    assert calls[0][2] == pytest.approx(0.12)
+    np.testing.assert_allclose(calls[0][3], [0.0, -0.085, 0.075])
+    theta = push.get_privileged_state()
+    assert theta["duration_s"] == pytest.approx(0.12)
+    assert theta["application_point_body_y_m"] == pytest.approx(-0.085)
+
+
 def test_o6_determinism_gate():
     stack = OperatorStack([Push(impulse_xy_ns=np.array([0.0, 7.5]), t_push_s=1.0)])
     h1, _ = run_stack(stack, seed=7)

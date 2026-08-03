@@ -1,0 +1,54 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v7-development",
+  "iteration_id": "forest-whipple-independent-metric-geometry-g04-v21",
+  "status": "development_crossed_appearance_geometry_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v15.json",
+    "sha256": "3419f68617e178fc538ff40e992e84fb3c9f3339acb0e72e415d7477f9d0b26a"
+  },
+  "overrides": {
+    "scene_id": "forest_trail_whipple_metric_g04",
+    "source_scene_id": "forest_whipple_shell_metric_g04_dev01",
+    "route": {
+      "waypoints_xy_m": [[0.0, -0.32], [1.15, -0.32], [2.30, -0.32], [3.45, -0.32], [4.60, -0.32]],
+      "surface_width_m": 1.50,
+      "endpoint_margin_m": 0.80
+    },
+    "near_field": {
+      "prop_transform_overrides": {
+        "roots_left_00": {"xyz_m": [0.10, 3.10, 0.0], "rotation_xyz_deg": [0.0, 0.0, 63.0]},
+        "roots_right_00": {"xyz_m": [3.35, -3.35, 0.0], "rotation_xyz_deg": [0.0, 0.0, 197.0]},
+        "roots_left_01": {"xyz_m": [5.75, 3.30, 0.0], "rotation_xyz_deg": [0.0, 0.0, 118.0]},
+        "rocks_left_00": {"xyz_m": [1.85, 3.15, 0.08], "rotation_xyz_deg": [0.0, 0.0, 27.0]},
+        "rocks_right_00": {"xyz_m": [0.85, -3.25, 0.08], "rotation_xyz_deg": [0.0, 0.0, 164.0]},
+        "rocks_right_01": {"xyz_m": [6.10, -3.40, 0.08], "rotation_xyz_deg": [0.0, 0.0, 281.0]},
+        "stump_left_00": {"xyz_m": [4.35, 3.20, 0.10], "rotation_xyz_deg": [0.0, 0.0, 54.0]},
+        "stump_right_00": {"xyz_m": [-1.15, -3.25, 0.10], "rotation_xyz_deg": [0.0, 0.0, 231.0]}
+      },
+      "opaque_composited_ground": {
+        "seed": 2121,
+        "centerline_wander_m": 0.10,
+        "phase_rad": 1.31
+      },
+      "visual_height_variation": {
+        "phase_rad": 0.92
+      }
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_whipple_metric_g04_dev01/isaac_hybrid_composition_dev_v21"
+    }
+  },
+  "factorial_contract": {
+    "appearance_family": "forest_whipple_cool_overcast_train",
+    "metric_geometry_realization": "g04",
+    "crosses_appearance_and_geometry": true,
+    "not_a_seed_repeat_of_g01_g02_g03": true,
+    "operator_parameters_are_not_part_of_scene_compilation": true
+  },
+  "quality_policy": {
+    "physical_route_and_prop_collision_hashes_must_be_distinct": true,
+    "nominal_route_gate_precedes_operator_pairs": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

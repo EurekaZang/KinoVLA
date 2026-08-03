@@ -1,0 +1,80 @@
+{
+  "a8_in_scope": false,
+  "appearance_interventions": {
+    "count_views_as_independent_physical_samples": false,
+    "include_all_manifest_views": true,
+    "require_timestamp_identity_across_views": true,
+    "share_proprio_across_views": true
+  },
+  "development_only": false,
+  "freeze_provenance": {
+    "collection_protocol": "configs/data/kinofail_realistic_scale_v8_replication_formal_v3.json",
+    "collection_protocol_sha256": "544e02136858e0613275aa5a78db1db6d2df7943bafaeb5c71afe73a532e2cba",
+    "contract": "configs/eval/kinofail_realistic_a0_a7_v6.json",
+    "contract_sha256": "56307c6d61376536c596b06fc33491f13224457e270ff3f839f4043bc1b69310",
+    "model_outcomes_available_at_freeze": false,
+    "physical_collection_started_at_freeze": false,
+    "physical_nuisance_audit": "outputs/kinofail_realistic/design_scale_v8_replication_v1/scale_v8_physical_nuisance_audit.json",
+    "physical_nuisance_audit_sha256": "727591633898e222752f2f4e6397ca4eb3e4f75f50e0a40d520c78fa7f7441c5"
+  },
+  "operator_event_adapters": {
+    "coverage": "O1-O11",
+    "selection_rule": "predeclared measured mechanism events only; no outcome-maximum heuristic"
+  },
+  "output_dir": "outputs/eval/realistic_a0_a7_v6/snapshots",
+  "protocol_id": "realistic_snapshot_scale_v8_physical_nuisance_v2",
+  "publication_guard": {
+    "may_satisfy_realistic_a0_a7": true,
+    "reason": "Five balanced, pair-shared route-entry nuisance profiles per scene/operator/severity cell on the frozen scale-v8 corpus."
+  },
+  "schema_version": "kinofail.realistic-snapshot-protocol.v2",
+  "selection": {
+    "allow_nonblocking_runtime_issue_suffixes": [
+      "appearance_effect_too_small",
+      "rgb_spatial_contrast_too_low"
+    ],
+    "operators_with_admitted_event_adapter": [
+      "O1_mu_field",
+      "O2_compliance",
+      "O3_collapse",
+      "O4_tether",
+      "O5_payload",
+      "O6_push",
+      "O7_visual_remap",
+      "O8_invisible_collider",
+      "O9_high_centering",
+      "O10_effort_decay",
+      "O11_obs_bias"
+    ],
+    "require_complete_counterfactual_pair": true,
+    "require_evaluation_eligible": false,
+    "require_runtime_validation_passed": true,
+    "required_collection_protocol_id": "kinofail_realistic_scale_1980_v8_replication_v3"
+  },
+  "source_corpus_root": "outputs/kinofail_realistic/corpus_scale_v8_replication_v1",
+  "source_schedule": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+  "source_schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+  "status": "frozen_before_scale_v8_physical_collection",
+  "temporal_alignment": {
+    "anchor": "first_predeclared_privileged_operator_event_in_anomaly_only",
+    "decision_delay_s": 0.0,
+    "decision_delay_s_by_operator": {
+      "O10_effort_decay": 0.7,
+      "O11_obs_bias": 0.4,
+      "O5_payload": 0.4
+    },
+    "max_proprio_end_skew_s": 0.021,
+    "max_rgb_target_skew_s": 0.041,
+    "minimum_decision_time_s": 0.42,
+    "nominal_alignment": "reuse_anomaly_event_and_decision_times_exactly",
+    "proprio_samples": 21,
+    "proprio_window_s": 0.5,
+    "rgb_offsets_from_decision_s": [
+      -0.4,
+      -0.3,
+      -0.2,
+      -0.1,
+      0.0
+    ]
+  }
+}

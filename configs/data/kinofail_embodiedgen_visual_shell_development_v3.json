@@ -1,0 +1,79 @@
+{
+  "schema_version": "kinofail.embodiedgen-visual-shell-development.v3",
+  "plan_id": "wild-high-resolution-untruncated-candidates-20260722-v3",
+  "status": "development_only_not_formal_corpus",
+  "objective": "Generate frozen 2048x1024 forest panorama candidates with an audited, untruncated CLIP prompt after the first high-resolution candidate failed content-level human review.",
+  "embodiedgen": {
+    "repository": "https://github.com/HorizonRobotics/EmbodiedGen",
+    "release": "v2.0.0",
+    "commit": "cc3015ca5ccdacf94df3428d9e65f79375982216",
+    "scene_model_repository": "archerfmy0831/sd-t2i-360panoimage",
+    "pipeline_commit": "84a1198dbae40d0ecc7276e54d957f1789566610"
+  },
+  "generation": {
+    "num_inference_steps": 40,
+    "upscale": false,
+    "output_width": 2048,
+    "output_height": 1024,
+    "resolution_policy": "direct_diffusion_synthesis_at_requested_resolution_no_post_resize",
+    "prompt_context_policy": "fail_before_diffusion_when_full_prompt_exceeds_text_encoder_context",
+    "negative_prompt": "people, animals, text, logo, watermark, fisheye discontinuity, floating objects, collapsed geometry, blocked trail, paved road, buildings, default grid, checkerboard floor, blurry, low resolution"
+  },
+  "visual_preflight": {
+    "minimum_luminance_std": 18.0,
+    "minimum_5bit_colors": 1024,
+    "maximum_black_fraction": 0.25,
+    "maximum_white_fraction": 0.25,
+    "maximum_horizontal_seam_mae": 35.0
+  },
+  "requests": [
+    {
+      "scene_id": "forest_trail_shell_hr_dev03",
+      "domain": "wild",
+      "split": "development",
+      "seed": 20260902,
+      "real_height_m": 8.0,
+      "prompt": "realistic temperate forest, wide dirt trail, mature trees, roots, mossy rocks, leaf litter, ferns, deep background, overcast daylight, open foreground, no people, no buildings"
+    },
+    {
+      "scene_id": "forest_trail_shell_hr_dev04",
+      "domain": "wild",
+      "split": "development",
+      "seed": 20260922,
+      "real_height_m": 8.0,
+      "prompt": "realistic temperate forest, wide dirt trail, mature trees, roots, mossy rocks, leaf litter, ferns, deep background, overcast daylight, open foreground, no people, no buildings"
+    }
+  ],
+  "predecessor_review": {
+    "scene_id": "forest_trail_shell_hr_dev02",
+    "status": "pixel_preflight_passed_content_review_failed",
+    "observations": [
+      "The complete prompt occupied 113 tokens for a 77-token text encoder and was silently truncated by the legacy generator.",
+      "The panorama lacked a clear traversable trail and showed implausible repeated vertical scene structure.",
+      "The panorama is preserved as a failed development candidate and is not eligible for composition or evidence."
+    ]
+  },
+  "physics_ownership": {
+    "visual_shell_only": true,
+    "embodiedgen_mesh_never_used_as_primary_walkable_collision": true,
+    "kino_owned_collision_and_route_required": true,
+    "wild_near_field_requires_audited_heightfield": true,
+    "operator_physics_owned_by_kino_fail": true
+  },
+  "admission_policy": {
+    "development_panorama_pass_does_not_admit_scene": true,
+    "manual_go2_view_quality_required": true,
+    "candidate_selection_precedes_operator_evaluation": true,
+    "candidate_selection_must_not_use_model_accuracy": true,
+    "required_next_stages": [
+      "panorama_visual_preflight",
+      "content_level_human_review",
+      "metric_near_field_composition",
+      "kino_collision_or_heightfield_compile",
+      "body_fixed_go2_rtx_qa",
+      "operator_capability_audit",
+      "independent_human_review",
+      "registry_binding"
+    ]
+  }
+}

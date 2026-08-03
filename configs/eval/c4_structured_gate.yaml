@@ -1,0 +1,32 @@
+experiment: A5.6
+method: registry_consistent_structured_gate
+frozen_before_final_collection: true
+frozen_date: 2026-07-18
+
+# Produced by calibration-only fitting on the original `appearance_split=train` rows.  This file
+# freezes the deployed decision before any c4-final snapshot is collected or evaluated.
+decision_inputs: [agent_label, posterior_argmax]
+forbidden_inputs: [truth, scenario, theta, appearance_id, appearance_split, physical_cost]
+fallback: backstep_detour
+accepted_strata:
+  - {agent_label: high_step, posterior_argmax: compliant_terrain}
+
+fit_constraints:
+  registry_canonical_primitive_required: true
+  min_calibration_appearance_clusters: 2
+  max_per_cluster_agent_minus_safe: 0.0
+  aggregate_agent_minus_safe_strictly_negative: true
+
+primary_endpoint:
+  metric: mean_physical_cost
+  comparator: always_safe
+  minimum_coverage: 0.10
+  success_gate: paired_two_stage_ci_upper_lt_zero
+  bootstrap_unit: appearance_cluster_within_scenario_plus_a4_episode
+  bootstrap_reps: 2000
+
+non_interference:
+  freeze_vla_weights: true
+  freeze_projector_weights: true
+  freeze_a1_a4_artifacts: true
+  no_truth_or_theta_at_deployment: true

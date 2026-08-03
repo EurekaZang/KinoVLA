@@ -1,0 +1,42 @@
+{
+  "schema_version": "kinofail.realistic-conflict-guarded-v2-development-freeze.v1",
+  "protocol_id": "realistic-conflict-guarded-v2-one-shot-development-20260724",
+  "status": "frozen_before_first_screen",
+  "created_utc": "2026-07-24T08:25:00+00:00",
+  "snapshot_dir": "outputs/eval/realistic_a0_a7_v6/snapshots",
+  "feature_dir": "outputs/eval/realistic_a0_a7_v6/features",
+  "scene_registry": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "output_root": "outputs/eval/realistic_conflict_guarded_v2_development",
+  "heldout_axes": [
+    "scene",
+    "material",
+    "scene_and_material"
+  ],
+  "seed": 20260724,
+  "router": {
+    "selection_source": "grouped out-of-fold predictions from the training fold only",
+    "minimum_override_precision": 0.9,
+    "minimum_override_groups": 6,
+    "fallback": "exact proprio-only probabilities when no OOF-certified override threshold exists"
+  },
+  "bootstrap": {
+    "unit": "paired counterfactual physics group",
+    "draws": 5000,
+    "seed": 2026072402
+  },
+  "screen_script": "scripts/screen_kinofail_realistic_conflict_guarded_v2.py",
+  "screen_script_sha256": "c3b64f4cef641495bdb94838e85a6b7c500cf89890e00b7cdb97c25faaae29d5",
+  "model_source": "kino_vla/eval/realistic_multimodal.py",
+  "model_source_sha256": "e75178b318a93681bb5860672b2acbfad4d257e6386637cf78e263690d54ebe3",
+  "forbidden_router_inputs": [
+    "heldout truth",
+    "heldout cost",
+    "scene identity",
+    "operator identity",
+    "severity",
+    "material identity",
+    "appearance identity",
+    "split label"
+  ],
+  "evidence_boundary": "One-shot architecture screen on an already-observed corpus. It can falsify this design but cannot confirm C2; any positive claim needs the unchanged architecture on an untouched extension."
+}

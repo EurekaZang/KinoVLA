@@ -1,0 +1,44 @@
+{
+  "schema_version": "kinofail.embodiedgen-o4-route-surface-v7-audit-amendment.v1",
+  "created_date": "2026-07-22",
+  "status": "frozen_after_collection_before_final_batch_seal",
+  "batch": {
+    "path": "configs/data/kinofail_embodiedgen_o4_route_surface_v7_confirmation_batch_v1.json",
+    "sha256": "1629744a521df99e81726cdfc7c5400d51b5e25bd88fda1e8b1a850efc9e9e46"
+  },
+  "prior_amendment": {
+    "path": "configs/data/kinofail_embodiedgen_o4_route_surface_v7_confirmation_batch_v1_amendment1.json",
+    "sha256": "a7edf035d3f645dd428ae1635e921bf4dad22524ae10b669dda56e6c5a122952"
+  },
+  "triggers": [
+    {
+      "type": "registered_adjudicator_priority",
+      "request": "indoor_kitchen_25",
+      "observation": "The collector's legacy all-frame aggregate returned false, while the preregistered phase-aware v6 formal audit returned true. The final batch audit must use v6 as the terminal adjudicator rather than short-circuiting on the stale raw flag."
+    },
+    {
+      "type": "pre_output_independence_exception",
+      "affected_requests": [
+        "indoor_office_27",
+        "indoor_bedroom_28"
+      ],
+      "observation": "The frozen v6 independence auditor raised before writing its native audit because each formal scene reused a calibration scene family (Office or Bedroom)."
+    }
+  ],
+  "administrative_change": "Add batch-auditor v3 that gives the already frozen phase-aware v6 result its registered priority and recognizes hash-bound family-overlap exceptions as terminal independence failures.",
+  "scientific_contract_changed": false,
+  "retry_or_replacement_authorized": false,
+  "unchanged": [
+    "all scene, material, and seed assignments",
+    "all collected nominal and O4 trajectories and RGB frames",
+    "all visual, physical, causal, and independence thresholds",
+    "the family-level held-out requirement",
+    "the full twelve-request denominator"
+  ],
+  "frozen_additions": {
+    "batch_auditor_v3": {
+      "path": "scripts/audit_embodiedgen_o4_route_surface_v7_batch_v3.py",
+      "sha256": "cf33eba7b54171c09f79646a6d674e9a2724b775613b62f690c6e0b994e53f4f"
+    }
+  }
+}

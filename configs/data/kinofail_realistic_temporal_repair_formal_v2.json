@@ -1,0 +1,142 @@
+{
+  "allowed": {
+    "camera_profiles": [
+      "go2_front_calib_a",
+      "go2_front_calib_b",
+      "go2_front_calib_c"
+    ],
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_073986c105277723f35d",
+      "cf_0794376c1852a73c66ba",
+      "cf_0872d6613640168f9629",
+      "cf_091f6a0a9457a975163e",
+      "cf_0a28a1cea130b19ac36c",
+      "cf_139c67dd02a8f5c33053",
+      "cf_293a99486076da9460f5",
+      "cf_399dfae2f8bcff05bb98",
+      "cf_42d2cd2e63eaa6b6bcb2",
+      "cf_437738087702d59d2b58",
+      "cf_49086157f12f126810e5",
+      "cf_62a6479ab8bf75d403f9",
+      "cf_7a23a2cfa868b91fb20e",
+      "cf_8fd24c8c33c23a353e36",
+      "cf_97aa001526be3c41e2dc",
+      "cf_a24952e200d5ec6a5478",
+      "cf_b433b25072edb8afec49",
+      "cf_e8ccdbefae66c143cdf6"
+    ],
+    "design_cells": [
+      {
+        "physical_nuisance_profile_index": 1,
+        "severity_id": "severe",
+        "target_operator": "O3_collapse"
+      },
+      {
+        "physical_nuisance_profile_index": 3,
+        "severity_id": "severe",
+        "target_operator": "O8_invisible_collider"
+      }
+    ],
+    "geometry_profiles": [
+      "hidden_support_cells",
+      "transparent_panel"
+    ],
+    "physical_nuisance_profile_indices": [
+      1,
+      3
+    ],
+    "physical_realizations": [
+      "impulse_triggered_support_tile",
+      "transparent_acrylic"
+    ],
+    "scene_families": [
+      "forest_river_walk_metric_g07",
+      "forest_slope_metric_g06",
+      "forest_trail_metric_g03",
+      "indoor_bedroom_118",
+      "indoor_kitchen_140",
+      "indoor_livingroom_139",
+      "indoor_office_162",
+      "indoor_office_168",
+      "indoor_office_186"
+    ],
+    "severity_ids": [
+      "severe"
+    ],
+    "target_operators": [
+      "O3_collapse",
+      "O8_invisible_collider"
+    ]
+  },
+  "amendment": {
+    "changed": "Install O3 or O8 after a uniform 30-control-step (0.6 s) recorded locomotion pre-roll so the frozen 0.5 s observable history exists before the severe event.",
+    "model_predictions_available_at_freeze": false,
+    "pair_selection_is_complete_design_cells_not_outcome_cherry_picking": true,
+    "selection_basis": {
+      "affected_design_cells": [
+        {
+          "cell": "O3_collapse / severe / physical nuisance profile 1 / all nine registered scenes",
+          "observed_before_freeze": {
+            "affected_pairs_finished": 3,
+            "affected_pairs_with_too_few_proprio_samples": 3,
+            "anomaly_proprio_samples_each": 23
+          }
+        },
+        {
+          "cell": "O8_invisible_collider / severe / physical nuisance profile 3 / all nine registered scenes",
+          "observed_before_freeze": {
+            "affected_pairs_finished": 2,
+            "affected_pairs_with_too_few_proprio_samples": 2,
+            "anomaly_proprio_samples_each": 16,
+            "anomaly_rgb_frames_each": 4
+          }
+        }
+      ],
+      "all_unobserved_members_of_both_cells_included_prospectively": true
+    },
+    "unchanged": [
+      "all scheduled O3 and O8 physical parameters",
+      "five-profile route-entry nuisance definition",
+      "scene geometry and operator region",
+      "controller and commanded speed",
+      "body-fixed Go2 front camera",
+      "three synchronized PBR appearance views",
+      "counterfactual pairing",
+      "10 Hz RGB capture",
+      "runtime quality gates"
+    ]
+  },
+  "base_protocol": "configs/data/kinofail_realistic_scale_v8_replication_formal_v3.json",
+  "benchmark_id": "kinofail_realistic_scale_v8_replication_v1",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "counterfactual_pairs": 18,
+    "physical_episodes": 36,
+    "pre_operator_control_steps": 30,
+    "pre_operator_duration_s": 0.6,
+    "separate_repair_root_required": true
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_temporal_repair_v2.py",
+  "collector_sha256": "c4f7bbac488f3b7752db770b820727d0eda0efbe296948a1779966c6ae7ab83e",
+  "frozen_utc": "2026-07-23T19:20:00+00:00",
+  "protocol_id": "kinofail_realistic_scale_v8_temporal_repair_v2",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_scale_scene_registry_v1.json",
+  "scene_registry_sha256": "fb6141210bcf7ecd35c650ee85e033b935ef54757e25cc179ad21f35b7ac4853",
+  "schedule_path": "outputs/kinofail_realistic/design_scale_v8_replication_v1/full_schedule.jsonl",
+  "schedule_sha256": "35e9fef82d1cf58b0a92d0a334380db4e3476e94ccb223a8b9938cff4976197f",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "Uniform all-scene repair of the two frozen O3-severe/profile-1 and O8-severe/profile-3 cells whose valid mechanisms terminate before the predeclared observable window exists; no other pair is admitted.",
+  "status": "frozen",
+  "supersedes": {
+    "protocol": "configs/data/kinofail_realistic_o3_temporal_repair_formal_v1.json",
+    "protocol_sha256": "13b50fb21eadf11b682dba923b3391386c5170fcada481f795b75592b19b4c31",
+    "reason": "Runtime QA exposed the second complete O8 temporal-window cell before any model training or prediction."
+  }
+}

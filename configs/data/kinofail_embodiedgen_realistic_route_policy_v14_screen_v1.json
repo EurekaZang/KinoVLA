@@ -1,0 +1,120 @@
+{
+  "schema_version": "kinofail.embodiedgen-realistic-route-policy-v14-screen.v1",
+  "purpose": "First frozen realistic-scene inference screen for the newly trained low-speed route policy.",
+  "evidence_boundary": {
+    "evidence_role": "post_training_route_screen_only",
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "old_a0_a7_results_are_reference_only": true,
+    "completion_requires_new_realistic_corpus_training_inference_and_a0_a7": true
+  },
+  "training_freeze": {
+    "policy": {
+      "path": "outputs/locomotion/realistic_route_v1/policy.pt",
+      "sha256": "fb40283b56ec260fd14d8943684107557f2e49c3372c2fca7804f0879642b61f"
+    },
+    "training_manifest": {
+      "path": "outputs/locomotion/realistic_route_v1/training_manifest.json",
+      "sha256": "9ff62d1d0ba172a988bbe64f0efd829dad73d871f51424f068c29996564a805c"
+    },
+    "training_postrun_audit": {
+      "path": "outputs/eval/realistic_route_locomotion_v1_training_postrun.json",
+      "sha256": "f77f0a1361f6363f8792a9d17da9e36a7c6055cc9065fee37191a942bd480f6b"
+    },
+    "policy_admitted_before_this_screen": false
+  },
+  "failed_predecessor": {
+    "path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_direct_velocity_v13_screen_v1/postrun_audit.json",
+    "sha256": "5112e499ad5a5afea027419313ac6f55012e8edcf970bf8be4147ea38eaa86a1"
+  },
+  "source_freeze": {
+    "collector_wrapper": {
+      "path": "scripts/isaac_collect_realistic_route_operator_lane_v14.py",
+      "sha256": "ae0227c81916b1a74fdfab69856eec087464a3f7c05d5340f2029f01bff4acb9"
+    },
+    "collector_engine": {
+      "path": "scripts/isaac_collect_realistic_route_operator_lane_v6.py",
+      "sha256": "dcd4c399407c5ad38c50011326b85a845b19606c23e5a8c38220d90a71d9df5e"
+    },
+    "backend": {
+      "path": "kino_vla/sim/isaac_policy_backend.py",
+      "sha256": "2a2572dfdffb90b871fbeef37b242e4963f09c1a9c05daccd069fd9ba249ce80"
+    },
+    "controller": {
+      "path": "kino_vla/sim/realistic_route_controller_v3.py",
+      "sha256": "7e0f8281cd394cf6faa57bfc49aedc29444c1928358a8a7bf033b5499f12bf8d"
+    },
+    "runtime_gate": {
+      "path": "kino_vla/eval/realistic_route_runtime_gate.py",
+      "sha256": "9148478366022e4ae3db4a0bfe45218a272d5b57ceede1cce8593db41c146bb5"
+    },
+    "scene_contract": {
+      "path": "kino_vla/eval/realistic_route_scene_contract.py",
+      "sha256": "c466a8a6aa5b29d70cbe426e5c092a5cbac1e7792bcdf51812d3f5e7125e0022"
+    },
+    "route_protocol": {
+      "path": "kino_vla/sim/realistic_route_protocol_v2.py",
+      "sha256": "10256042d810456526a6ab5b93f291a612ff4ebd642adda7fd9d0de3d750572e"
+    },
+    "o2_operator": {
+      "path": "kino_vla/sim/operators/o2_compliance.py",
+      "sha256": "63abd0dbde8b38d90597e3a6daf7997d3936e9dedfeb72d1ddf715a5de13517e"
+    },
+    "material_lock": {
+      "path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json",
+      "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"
+    }
+  },
+  "execution_policy": {
+    "fresh_isaac_process": true,
+    "one_attempt": true,
+    "nominal_only": true,
+    "policy_is_only_change_from_v13": true,
+    "no_anomaly": true,
+    "pass_requires_every_runtime_check": true,
+    "if_failed_reject_policy_v1": true,
+    "if_passed_require_livingroom_and_diningroom_development_replication": true
+  },
+  "runtime": {
+    "operator": "o2",
+    "lane": "nominal",
+    "camera_profile": "go2_front_calib_b",
+    "steps": 650,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": 0.0,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.6,
+    "start_lateral_offset_m": 0.0,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": 0.0,
+    "forward_speed_mps": 0.18,
+    "maximum_route_deviation_m": 0.3,
+    "minimum_nominal_region_samples": 40,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.2,
+    "yaw_rate_limit_radps": 0.6,
+    "seed": 20261201
+  },
+  "scene": {
+    "scene_id": "indoor_kitchen_31",
+    "scene_family": "Kitchen",
+    "material_id": "test_ground073",
+    "terrain_compiled_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/compiled_scene_audit.json",
+      "sha256": "81155f31d69c0f05f8d5d55a51061589e3bc1a2e574a05444069788889141cf3"
+    },
+    "terrain_episode": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/episode_terrain_v2.usda",
+      "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"
+    },
+    "offline_usd_audit": {
+      "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/offline_usd_audit.json",
+      "sha256": "5f07c3fb7a45e10b3ef1bdbf5685fde0410fba1a9cf46e5cc498ac5ab8d334e3"
+    }
+  },
+  "planned_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_realistic_route_policy_v14_screen_v1/kitchen31/o2_nominal"
+}

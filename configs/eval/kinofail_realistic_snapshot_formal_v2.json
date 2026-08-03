@@ -1,0 +1,107 @@
+{
+  "amendment": {
+    "base_protocol": "configs/eval/kinofail_realistic_snapshot_formal_v1.json",
+    "base_protocol_sha256": "86b6eaf9def830e2cb7f14dbacbcf91e03234a7a47daddd4d9fef9981b31cde8",
+    "changed": "O10_effort_decay decision delay 0.0 s -> 0.8 s",
+    "created_utc": "2026-07-23T12:36:14.500973+00:00",
+    "sensor_qa_basis": {
+      "candidate_results": {
+        "0.0_s": {
+          "median": 0.0,
+          "minimum": 0.0
+        },
+        "0.4_s": {
+          "median": 0.19378569722175598,
+          "minimum": 0.003966059070080519
+        },
+        "0.8_s": {
+          "median": 1.486276626586914,
+          "minimum": 1.3888788223266602
+        },
+        "1.2_s": {
+          "reason": "requested RGB timestamps do not resolve to distinct 10 Hz frames",
+          "valid": false
+        }
+      },
+      "complete_o10_pairs_observed": 5,
+      "formal_features_or_predictions_existed": false,
+      "labels_or_model_accuracy_used": false,
+      "metric": "mean absolute anomaly-minus-nominal proprioception difference in the frozen 21-sample decision window",
+      "selection_rule": "Use the shortest tested delay that exposes a non-negligible O10 sensor consequence in every observed pair while retaining five distinct RGB frames."
+    },
+    "unchanged": [
+      "all collected episodes",
+      "event adapter",
+      "RGB offsets",
+      "proprioception window",
+      "all other operator delays",
+      "model architecture and heldout splits"
+    ]
+  },
+  "appearance_interventions": {
+    "count_views_as_independent_physical_samples": false,
+    "include_all_manifest_views": true,
+    "require_timestamp_identity_across_views": true,
+    "share_proprio_across_views": true
+  },
+  "development_only": false,
+  "operator_event_adapters": {
+    "coverage": "O1-O11",
+    "selection_rule": "predeclared measured mechanism events only; no outcome-maximum heuristic"
+  },
+  "output_dir": "outputs/eval/realistic_a0_a7_v4/snapshots",
+  "protocol_id": "realistic_snapshot_formal_scale_v7_o10_timing_v2",
+  "publication_guard": {
+    "may_satisfy_realistic_a0_a7": true,
+    "reason": "Formal extraction may support model-based A2/A3/A5/A7 only after A0 freezes the complete scale-v7 corpus and new training/inference artifacts bind this protocol."
+  },
+  "schema_version": "kinofail.realistic-snapshot-protocol.v2",
+  "selection": {
+    "allow_nonblocking_runtime_issue_suffixes": [
+      "appearance_effect_too_small"
+    ],
+    "operators_with_admitted_event_adapter": [
+      "O1_mu_field",
+      "O2_compliance",
+      "O3_collapse",
+      "O4_tether",
+      "O5_payload",
+      "O6_push",
+      "O7_visual_remap",
+      "O8_invisible_collider",
+      "O9_high_centering",
+      "O10_effort_decay",
+      "O11_obs_bias"
+    ],
+    "require_complete_counterfactual_pair": true,
+    "require_evaluation_eligible": false,
+    "require_runtime_validation_passed": true,
+    "required_collection_protocol_id": "kinofail_realistic_scale_396_v7"
+  },
+  "source_corpus_root": "outputs/kinofail_realistic/corpus_scale_v7",
+  "source_schedule": "outputs/kinofail_realistic/design_scale_v2/pilot_schedule.jsonl",
+  "source_schedule_sha256": "625b2e23a15e7400ae0e4468071d2724c4d28c266ad9446a0cfaeb8f03762385",
+  "status": "frozen_after_sensor_qa_before_formal_snapshot_extraction",
+  "temporal_alignment": {
+    "anchor": "first_predeclared_privileged_operator_event_in_anomaly_only",
+    "decision_delay_s": 0.0,
+    "decision_delay_s_by_operator": {
+      "O10_effort_decay": 0.8,
+      "O11_obs_bias": 0.4,
+      "O5_payload": 0.4
+    },
+    "max_proprio_end_skew_s": 0.021,
+    "max_rgb_target_skew_s": 0.041,
+    "minimum_decision_time_s": 0.42,
+    "nominal_alignment": "reuse_anomaly_event_and_decision_times_exactly",
+    "proprio_samples": 21,
+    "proprio_window_s": 0.5,
+    "rgb_offsets_from_decision_s": [
+      -0.4,
+      -0.3,
+      -0.2,
+      -0.1,
+      0.0
+    ]
+  }
+}

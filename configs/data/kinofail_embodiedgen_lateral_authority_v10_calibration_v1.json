@@ -1,0 +1,75 @@
+{
+  "schema_version": "kinofail.embodiedgen-lateral-authority-v10-calibration.v1",
+  "purpose": "Test one preregistered increase in common route-controller lateral authority after 106 pre-peak saturated steps in the retained v9 O2 nominal failure.",
+  "evidence_boundary": {
+    "evidence_role": "controller_authority_calibration_only",
+    "development_only": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "realistic_a0_a7_readiness": "0/8",
+    "completion_requires_new_realistic_corpus_training_inference_and_a0_a7": true
+  },
+  "calibration_basis": {
+    "v9_postrun_audit": {"path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_fixed_joint_reset_v9_calibration_v1/postrun_audit.json", "sha256": "e8cd8ac6faf4d1cee5d1a9d93cf7c0c1115bfeee5db9269a1e731c1fff05ed46"},
+    "v9_manifest": {"path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_fixed_joint_reset_v9_calibration_v1/kitchen31/o2_nominal_attempt1/lane_manifest.json", "sha256": "d227017ad51eeca44b77e64f9a5d664817cfc225fea3ba2f875c8c66515ec8ea"},
+    "v9_telemetry": {"path": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_fixed_joint_reset_v9_calibration_v1/kitchen31/o2_nominal_attempt1/telemetry.jsonl", "sha256": "0ac7eb9e2092ebc016bb8c7d2b2b738023a656c1e6d76aeee38146d010f36bd3"},
+    "measured_pre_peak_negative_saturation_steps": 106,
+    "v9_peak_absolute_route_offset_m": 0.3428860784950256,
+    "required_reduction_to_frozen_gate_m": 0.04288607849502561,
+    "policy_training_lateral_command_range_mps": [-1.0, 1.0],
+    "single_change": "lateral_limit_mps_from_0.16_to_0.20"
+  },
+  "source_freeze": {
+    "collector_wrapper": {"path": "scripts/isaac_collect_realistic_route_operator_lane_v10.py", "sha256": "c97d206609b54059d6e9a1c7f839dd56c5bb5cd1e75bce117510fd0f11f26181"},
+    "collector_engine": {"path": "scripts/isaac_collect_realistic_route_operator_lane_v6.py", "sha256": "080bf4e3771a16d641909e83e14920cf121cebbc291a147b2c2780cb84d763ef"},
+    "backend": {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "2a2572dfdffb90b871fbeef37b242e4963f09c1a9c05daccd069fd9ba249ce80"},
+    "reset_contract_test": {"path": "tests/test_isaac_inference_reset_contract.py", "sha256": "3b939fa5009df7c8e8ffe38dec0c9a2f455091f71a24549c566d4d61661f1500"},
+    "controller": {"path": "kino_vla/sim/realistic_route_controller_v3.py", "sha256": "7e0f8281cd394cf6faa57bfc49aedc29444c1928358a8a7bf033b5499f12bf8d"},
+    "runtime_gate": {"path": "kino_vla/eval/realistic_route_runtime_gate.py", "sha256": "9148478366022e4ae3db4a0bfe45218a272d5b57ceede1cce8593db41c146bb5"},
+    "scene_contract": {"path": "kino_vla/eval/realistic_route_scene_contract.py", "sha256": "c466a8a6aa5b29d70cbe426e5c092a5cbac1e7792bcdf51812d3f5e7125e0022"},
+    "route_protocol": {"path": "kino_vla/sim/realistic_route_protocol_v2.py", "sha256": "10256042d810456526a6ab5b93f291a612ff4ebd642adda7fd9d0de3d750572e"},
+    "o2_operator": {"path": "kino_vla/sim/operators/o2_compliance.py", "sha256": "63abd0dbde8b38d90597e3a6daf7997d3936e9dedfeb72d1ddf715a5de13517e"},
+    "material_lock": {"path": "outputs/assets/terrain_pbr_v1/terrain_assets.lock.json", "sha256": "6ed103a80e82ecc3060a8e2facda9fff8b91c6e800b74bb861e2fa7d5d0ab003"}
+  },
+  "scene": {
+    "scene_id": "indoor_kitchen_31",
+    "scene_family": "Kitchen",
+    "material_id": "test_ground073",
+    "route_surface_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/route_surface_v7_admission_audit.json", "sha256": "492729e6bc7315737976299ba0eb24b540480216a3be6816d62a5b185f2c45d9"},
+    "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/compiled_scene_audit.json", "sha256": "81155f31d69c0f05f8d5d55a51061589e3bc1a2e574a05444069788889141cf3"},
+    "terrain_episode": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/episode_terrain_v2.usda", "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"},
+    "offline_usd_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/offline_usd_audit.json", "sha256": "5f07c3fb7a45e10b3ef1bdbf5685fde0410fba1a9cf46e5cc498ac5ab8d334e3"}
+  },
+  "execution_policy": {
+    "fresh_isaac_process": true,
+    "one_attempt": true,
+    "failed_attempt_retained": true,
+    "run_o2_anomaly_only_after_nominal_passes": true,
+    "run_unseen_scenes_only_after_kitchen_nominal_passes": true,
+    "same_controller_contract_required_for_o1_o2_o3": true,
+    "no_further_gain_tuning_after_this_attempt": true
+  },
+  "runtime": {
+    "operator": "o2",
+    "lane": "nominal",
+    "seed": 20261082,
+    "camera_profile": "go2_front_calib_b",
+    "steps": 650,
+    "region_progress_m": 0.86,
+    "region_lateral_offset_m": 0.0,
+    "region_half_length_m": 0.45,
+    "region_half_width_m": 0.6,
+    "start_lateral_offset_m": 0.0,
+    "start_heading_offset_rad": 0.0,
+    "target_lateral_offset_m": -0.25,
+    "forward_speed_mps": 0.2,
+    "maximum_route_deviation_m": 0.3,
+    "minimum_nominal_region_samples": 40,
+    "cross_track_gain_per_s": 1.0,
+    "lateral_velocity_damping": 0.0,
+    "heading_gain_per_s": 2.0,
+    "lateral_limit_mps": 0.2,
+    "yaw_rate_limit_radps": 0.6
+  },
+  "planned_output": "outputs/kinofail_realistic/operator_confirmation/embodiedgen_lateral_authority_v10_calibration_v1/kitchen31/o2_nominal_attempt1"
+}

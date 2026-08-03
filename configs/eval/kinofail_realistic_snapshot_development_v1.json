@@ -1,0 +1,51 @@
+{
+  "schema_version": "kinofail.realistic-snapshot-protocol.v1",
+  "protocol_id": "realistic_snapshot_development_v1",
+  "status": "frozen_development",
+  "development_only": true,
+  "source_schedule": "outputs/kinofail_realistic/design_v1/pilot_schedule.jsonl",
+  "source_corpus_root": "outputs/kinofail_realistic/corpus_v1_formal",
+  "output_dir": "outputs/eval/realistic_a0_a7/snapshot_development_v1",
+  "selection": {
+    "require_evaluation_eligible": true,
+    "require_complete_counterfactual_pair": true,
+    "operators_with_admitted_event_adapter": [
+      "O4_tether"
+    ]
+  },
+  "temporal_alignment": {
+    "anchor": "first_privileged_operator_event_in_anomaly_only",
+    "decision_delay_s": 0.4,
+    "rgb_offsets_from_decision_s": [
+      -0.4,
+      -0.3,
+      -0.2,
+      -0.1,
+      0.0
+    ],
+    "max_rgb_target_skew_s": 0.041,
+    "proprio_window_s": 0.5,
+    "proprio_samples": 25,
+    "max_proprio_end_skew_s": 0.021,
+    "nominal_alignment": "reuse_anomaly_event_and_decision_times_exactly"
+  },
+  "appearance_interventions": {
+    "include_all_manifest_views": true,
+    "require_timestamp_identity_across_views": true,
+    "share_proprio_across_views": true,
+    "count_views_as_independent_physical_samples": false
+  },
+  "operator_event_adapters": {
+    "O4_tether": {
+      "telemetry_path": "adhesion.feet[*].event",
+      "accepted_values": [
+        "attached"
+      ],
+      "semantics": "first measured foot attachment"
+    }
+  },
+  "publication_guard": {
+    "may_satisfy_realistic_a0_a7": false,
+    "reason": "This frozen development extraction validates model-input wiring on an incomplete one-operator pilot; publication estimands require a new formal protocol after all 11 event adapters and the full corpus are admitted."
+  }
+}

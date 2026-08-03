@@ -1,0 +1,102 @@
+{
+  "allowed": {
+    "conditions": [
+      "anomaly",
+      "nominal_counterfactual"
+    ],
+    "counterfactual_group_ids": [
+      "cf_12173d3585bdd81a7191",
+      "cf_123d992b3fa1bf23db48",
+      "cf_1eb8fa318afd72038e1b",
+      "cf_235f4933b4f009b18f55",
+      "cf_24811af1f67730d5b3d7",
+      "cf_24d629ca1ce68be6aec8",
+      "cf_33bfdf32f66d889c088a",
+      "cf_3677fdba21be31b04e58",
+      "cf_37ac7ea238ca98d4f2b1",
+      "cf_3a228744afffc2b0ee8c",
+      "cf_5ff9bd1ee35e4bcce524",
+      "cf_64220f8a9ec0410666b6",
+      "cf_69824128f028d64b16d7",
+      "cf_7128f06a5c72c910ae67",
+      "cf_76dc7679d1cc7b870935",
+      "cf_7aea03c4cad0e629b2e2",
+      "cf_7ca55f92695938973a1a",
+      "cf_85560ce3833e23186e2c",
+      "cf_89ea0f1afb13159d0ddf",
+      "cf_8bdae96e8cf2f2f042f4",
+      "cf_8eae75a253f874936102",
+      "cf_9fca33a3d1bc51a4511c",
+      "cf_a27501b0601be942a18b",
+      "cf_a8a8ba3a2f98dc1a065f",
+      "cf_bb5e7fcaa6fd7192791a",
+      "cf_bd155ed5b6fc353ef8ef",
+      "cf_d43d40e0d4c02343c690",
+      "cf_ecfae95e90c30a0044fb",
+      "cf_f25bdc465e67b46a930b",
+      "cf_f84e75acf96c469077cb"
+    ],
+    "geometry_profiles": [
+      "same_surface_counterfactual",
+      "transparent_panel"
+    ],
+    "physical_realizations": [
+      "appearance_physics_swap",
+      "transparent_acrylic"
+    ],
+    "scene_families": [
+      "forest_trail_metric_g02",
+      "indoor_bedroom_190",
+      "indoor_office_156"
+    ],
+    "severity_ids": [
+      "moderate",
+      "severe"
+    ],
+    "target_operators": [
+      "O7_visual_remap",
+      "O8_invisible_collider"
+    ]
+  },
+  "amendment_id": "C2-v5-T3-A1-strong-material-swaps",
+  "amendment_sha256": "d502b0bff96463c1665890070f2b11d8accf862cdb4c785b3a9d18fb39ca5fc6",
+  "benchmark_id": "c2_bidirectional_confirmation_v5_t3_a1_strong_swaps",
+  "case_schedule_sha256": "be85c126c707bbe851e2a8f07ab8f8b1086b025e5586cfb10aa6b72873f19d5b",
+  "collection_contract": {
+    "a8_in_scope": false,
+    "appearance_views_per_episode": 3,
+    "counterfactual_pairs": 30,
+    "domains": 3,
+    "formal_collection_status": "formal_pilot",
+    "isaac_processes": 30,
+    "maximum_frame_highlight_fraction": 0.995,
+    "maximum_mean_highlight_fraction": 0.45,
+    "minimum_mean_appearance_pair_rgb_l1": 0.015,
+    "operators": 2,
+    "outcome_strength_is_reported_not_gated": true,
+    "pairs_per_process": 1,
+    "per_scene_parameter_tuning_forbidden": true,
+    "physical_episodes": 60,
+    "runtime_schema": "kinofail.realistic-runtime.v5",
+    "scene_families": 3,
+    "strong_material_swaps_per_episode": 2
+  },
+  "collector_path": "scripts/isaac_collect_kinofail_realistic_pair_v3.py",
+  "collector_sha256": "0ba9575432e22da3b1ef9824758186f5381226470b5b36ce6fcf078bb1953686",
+  "design_audit_sha256": "f2e3ba342daf2d5ffd856ff738aea53c63b79f60db69022e572475d2e49106f9",
+  "frozen_utc": "2026-07-24T15:19:11.673854+00:00",
+  "model_predictions_available_at_freeze": false,
+  "protocol_id": "kinofail-realistic-c2-v5-t3-collection-amendment1",
+  "runner_path": "scripts/run_kinofail_realistic_c2_v4_t3_isolated.py",
+  "runner_sha256": "5157f1ee23ee23bf1d1ba04fba0979543ddf6ea70217e28a244ade5929d21d48",
+  "runtime_manifest_path": "kino_vla/data/runtime_manifest.py",
+  "runtime_manifest_sha256": "617e8d8b3d7f838191ea60a53aec9b2b3634cb7e9164074f3ce6a2738dd9e756",
+  "scene_registry_path": "configs/data/kinofail_realistic_c2_v5_confirmation_scene_registry.json",
+  "scene_registry_sha256": "6665a1accf81446b74d8eda81dc736f0077a17b292e9ec3041c2c4f40ae757f5",
+  "schedule_path": "outputs/kinofail_realistic/design_c2_bidirectional_confirmation_v5_t3_amendment1/schedule.jsonl",
+  "schedule_sha256": "9bd80a2eafbac477b1ddfa25c2d8e0d57678421e19ed7bd67e0ee6d28d1b5e6b",
+  "schema_version": "kinofail.formal-collection-protocol.v1",
+  "scope": "60 physical episodes / 30 nominal-anomaly O7/O8 pairs with two strong material swaps on three fresh C2 scenes.",
+  "status": "frozen",
+  "supersedes_sha256": "14738bf868db60c9151c53e8ccdc548279b63ad41fd5a7e616780ac439eee904"
+}

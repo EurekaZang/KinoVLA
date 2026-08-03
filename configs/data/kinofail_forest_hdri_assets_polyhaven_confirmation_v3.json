@@ -1,0 +1,60 @@
+{
+  "schema_version": "kinofail.forest-hdri-assets.v1",
+  "status": "frozen_new_visual_family_candidates_before_v3_confirmation_runtime",
+  "provider": {
+    "name": "Poly Haven",
+    "api": "https://api.polyhaven.com",
+    "license": "CC0",
+    "license_url": "https://polyhaven.com/license",
+    "api_terms_url": "https://polyhaven.com/our-api"
+  },
+  "selection_policy": {
+    "purpose": "Two photographic forest backgrounds not used by any G01-G05 operator run, reserved for the first unseen-scene confirmation of the phase-robust O1/O2 admission candidate.",
+    "resolution": "4k",
+    "format": "hdr",
+    "selection_uses_model_results": false,
+    "candidate_reason": "Forest Slope adds summer dappled-slope illumination; River Walk 1 adds warm canopy light. Both differ from Monks, Whipple and Hochsal while retaining a plausible dirt-trail context for the metric near field."
+  },
+  "assets": [
+    {
+      "id": "forest_slope",
+      "display_name": "Forest Slope",
+      "asset_page": "https://polyhaven.com/a/forest_slope",
+      "metadata_api": "https://api.polyhaven.com/info/forest_slope",
+      "files_api": "https://api.polyhaven.com/files/forest_slope",
+      "author": "Andreas Mischok",
+      "categories": ["outdoor", "nature", "morning-afternoon", "low contrast", "natural light"],
+      "tags": ["tree", "forest", "summer", "rock", "hill"],
+      "file": {
+        "relative_path": "forest_slope/forest_slope_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/forest_slope_4k.hdr",
+        "bytes": 29764886,
+        "md5": "9418559aa2355e62621503115240efd4"
+      }
+    },
+    {
+      "id": "river_walk_1",
+      "display_name": "River Walk 1",
+      "asset_page": "https://polyhaven.com/a/river_walk_1",
+      "metadata_api": "https://api.polyhaven.com/info/river_walk_1",
+      "files_api": "https://api.polyhaven.com/files/river_walk_1",
+      "author": "Greg Zaal",
+      "categories": ["outdoor", "nature", "sunrise-sunset", "medium contrast", "natural light"],
+      "tags": ["forest", "tree", "path", "bush", "leaves", "canopy"],
+      "file": {
+        "relative_path": "river_walk_1/river_walk_1_4k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/river_walk_1_4k.hdr",
+        "bytes": 29948313,
+        "md5": "02665985562522b5ce33b842ff0c182d"
+      }
+    }
+  ],
+  "interpretation_policy": {
+    "photographic_hdri_is_not_embodiedgen_output": true,
+    "kino_fail_owns_metric_near_field_collision_and_operators": true,
+    "new_hdri_alone_does_not_count_as_an_independent_physical_scene": true,
+    "must_be_crossed_with_new_g06_g07_metric_geometries": true,
+    "frozen_before_v3_confirmation_runtime": true,
+    "counts_as_a0_a7_evidence": false
+  }
+}

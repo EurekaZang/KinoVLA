@@ -1,0 +1,54 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v7-development",
+  "iteration_id": "forest-whipple-cool-overcast-appearance-v15",
+  "status": "development_synchronized_appearance_family_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v14.json",
+    "sha256": "f1b60ae56f6a8e35ff7a2c977af6d7ea79dda4220c85b2be9e4f6b8f7fada824"
+  },
+  "overrides": {
+    "background": {
+      "panorama": {
+        "path": "outputs/assets/forest_hdri_polyhaven_extension_v2/whipple_creek_regional_park_04/whipple_creek_regional_park_04_4k.hdr",
+        "sha256": "2c2e5b914fed6d58af73ec2e0f7184034e51d4b16a563506f79491c97504ae3a"
+      },
+      "preflight": {
+        "path": "outputs/assets/forest_hdri_polyhaven_extension_v2/whipple_creek_regional_park_04/preflight.json",
+        "sha256": "9cf2a795e4831841605c8f4795e1b79323bcd75aab55f520af93ed3e30161308"
+      },
+      "intensity": 120.0,
+      "rotation_xyz_deg": [0.0, 0.0, 180.0]
+    },
+    "appearance": {
+      "route_material_lock": {
+        "path": "outputs/assets/forest_textures_polyhaven_v2/terrain_assets.lock.json",
+        "sha256": "8e6e4263d80146c9210fc703b59224bd76f99ed35e42ef0d74f456ed8c74fc78"
+      },
+      "route_material_id": "train_polyhaven_forrest_ground03_2k",
+      "route_expected_split": "train",
+      "surrounding_material_lock": {
+        "path": "outputs/assets/forest_textures_polyhaven_extension_v2/terrain_assets.lock.json",
+        "sha256": "d0216db315b92a8c1a6b9e1fc2872b2f698e01c3b5de72330e39dfa34f105aa2"
+      },
+      "surrounding_material_id": "train_polyhaven_forest_leaves02_2k",
+      "surrounding_expected_split": "train"
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_whipple_dev01/isaac_hybrid_composition_dev_v15"
+    }
+  },
+  "appearance_family_contract": {
+    "family_id": "forest_whipple_cool_overcast_train",
+    "family_role": "train_randomization",
+    "physical_layout_source": "kinofail_forest_hybrid_composition_dev_v14.json",
+    "physical_operator_parameters_unchanged": true,
+    "camera_and_capture_protocol_unchanged": true,
+    "panorama_and_material_selection_frozen_before_model_evaluation": true
+  },
+  "quality_policy": {
+    "body_fixed_go2_rtx_review_required": true,
+    "nominal_and_anomaly_pair_must_be_recollected": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

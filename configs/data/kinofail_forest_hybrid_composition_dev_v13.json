@@ -1,0 +1,33 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v6-development",
+  "iteration_id": "forest-photographic-hdri-opaque-ground-fine-mesh-v13",
+  "status": "development_fine_mesh_pair_iteration_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v12.json",
+    "sha256": "d85fe7a4eef38fccd06836d06fc584c1a48d65c8cc5df9439295c486dd53a392"
+  },
+  "overrides": {
+    "near_field": {
+      "visual_height_variation": {
+        "grid_spacing_m": 0.06
+      }
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v13"
+    }
+  },
+  "predecessor_result": {
+    "config": "configs/data/kinofail_forest_hybrid_composition_dev_v12.json",
+    "nominal_visual_gate": "passed",
+    "anomaly_physics_gate": "passed",
+    "anomaly_sequence_gate": "failed_because_terminal_frame_was_captured_after_fall",
+    "residual_visual_issue": "12_cm_visual_mesh_left_minor_triangular_faceting_at_sink_boundary"
+  },
+  "quality_policy": {
+    "six_centimeter_visual_mesh_is_appearance_only": true,
+    "paired_frames_use_pre_entry_inside_region_and_matched_consequence_events": true,
+    "body_fixed_go2_rtx_review_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

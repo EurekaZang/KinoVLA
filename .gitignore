@@ -13,8 +13,23 @@ venv/
 .ruff_cache/
 .mypy_cache/
 
+# Local documentation, paper, and presentation material
+.claude/
+docs/
+paper/
+A实验/
+*.md
+*.pdf
+*.ppt
+*.pptx
+*.doc
+*.docx
+*.tex
+
 # Large artifacts: checkpoints, datasets, rollout logs (QA 5.4 — never in git)
 outputs/
+logs/
+*.log
 *.ckpt
 *.pt
 *.pth

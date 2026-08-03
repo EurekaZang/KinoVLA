@@ -49,6 +49,7 @@ attribution:
 # strategy" is caught even when the symptom (proprioception) is identical (spec §5, §8.1 P4).
 recovery:
   feasible:
+    nominal: [continue]
     low_friction: [Set_Constraint, Adjust_Posture]
     compliant_terrain: [Switch_Gait, Set_Constraint]
     region_collapse: [Update_Topology, Replan_Waypoint, Backstep]
@@ -60,6 +61,7 @@ recovery:
     high_centering: [Adjust_Posture, Backstep]
     obs_bias: [Set_Constraint]
   canonical:
+    nominal: continue
     low_friction: Set_Constraint
     compliant_terrain: Switch_Gait
     region_collapse: Update_Topology
@@ -155,7 +157,7 @@ oracle:
   confab_rate: 0.25   # fraction of (non-deceptive) snapshots the surrogate Oracle confabulates
   prompt:
     primitive_library:
-      [Backstep, Replan_Waypoint, Switch_Gait, Adjust_Posture, Set_Constraint, Update_Topology, Hold_and_Request]
+      [continue, Backstep, Replan_Waypoint, Switch_Gait, Adjust_Posture, Set_Constraint, Update_Topology, Hold_and_Request]
     category_vocabulary:
       [low_friction, compliant_terrain, region_collapse, adhesion, overload, effort_decay, external_push, invisible_obstacle, high_centering, obs_bias, nominal]
     model: gemini-3.1-pro   # spec §10 names an external Oracle LLM (e.g. Gemini 3.1 Pro)

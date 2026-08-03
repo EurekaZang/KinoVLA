@@ -1,0 +1,148 @@
+{
+  "schema_version": "kinofail.realistic-a0-a7-replication-contract.v1",
+  "contract_id": "kinofail-realistic-a0-a7-20260722-v1",
+  "status": "development_contract_frozen_before_full_pilot_collection",
+  "scope": "A0-A7 realistic replication; controlled-core results are reference effects, not substitutes",
+  "benchmark": {
+    "physical_episodes": 396,
+    "counterfactual_groups": 198,
+    "appearance_view_sequences": 1188,
+    "operators": 11,
+    "domains": 3,
+    "scene_families": 9,
+    "scene_families_per_domain": 3,
+    "camera_profiles": 3,
+    "appearance_views_per_episode": 3
+  },
+  "evidence_roots": {
+    "scene_registry": "outputs/kinofail_realistic/scene_registry/registry_audit.json",
+    "runtime_audit": "outputs/kinofail_realistic/runtime_audit/formal_pilot_partial/runtime_audit.json",
+    "runtime_coverage": "outputs/kinofail_realistic/runtime_audit/formal_pilot_partial/coverage.json",
+    "snapshot_development_audit": "outputs/eval/realistic_a0_a7/snapshot_development_v1/extraction_audit.json",
+    "training_manifest": "outputs/eval/realistic_a0_a7/training_manifest.json",
+    "inference_manifest": "outputs/eval/realistic_a0_a7/inference_manifest.json",
+    "predictions": "outputs/eval/realistic_a0_a7/predictions.jsonl"
+  },
+  "experiments": {
+    "A0": {
+      "output": "outputs/eval/realistic_a0_a7/a0_certificate.json",
+      "role": "corpus, provenance, synchronization, determinism and leakage certificate",
+      "acceptance": {
+        "evaluation_eligible_records": 396,
+        "complete_counterfactual_pairs": 198,
+        "registered_scene_families": 9,
+        "domains": 3,
+        "operators": 11,
+        "camera_profiles": 3,
+        "texture_swap_runtime_pass": true,
+        "scene_registry_fully_bound": true,
+        "publication_freeze_ready": true
+      }
+    },
+    "A1": {
+      "output": "outputs/eval/realistic_a0_a7/a1_construct_validity.json",
+      "role": "fresh-app matched O2/O4 construct validity on body-fixed multimodal sequences",
+      "acceptance": {
+        "minimum_scene_clusters": 9,
+        "c2st_auc_equivalence_margin_from_chance": 0.10,
+        "c2st_cluster_ci_must_lie_inside_equivalence_band": true,
+        "vision_auc_cluster_ci_lower": 0.80,
+        "fresh_app_and_deep_reset_required": true,
+        "all_three_domains_required": true
+      }
+    },
+    "A2": {
+      "output": "outputs/eval/realistic_a0_a7/a2_headline.json",
+      "role": "multimodal conflict learning with scene/material/combined heldout evaluation",
+      "acceptance": {
+        "training_seeds": 5,
+        "required_heldout_axes": ["scene", "material", "scene_and_material"],
+        "ours_minimum_combined_balanced_accuracy": 0.80,
+        "ours_minus_unshaped_cluster_ci_lower": 0.0,
+        "report_all_baselines_without_champion_claim_if_ci_overlaps": true
+      }
+    },
+    "A3": {
+      "output": "outputs/eval/realistic_a0_a7/a3_publication_report.json",
+      "role": "three-domain T1-T5 bidirectional conflict battery",
+      "acceptance": {
+        "training_seeds": 5,
+        "require_every_seed": true,
+        "domains": 3,
+        "T1": 0.90,
+        "T2": 1.0,
+        "T3_strictly_greater_than": 0.917,
+        "T4": 1.0,
+        "T5": 0.90,
+        "T3_subcells": {
+          "looks_safe": 0.90,
+          "transparent_or_thin_obstacle": 0.90,
+          "reverse_conflict": 0.90
+        },
+        "worst_cell": 0.90,
+        "macro": 0.95,
+        "minimum_independent_scene_physics_clusters": 33
+      }
+    },
+    "A4": {
+      "output": "outputs/eval/realistic_a0_a7/a4_consequence.json",
+      "role": "actual-action recovery consequence on corrected realistic physics",
+      "acceptance": {
+        "required_headline_operators": ["O2", "O4", "O5", "O8", "O9"],
+        "actual_action_required": true,
+        "minimum_episode_seeds_per_action_cell": 10,
+        "scene_clustered_paired_bootstrap_required": true,
+        "weak_or_non_identifiable_cells_must_remain_in_report": true
+      }
+    },
+    "A5": {
+      "output": "outputs/eval/realistic_a0_a7/a5_selective.json",
+      "role": "heldout-scene/material/lighting/camera/realization generalization and selective recovery",
+      "acceptance": {
+        "required_heldout_axes": ["scene", "material", "lighting", "camera_profile", "physical_realization"],
+        "selective_minus_always_safe_cluster_ci_upper": 0.0,
+        "released_attribution_precision": 0.95,
+        "texture_swap_hard_consistency": 0.95,
+        "texture_swap_pairwise_agreement": 0.95,
+        "texture_swap_mean_probability_jsd_max": 0.05,
+        "negative_ood_or_abstention_results_must_be_retained": true
+      }
+    },
+    "A6": {
+      "output": "outputs/eval/realistic_a0_a7/a6_boundary.json",
+      "role": "measured-parameter severity and intervention-boundary analysis",
+      "acceptance": {
+        "minimum_operator_parameter_families": 5,
+        "minimum_levels_per_parameter": 4,
+        "minimum_independent_seeds_per_level": 5,
+        "interval_estimates_required": true,
+        "no_interpolated_point_claim_without_identified_bracket": true
+      }
+    },
+    "A7": {
+      "output": "outputs/eval/realistic_a0_a7/a7_ablation.json",
+      "role": "realism, camera, physics and texture-intervention ablations",
+      "acceptance": {
+        "training_seeds": 3,
+        "required_ablations": [
+          "default_grid_vs_realistic_scene",
+          "procedural_texture_vs_scanned_pbr",
+          "world_follow_vs_body_fixed_camera",
+          "surrogate_trunk_effect_vs_local_physics",
+          "texture_vs_geometry_vs_physics_intervention",
+          "without_texture_swap_consistency"
+        ],
+        "paired_scene_cluster_statistics_required": true
+      }
+    }
+  },
+  "claim_policy": {
+    "controlled_core_may_be_reported_separately": true,
+    "realistic_result_may_not_be_inherited_from_controlled_core": true,
+    "realistic_a0_a7_complete_requires_all_eight_experiments": true,
+    "completion_requires_hash_bound_realistic_corpus_training_inference_and_predictions": true,
+    "model_based_experiments": ["A2", "A3", "A5", "A7"],
+    "sim2real_validated_requires_real_go2_anchor": true,
+    "current_allowed_term_before_real_anchor": "sim2real-oriented synthetic causal benchmark"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v6-development",
+  "iteration_id": "forest-photographic-hdri-opaque-composited-ground-v12",
+  "status": "development_opaque_ground_iteration_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v9.json",
+    "sha256": "bc040a91eb1aee5ebf762040413f0ac03629bee2dffc727866c47e89d6ac1e95"
+  },
+  "overrides": {
+    "near_field": {
+      "naturalized_route_visual": {
+        "enabled": false,
+        "feathered_edge": false
+      },
+      "visual_height_variation": {
+        "enabled": true,
+        "appearance_only": true,
+        "grid_spacing_m": 0.12,
+        "amplitude_m": 0.040,
+        "wavelength_m": 2.3,
+        "route_boundary_fade_m": 0.9,
+        "phase_rad": 0.37
+      },
+      "opaque_composited_ground": {
+        "enabled": true,
+        "appearance_only": true,
+        "max_texture_dimension_px": 2048,
+        "seed": 1207,
+        "noise_grid_size": 15,
+        "core_half_width_m": 0.43,
+        "outer_half_width_m": 1.02,
+        "width_variation_m": 0.10,
+        "centerline_wander_m": 0.08,
+        "noise_amplitude_m": 0.045,
+        "wavelength_m": 4.2,
+        "phase_rad": 0.83
+      }
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v12"
+    }
+  },
+  "failed_predecessors": [
+    {
+      "config": "configs/data/kinofail_forest_hybrid_composition_dev_v10.json",
+      "failure": "Overlapping transparent route meshes caused liquid-trench RTX artifacts."
+    },
+    {
+      "config": "configs/data/kinofail_forest_hybrid_composition_dev_v11.json",
+      "failure": "Vertex-opacity feathering still exposed thin-film walls and route geometry."
+    }
+  ],
+  "visual_physics_separation": {
+    "one_continuous_opaque_visual_mesh": true,
+    "basecolor_normal_roughness_are_precomposited": true,
+    "physical_route_boundary_is_inside_soft_texture_transition": true,
+    "collision_route_is_unchanged": true,
+    "operator_parameters_are_unchanged": true
+  },
+  "quality_policy": {
+    "body_fixed_go2_rtx_review_required": true,
+    "anomaly_lane_is_forbidden_until_nominal_human_review_passes": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}

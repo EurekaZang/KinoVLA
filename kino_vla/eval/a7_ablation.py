@@ -159,9 +159,11 @@ def _binom_two_sided_p(k: int, n: int) -> float:
         return 1.0
     from math import comb
 
-    probs = [comb(n, i) * 0.5**n for i in range(n + 1)]
-    p_obs = probs[k]
-    return float(min(1.0, sum(pi for pi in probs if pi <= p_obs + 1e-12)))
+    # McNemar calls this with k=min(b, c), hence k <= n/2. For p=0.5 the
+    # exact two-sided probability is twice the lower tail. An absolute
+    # comparison tolerance would swamp genuinely tiny probabilities.
+    lower_tail = sum(comb(n, i) * 0.5**n for i in range(k + 1))
+    return float(min(1.0, 2.0 * lower_tail))
 
 
 def mcnemar(a_correct: list[bool], b_correct: list[bool]) -> dict[str, Any]:
@@ -176,7 +178,7 @@ def mcnemar(a_correct: list[bool], b_correct: list[bool]) -> dict[str, Any]:
         "b_a_right_b_wrong": b,
         "c_a_wrong_b_right": c,
         "discordant": disc,
-        "p_exact_two_sided": round(p, 6),
+        "p_exact_two_sided": p,
         "b_better": c > b,
         "significant_05": p < 0.05,
     }
@@ -231,9 +233,9 @@ def risk_coverage_curve(
 ) -> list[dict[str, Any]]:
     """Expected cost as high-score rows abstain to a safe default.
 
-    Lower scores are treated as safer/more confident. A row is covered (uses the agent decision) when
-    ``score <= tau`` and abstains to ``cost_safe`` otherwise. The curve always includes coverage 0 and
-    coverage 1 endpoints and is suitable for AURC integration.
+    Lower scores are treated as safer/more confident. A row is covered (uses the agent
+    decision) when ``score <= tau`` and abstains to ``cost_safe`` otherwise. The curve
+    always includes coverage 0 and coverage 1 endpoints and is suitable for AURC integration.
     """
     if not rows:
         return []
@@ -249,7 +251,10 @@ def risk_coverage_curve(
     curve = []
     for tau in thresholds:
         covered = [p["score"] <= tau for p in pts]
-        costs = [p["cost_agent"] if keep else p["cost_safe"] for p, keep in zip(pts, covered, strict=True)]
+        costs = [
+            p["cost_agent"] if keep else p["cost_safe"]
+            for p, keep in zip(pts, covered, strict=True)
+        ]
         curve.append(
             {
                 "tau": float(tau),
@@ -272,7 +277,7 @@ def risk_coverage_auc(curve: list[dict[str, Any]]) -> float:
         return 0.0
     pts = sorted((float(p["coverage"]), float(p["expected_cost"])) for p in curve)
     area = 0.0
-    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:], strict=False):
         area += (x1 - x0) * (y0 + y1) / 2.0
     return round(area, 3)
 
@@ -300,15 +305,40 @@ def heldout_threshold_selection(
     score_field: str,
     split_seed: int = 0,
     calibration_frac: float = 0.5,
+    split_field: str | None = None,
+    calibration_value: str = "train",
+    test_value: str = "test",
 ) -> dict[str, Any]:
-    """Select the risk-coverage threshold on calibration rows and evaluate it on held-out rows."""
-    ordered = sorted(rows, key=lambda r: str(r.get("sample_id") or r.get("sid") or ""))
-    rng = random.Random(int(split_seed))
-    shuffled = list(ordered)
-    rng.shuffle(shuffled)
-    n_cal = max(1, min(len(shuffled) - 1, int(round(len(shuffled) * float(calibration_frac)))))
-    cal = shuffled[:n_cal]
-    test = shuffled[n_cal:]
+    """Select on calibration rows and evaluate once on held-out rows.
+
+    When ``split_field`` is supplied, the function consumes a frozen, pre-registered split (for
+    A7 this is the appearance train/test split).  The legacy deterministic random split remains
+    available for generic unit tests and callers without split metadata.
+    """
+    if split_field is not None:
+        cal = [r for r in rows if str(r.get(split_field)) == str(calibration_value)]
+        test = [r for r in rows if str(r.get(split_field)) == str(test_value)]
+        if not cal or not test:
+            raise ValueError(
+                f"frozen split {split_field!r} needs non-empty {calibration_value!r}/"
+                f"{test_value!r} rows"
+            )
+        split_protocol = "frozen_field"
+    else:
+        ordered = sorted(rows, key=lambda r: str(r.get("sample_id") or r.get("sid") or ""))
+        rng = random.Random(int(split_seed))
+        shuffled = list(ordered)
+        rng.shuffle(shuffled)
+        n_cal = max(
+            1,
+            min(
+                len(shuffled) - 1,
+                int(round(len(shuffled) * float(calibration_frac))),
+            ),
+        )
+        cal = shuffled[:n_cal]
+        test = shuffled[n_cal:]
+        split_protocol = "deterministic_random"
     curve = risk_coverage_curve(cal, score_field=score_field)
     best = min(curve, key=lambda p: (float(p["expected_cost"]), -float(p["coverage"])))
     tau = float(best["tau"])
@@ -317,8 +347,12 @@ def heldout_threshold_selection(
         "calibration": best,
         "test": _eval_threshold(test, score_field=score_field, tau=tau),
         "splits": {
+            "protocol": split_protocol,
             "split_seed": int(split_seed),
             "calibration_frac": float(calibration_frac),
+            "split_field": split_field,
+            "calibration_value": calibration_value if split_field is not None else None,
+            "test_value": test_value if split_field is not None else None,
             "calibration_ids": [str(r.get("sample_id") or r.get("sid")) for r in cal],
             "test_ids": [str(r.get("sample_id") or r.get("sid")) for r in test],
         },
@@ -343,10 +377,16 @@ def conformal_risk_control(
     candidates = []
     for point in risk_coverage_curve(rows, score_field=score_field):
         stats = _eval_threshold(rows, score_field=score_field, tau=float(point["tau"]))
-        ucb = _normal_hoeffding_ucb(float(stats["expected_cost"]), int(stats["n"]), alpha, cost_range)
+        ucb = _normal_hoeffding_ucb(
+            float(stats["expected_cost"]), int(stats["n"]), alpha, cost_range
+        )
         candidates.append({**point, "ucb_mean_cost": round(ucb, 3)})
     feasible = [c for c in candidates if float(c["ucb_mean_cost"]) <= float(risk_budget)]
-    selected = max(feasible, key=lambda c: (float(c["coverage"]), -float(c["expected_cost"]))) if feasible else min(candidates, key=lambda c: float(c["ucb_mean_cost"]))
+    selected = (
+        max(feasible, key=lambda c: (float(c["coverage"]), -float(c["expected_cost"])))
+        if feasible
+        else min(candidates, key=lambda c: float(c["ucb_mean_cost"]))
+    )
     return {
         "risk_budget": float(risk_budget),
         "alpha": float(alpha),
@@ -357,9 +397,7 @@ def conformal_risk_control(
     }
 
 
-def posterior_mean_variance(
-    posteriors: list[dict[str, dict[str, float]]], sample_id: str
-) -> float:
+def posterior_mean_variance(posteriors: list[dict[str, dict[str, float]]], sample_id: str) -> float:
     """Mean per-category predictive variance across posterior-producing seeds."""
     rows = [p[sample_id] for p in posteriors if sample_id in p]
     cats = sorted({cat for row in rows for cat in row})
@@ -479,8 +517,7 @@ def dose_curve_summary(
         rec = {"dose": int(dose), **cell}
         if prev_rows is not None:
             by_id_prev = {
-                str(r.get("sample_id") or r.get("sid")): bool(r.get(field))
-                for r in prev_rows
+                str(r.get("sample_id") or r.get("sid")): bool(r.get(field)) for r in prev_rows
             }
             paired_prev, paired_cur = [], []
             for r in rows:
@@ -506,7 +543,7 @@ def status_counts(rows: dict[str, dict[str, Any]]) -> dict[str, int]:
 
 
 def mean_rate_cells(cells: list[dict[str, Any]]) -> dict[str, Any]:
-    """Average already-reduced proportion cells across seeds without pretending raw trials pooled."""
+    """Average reduced proportion cells without pretending raw trials are pooled."""
     if not cells:
         return {"n_cells": 0, "mean_rate": 0.0, "min_rate": 0.0, "max_rate": 0.0}
     rates = [float(c.get("rate", c.get("acc", 0.0))) for c in cells]
@@ -524,7 +561,10 @@ def aggregate_dose_curves(curves: dict[str, dict[str, Any]]) -> dict[str, Any]:
     for curve in curves.values():
         for rec in curve.get("curve", []):
             by_dose[str(int(rec["dose"]))].append(rec)
-    reduced = {dose: mean_rate_cells(cells) for dose, cells in sorted(by_dose.items(), key=lambda kv: int(kv[0]))}
+    reduced = {
+        dose: mean_rate_cells(cells)
+        for dose, cells in sorted(by_dose.items(), key=lambda kv: int(kv[0]))
+    }
     best_dose = None
     if reduced:
         best_dose = max(reduced.items(), key=lambda kv: (kv[1]["mean_rate"], -int(kv[0])))[0]
@@ -532,7 +572,8 @@ def aggregate_dose_curves(curves: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "n_seeds": len(curves),
         "by_dose": reduced,
         "best_mean_dose": None if best_dose is None else int(best_dose),
-        "monotone_all_seeds": bool(curves) and all(bool(c.get("monotone_non_decreasing")) for c in curves.values()),
+        "monotone_all_seeds": bool(curves)
+        and all(bool(c.get("monotone_non_decreasing")) for c in curves.values()),
     }
 
 
@@ -560,7 +601,9 @@ def tail_window_rows(rows: list[list[float]] | tuple[Any, ...], length: int) -> 
     return seq[-n:]
 
 
-def _best_available_encoder(cells: dict[str, dict[str, Any]], metric: str, *, higher: bool) -> dict[str, Any] | None:
+def _best_available_encoder(
+    cells: dict[str, dict[str, Any]], metric: str, *, higher: bool
+) -> dict[str, Any] | None:
     vals = []
     for key, cell in cells.items():
         if cell.get("status") != "available" or metric not in cell:
@@ -593,9 +636,10 @@ def aggregate_encoder_grid(cells: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "blocked_cells": len(cells) - available,
         "best_theta_mae": _best_available_encoder(cells, "theta_mae_mean", higher=False),
         "best_attr_acc": _best_available_encoder(cells, "attr_acc", higher=True),
-        "best_residual_error_auroc": _best_available_encoder(cells, "residual_error_auroc", higher=True),
+        "best_residual_error_auroc": _best_available_encoder(
+            cells, "residual_error_auroc", higher=True
+        ),
     }
-
 
 
 def ers_regret_from_agent_rows(
@@ -618,7 +662,12 @@ def ers_regret_from_agent_rows(
             label = str(row.get("primitive") or row.get("label") or row.get("pred_label"))
             scenario_costs = m_cost.get(scenario)
             canonical = canonical_label.get(scenario)
-            if scenario_costs is None or canonical is None or label not in scenario_costs or canonical not in scenario_costs:
+            if (
+                scenario_costs is None
+                or canonical is None
+                or label not in scenario_costs
+                or canonical not in scenario_costs
+            ):
                 missing += 1
                 continue
             cost = float(scenario_costs[label])

@@ -1,0 +1,46 @@
+{
+  "schema_version": "kinofail.embodiedgen-terrain-adapter-calibration.v1-development",
+  "status": "development_calibration_completed_not_formal_collector",
+  "scene_id": "indoor_kitchen_31",
+  "purpose": "Calibrate the first route-centric O1-O3 adapter from an admitted EmbodiedGen v4 scene while retaining every failed integration attempt.",
+  "evidence_boundary": {
+    "development_only": true,
+    "uses_dynamic_bridge_collector": true,
+    "formal_native_v3_collector_required": true,
+    "scene_registry_eligible": false,
+    "counts_as_a0_a7_evidence": false,
+    "does_not_reproduce_a0_a7": true
+  },
+  "frozen_inputs": {
+    "base_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/compiled_scene_audit.json", "sha256": "25fc43653e63ca7b410d6d858dc564bb5030e95a687c9a95604512b52fe793cf"},
+    "route_surface_admission": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/route_surface_v7_admission_audit.json", "sha256": "492729e6bc7315737976299ba0eb24b540480216a3be6816d62a5b185f2c45d9"},
+    "terrain_compiled_audit": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/compiled_scene_audit.json", "sha256": "81155f31d69c0f05f8d5d55a51061589e3bc1a2e574a05444069788889141cf3"},
+    "terrain_surface_layer": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/terrain_operator_surface.usda", "sha256": "027594071e6c8bc8502909b0f4c0384e0664e8e2d76415bdd539091b95e0a83d"},
+    "terrain_episode": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_route_v2/episode_terrain_v2.usda", "sha256": "7ad2f8f6dab81e657a27be127ad9f631e1986f2f0421f689094589254a64686e"},
+    "route_protocol_v2": {"path": "kino_vla/sim/realistic_route_protocol_v2.py", "sha256": "10256042d810456526a6ab5b93f291a612ff4ebd642adda7fd9d0de3d750572e"},
+    "terrain_compiler_v2": {"path": "kino_vla/sim/embodiedgen_terrain_route_v2.py", "sha256": "50066309bf4fc632459d51697407d60778efff7648d1429763789f6dd8440a3b"},
+    "bridge_collector": {"path": "scripts/isaac_collect_realistic_route_lane_v3_dev.py", "sha256": "438c29507582a2a2f7da3f3dde93b942f3e694d3f3421c06b9e6bfde9ec5bc8f"},
+    "frozen_forest_collector": {"path": "scripts/isaac_collect_visual_shell_o2_lane.py", "sha256": "418e7e13e23bbeb074916503bf40482a22d760c1e892d215558ff0ea2e3e60f0"},
+    "backend": {"path": "kino_vla/sim/isaac_policy_backend.py", "sha256": "4f602d4f178c08e685ba9bd4a69bab6dbf111f7d175142471c3a0e821e7b2bb1"}
+  },
+  "retained_failed_attempts": [
+    {"attempt": 1, "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_adapter_v3_dev/kitchen31_nominal_o1_attempt1", "structured_manifest": false, "failure": "missing nominal floor PhysicsMaterialAPI; Isaac shutdown also hung before diagnostic output"},
+    {"attempt": 2, "path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_adapter_v3_dev/kitchen31_nominal_o1_attempt2_diagnostic", "structured_manifest": false, "failure": "explicit diagnostic: no physics material attributes under /World/KinoIndoor/Collision/Floor"},
+    {"attempt": 3, "manifest": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_adapter_v3_dev/kitchen31_nominal_o1_attempt3_material_layer/lane_manifest.json", "sha256": "bc962350f3d30bdec514e3412b4ef231bc15fe77d6f05d57ed06636e1cec33b3"}, "failure": "four-vertex route surface lacked opaqueCompositedGround and dense deformation topology"},
+    {"attempt": 4, "manifest": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_adapter_v3_dev/kitchen31_nominal_o1_attempt4_dense_surface/lane_manifest.json", "sha256": "36df82c9592bc03fb49f5930eb6e6ed77064b01219becc2a3da19728a91768ce"}, "failure": "used waypoint 0 instead of the pre-admitted collector_start_waypoint_index 2; operator region was not reached"}
+  ],
+  "calibration_result": {
+    "nominal_manifest": {"path": "outputs/kinofail_realistic/scene_sources/embodiedgen_v2/Kitchen_seed20260861/route_surface_v7_confirmation/test_ground073/terrain_adapter_v3_dev/kitchen31_nominal_o1_attempt5_admitted_start/lane_manifest.json", "sha256": "fac6fba95e9d31d92cc3b62b4c470efab4354b0bdb0c36e8c26c1ea5a8a9bc81"},
+    "route_runtime": {"seed": 20260901, "steps": 500, "region_progress_m": 0.86, "region_half_length_m": 0.45, "region_half_width_m": 0.50, "forward_speed_mps": 0.28, "collector_start_waypoint_index": 2},
+    "nominal_only": true,
+    "operator_anomaly_not_run": true
+  },
+  "promotion_requirements": [
+    "replace the dynamic bridge with a native versioned collector",
+    "compile at least one calibration and two operator-naive confirmation scene families",
+    "freeze generalized O1-O3 pair auditors before anomaly runs",
+    "run nominal preflight before every anomaly",
+    "bind passing scene/operator capabilities into a new formal registry and schedule",
+    "collect the registry-bound corpus before any realistic A0-A7 training or statistics"
+  ]
+}

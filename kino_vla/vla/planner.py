@@ -44,6 +44,7 @@ from kino_vla.shield.primitive_compiler import (
     AdjustPosture,
     Backstep,
     CompiledCommand,
+    Continue,
     HoldAndRequest,
     Primitive,
     PrimitiveCompiler,
@@ -83,6 +84,7 @@ class VlaPolicy(Protocol):
 # sized to clear a ~2 m hazard patch from its interior — the old override behaviour, but now carried
 # IN the primitive where the VLA owns it. The real ModelVlaPolicy emits its own learned values.
 _CANON_PARAMS = {
+    "continue": {},
     "Backstep": {"distance_m": 1.2},
     "Replan_Waypoint": {"point_px": [480, 360]},
     "Switch_Gait": {"mode": "high_step"},
@@ -172,8 +174,8 @@ class ModelVlaPolicy:
         self._proprio_detail = str(proprio_detail)
         # B-V (A2 vision-only arm): mask the proprioception channel. On the latent route this drops
         # the projected Kino-Tokens (the <|kino|> placeholder embeddings are left un-overwritten, so
-        # the model reads vision + a constant, proprio-independent placeholder); on the text route it
-        # forces proprio_detail="none". Additive (default off ⇒ the deployed policy is unchanged).
+        # the model reads vision + a constant, proprio-independent placeholder); on the text route
+        # it forces proprio_detail="none". Additive (default off ⇒ the deployed policy unchanged).
         self._mask_proprio = bool(mask_proprio)
 
     def decide(self, snapshot: Snapshot, map_note: str = "") -> ParsedDecision:
@@ -764,6 +766,9 @@ class VlaPlanner:
             self.posture_height = float(prim.body_height_m)  # the dog tracks the commanded height
         elif isinstance(prim, HoldAndRequest):
             self.phase = Phase.HALTED
+        elif isinstance(prim, Continue):
+            # Explicit abstention/non-intervention: retain the nominal route, gait and speed.
+            self.phase = Phase.NOMINAL
         if cc is not None and cc.waypoint_xy is not None:  # Replan_Waypoint: the VLA's own waypoint
             self.waypoints = [np.asarray(cc.waypoint_xy, dtype=np.float64), self.goal_xy.copy()]
 

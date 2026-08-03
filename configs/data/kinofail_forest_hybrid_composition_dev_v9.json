@@ -1,0 +1,34 @@
+{
+  "schema_version": "kinofail.forest-hybrid-isaac-composition.v5-development",
+  "iteration_id": "forest-photographic-hdri-mossy-leaf-bank-v9",
+  "status": "development_lush_bank_alignment_not_scene_registry_not_a0_a7_evidence",
+  "extends": {
+    "path": "configs/data/kinofail_forest_hybrid_composition_dev_v8.json",
+    "sha256": "de719e4c97e2354c29f0788e66353894b71fd9e1e9638c92c06520a08f024e26"
+  },
+  "overrides": {
+    "appearance": {
+      "surrounding_material_lock": {
+        "path": "outputs/assets/forest_textures_polyhaven_extension_v2/terrain_assets.lock.json",
+        "sha256": "d0216db315b92a8c1a6b9e1fc2872b2f698e01c3b5de72330e39dfa34f105aa2"
+      },
+      "surrounding_material_id": "train_polyhaven_forest_leaves02_2k"
+    },
+    "output": {
+      "directory": "outputs/kinofail_realistic/scene_sources/polyhaven_hdri_v1/forest_hybrid_monks_dev01/isaac_hybrid_composition_dev_v9"
+    }
+  },
+  "appearance_randomization_contract": {
+    "route_lock": "outputs/assets/forest_textures_polyhaven_v2/terrain_assets.lock.json",
+    "bank_lock": "outputs/assets/forest_textures_polyhaven_extension_v2/terrain_assets.lock.json",
+    "route_and_bank_material_selection_precedes_model_evaluation": true,
+    "physical_operator_parameters_unchanged": true
+  },
+  "quality_policy": {
+    "mossy_leaf_bank_matches_lush_hdri_semantics": true,
+    "body_fixed_go2_rtx_review_required": true,
+    "edge_blending_and_operator_geometry_review_still_required": true,
+    "counts_as_scene_registry_admission": false,
+    "counts_as_a0_a7_evidence": false
+  }
+}
