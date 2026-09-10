@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kino-vla"
+name = "kino"
 version = "0.0.1"
-description = "Kino-VLA: closed-loop embodied reflection for a Unitree Go2 quadruped in Isaac Lab"
+description = "KINO: recovery-related physical attribution for quadrupedal navigation"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -26,7 +26,7 @@ dev = [
 # requires Isaac Sim >= 5.0 with CUDA 12.8+ PyTorch builds).
 
 [tool.setuptools.packages.find]
-include = ["kino_vla*"]
+include = ["kino", "kino.*", "kino_vla", "kino_vla.*"]
 
 [tool.ruff]
 line-length = 100

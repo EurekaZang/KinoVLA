@@ -17,9 +17,11 @@ jobs:
       - name: Install source-check dependencies
         run: pip install -e ".[dev]"
       - name: Check registered evaluation paths and configuration guards
-        run: pytest tests/test_publication_evaluation.py -q
+        run: pytest tests/test_publication_evaluation.py tests/test_kino_naming.py -q
       - name: Lint evaluation wrapper and regression tests
-        run: ruff check scripts/evaluate_publication.py tests/test_publication_evaluation.py
+        run: >-
+          ruff check kino scripts/evaluate_kino_fail.py scripts/setup_kino_paths.py
+          tests/test_publication_evaluation.py tests/test_kino_naming.py
 
   lint-and-test:
     runs-on: ubuntu-latest

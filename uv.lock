@@ -74,7 +74,7 @@ wheels = [
 ]
 
 [[package]]
-name = "kino-vla"
+name = "kino"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [

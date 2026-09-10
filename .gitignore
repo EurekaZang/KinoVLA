@@ -46,6 +46,9 @@ A实验/
 
 # Large artifacts: checkpoints, datasets, rollout logs
 outputs/
+checkpoints/
+results/
+datasets/
 logs/
 *.log
 *.ckpt
