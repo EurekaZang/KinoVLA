@@ -11,7 +11,7 @@ These are the Suite-Sem-relevant scenarios whose *outcome depends on the attribu
   proprioception (a slip *step* ⇒ O3) to tell them apart.
 
 Each returns a :class:`~kino_vla.vla.rollout.Scenario` on a straight start→goal path at lane ``y``
-(distinct ``y`` per lane lets the Isaac driver run them in one app, spec §8.1 / CLAUDE.md #21a).
+(distinct ``y`` per lane lets the Isaac driver run them in one app, spec §8.1).
 """
 
 from __future__ import annotations
@@ -462,4 +462,3 @@ def o7_visual_remap_reverse(
         start_xy=(0.0, y),
         max_time_s=_MAX_T,
     )
-

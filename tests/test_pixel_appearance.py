@@ -1,6 +1,6 @@
 """Contract tests for the network-free pixel appearance encoder (kino_vla/map/pixel_appearance).
 
-The encoder is the M5 strict-GPU drop-in for CLIP (CLAUDE.md §6 #22): an RGB crop → unit
+The encoder is the M5 strict-GPU drop-in for CLIP: an RGB crop → unit
 vector whose cosine similarity tracks visual homogeneity. These CPU tests lock the contract
 the map's 0.9 propagation bar relies on — same material near-collinear *even under a lighting
 gradient*, different materials well-separated — so the Isaac render only has to reproduce it.

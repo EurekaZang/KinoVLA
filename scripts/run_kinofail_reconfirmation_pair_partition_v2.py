@@ -13,7 +13,9 @@ import argparse
 import hashlib
 import json
 import os
+import signal
 import subprocess
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -75,6 +77,11 @@ ISAACLAB_PYTHONPATH = (
     "/home/eureka/IsaacLab-v2.3.0/source/isaaclab_rl:"
     "/home/eureka/KinoVLA"
 )
+PAIR_TIMEOUT_S = 300.0
+GPU_DEVICE_LOST_MARKERS = (
+    "VkResult: ERROR_DEVICE_LOST",
+    "A GPU crash occurred. Exiting the application",
+)
 
 
 def _sha256(path: Path) -> str:
@@ -101,12 +108,146 @@ def _jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def _write_json(path: Path, value: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(
         json.dumps(value, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     os.replace(temporary, path)
+
+
+def _summary_is_structurally_complete(
+    summary: dict[str, Any], pair_id: str
+) -> bool:
+    results = summary.get("results")
+    return (
+        summary.get("counterfactual_group_id") == pair_id
+        and isinstance(results, list)
+        and len(results) == 2
+        and {str(value.get("condition")) for value in results}
+        == {"nominal_counterfactual", "anomaly"}
+        and all(Path(str(value.get("manifest", ""))).is_file() for value in results)
+    )
+
+
+def _attrition_marker_path(corpus_root: Path, pair_id: str) -> Path:
+    return corpus_root / "operational_attrition" / f"{pair_id}.json"
+
+
+def _valid_attrition_marker(
+    path: Path,
+    *,
+    pair_id: str,
+    scene_id: str,
+    schedule: Path,
+) -> bool:
+    if not path.is_file():
+        return False
+    value = _json(path)
+    return (
+        value.get("schema_version")
+        == "kinofail.kino-v4-operational-attrition.v1"
+        and value.get("status") == "sealed_before_model_inference"
+        and value.get("counterfactual_group_id") == pair_id
+        and value.get("scene_id") == scene_id
+        and value.get("schedule_sha256") == _sha256(schedule)
+        and value.get("result_dependent_retry_permitted") is False
+        and value.get("model_predictions_read") is False
+        and value.get("method_scores_read") is False
+    )
+
+
+def _terminate_process_group(process: subprocess.Popen[Any]) -> None:
+    """Terminate the whole collector group, including leaked descendants.
+
+    IsaacLab is launched through a shell wrapper.  The wrapper can exit after
+    the scientific collector has written its outputs while a renderer child is
+    still alive.  Therefore ``process.poll()`` is not evidence that the process
+    group is empty: always address the group by the original leader PID.
+    """
+
+    process_group = process.pid
+
+    def group_exists() -> bool:
+        try:
+            os.killpg(process_group, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        return True
+
+    if not group_exists():
+        if process.poll() is None:
+            process.wait(timeout=10.0)
+        return
+    try:
+        os.killpg(process_group, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    deadline = time.monotonic() + 10.0
+    while group_exists() and time.monotonic() < deadline:
+        time.sleep(0.1)
+    try:
+        if group_exists():
+            os.killpg(process_group, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    if process.poll() is None:
+        process.wait(timeout=10.0)
+    deadline = time.monotonic() + 10.0
+    while group_exists() and time.monotonic() < deadline:
+        time.sleep(0.1)
+    if group_exists():
+        raise RuntimeError(
+            f"collector process group {process_group} survived SIGKILL"
+        )
+
+
+def _run_collector_once(
+    command: list[str],
+    *,
+    environment: dict[str, str],
+    log_path: Path,
+) -> tuple[int, str | None, float]:
+    """Run one frozen pair once and fail closed on a process-level hang."""
+
+    started = time.monotonic()
+    reason: str | None = None
+    with log_path.open("x", encoding="utf-8") as log:
+        process = subprocess.Popen(
+            command,
+            cwd=ROOT,
+            env=environment,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        while True:
+            try:
+                returncode = int(process.wait(timeout=5.0))
+                # A successful wrapper exit can still leave an Isaac renderer
+                # child behind.  Clean it before the next frozen pair starts.
+                _terminate_process_group(process)
+                break
+            except subprocess.TimeoutExpired:
+                elapsed = time.monotonic() - started
+                try:
+                    recent = log_path.read_text(
+                        encoding="utf-8", errors="replace"
+                    )[-32768:]
+                except OSError:
+                    recent = ""
+                if any(marker in recent for marker in GPU_DEVICE_LOST_MARKERS):
+                    reason = "gpu_device_lost"
+                elif elapsed >= PAIR_TIMEOUT_S:
+                    reason = "collector_wall_timeout"
+                if reason is not None:
+                    _terminate_process_group(process)
+                    returncode = int(process.returncode or -signal.SIGKILL)
+                    break
+    return returncode, reason, time.monotonic() - started
 
 
 def _attempt_audit(
@@ -130,6 +271,8 @@ def _attempt_audit(
         "scientific_content_changed": False,
         "result_dependent_retry_permitted": False,
         "fresh_isaac_process_per_counterfactual_pair": True,
+        "per_pair_wall_timeout_s": PAIR_TIMEOUT_S,
+        "process_failure_disposition": "operational_attrition_without_retry",
         "scene_id": scene_id,
         "battery": battery,
         "partition_index": partition_index,
@@ -681,7 +824,10 @@ def main() -> int:
 
     for progress, pair_id in enumerate(selected_pair_ids, start=1):
         summary_path = corpus_root / "pair_summaries" / f"{pair_id}.json"
-        if summary_path.is_file() and _json(summary_path).get("passed") is True:
+        attrition_path = _attrition_marker_path(corpus_root, pair_id)
+        if summary_path.is_file() and _summary_is_structurally_complete(
+            _json(summary_path), pair_id
+        ):
             status = "skip_sealed_pass"
             print(
                 json.dumps(
@@ -690,6 +836,24 @@ def main() -> int:
                         "progress": f"{progress}/{len(selected_pair_ids)}",
                         "pair": pair_id,
                         "status": status,
+                    }
+                ),
+                flush=True,
+            )
+            continue
+        if _valid_attrition_marker(
+            attrition_path,
+            pair_id=pair_id,
+            scene_id=scene_id,
+            schedule=schedule_path,
+        ):
+            print(
+                json.dumps(
+                    {
+                        "battery": battery,
+                        "progress": f"{progress}/{len(selected_pair_ids)}",
+                        "pair": pair_id,
+                        "status": "skip_sealed_operational_attrition_without_retry",
                     }
                 ),
                 flush=True,
@@ -771,23 +935,53 @@ def main() -> int:
             "--experience",
             str(EXPERIENCE),
         ]
-        with log_path.open("x", encoding="utf-8") as log:
-            completed = subprocess.run(
-                command,
-                cwd=ROOT,
-                env=environment,
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                check=False,
-            )
+        returncode, operational_reason, elapsed_s = _run_collector_once(
+            command,
+            environment=environment,
+            log_path=log_path,
+        )
         summary = _json(summary_path) if summary_path.is_file() else {}
+        structurally_complete = _summary_is_structurally_complete(summary, pair_id)
+        if not structurally_complete:
+            if operational_reason is None:
+                operational_reason = (
+                    f"collector_returncode_{returncode}"
+                    if returncode != 0
+                    else "missing_or_invalid_pair_summary"
+                )
+            _write_json(
+                attrition_path,
+                {
+                    "schema_version": "kinofail.kino-v4-operational-attrition.v1",
+                    "status": "sealed_before_model_inference",
+                    "created_utc": datetime.now(UTC).isoformat(),
+                    "scene_id": scene_id,
+                    "battery": battery,
+                    "counterfactual_group_id": pair_id,
+                    "reason_code": operational_reason,
+                    "collector_returncode": returncode,
+                    "elapsed_s": elapsed_s,
+                    "log": str(log_path),
+                    "log_sha256": _sha256(log_path),
+                    "schedule": str(schedule_path),
+                    "schedule_sha256": _sha256(schedule_path),
+                    "result_dependent_retry_permitted": False,
+                    "model_predictions_read": False,
+                    "method_scores_read": False,
+                    "scientific_content_changed": False,
+                },
+            )
         terminal = {
             **started,
             "state": "terminal",
             "completed_utc": datetime.now(UTC).isoformat(),
-            "returncode": int(completed.returncode),
+            "returncode": returncode,
             "summary_exists": summary_path.is_file(),
             "passed": summary.get("passed") is True,
+            "structurally_complete": structurally_complete,
+            "operational_attrition": not structurally_complete,
+            "operational_reason": operational_reason,
+            "elapsed_s": elapsed_s,
         }
         attempts[-1] = terminal
         _write_json(
@@ -818,16 +1012,29 @@ def main() -> int:
             flush=True,
         )
 
-    passed = {
+    completed_pairs = {
         pair_id
         for pair_id in selected_pair_ids
         if (corpus_root / "pair_summaries" / f"{pair_id}.json").is_file()
-        and _json(corpus_root / "pair_summaries" / f"{pair_id}.json").get(
-            "passed"
+        and _summary_is_structurally_complete(
+            _json(corpus_root / "pair_summaries" / f"{pair_id}.json"),
+            pair_id,
         )
-        is True
     }
-    return 0 if passed == set(selected_pair_ids) else 2
+    attrited_pairs = {
+        pair_id
+        for pair_id in selected_pair_ids
+        if _valid_attrition_marker(
+            _attrition_marker_path(corpus_root, pair_id),
+            pair_id=pair_id,
+            scene_id=scene_id,
+            schedule=schedule_path,
+        )
+    }
+    # A launcher exit code describes operational completion, not scientific
+    # eligibility.  Runtime failures are retained as preregistered attrition
+    # and adjudicated once by the global model-blind observation seal.
+    return 0 if completed_pairs | attrited_pairs == set(selected_pair_ids) else 2
 
 
 if __name__ == "__main__":

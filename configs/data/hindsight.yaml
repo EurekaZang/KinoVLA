@@ -193,7 +193,7 @@ snapshot:
 # straight across the hazard with a bang-bang square-wave excitation (exactly the M4
 # distillation driver) and let the Kino-Monitor intercept the anomaly. The excitation is
 # load-bearing — payload (O5) / effort-decay (O10) only leave a proprioceptive trace when the
-# effort budget binds, during the sharp high→low deceleration (CLAUDE.md #15); a flat cruise
+# effort budget binds, during the sharp high→low deceleration; a flat cruise
 # never excites them, so they would never intercept.
 drive:
   n_steps: 320           # 6.4 s at 50 Hz — long enough to reach + dwell in the hazard

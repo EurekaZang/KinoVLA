@@ -40,7 +40,7 @@ class Segmenter(Protocol):
 # The perception front-end the map builds when none is injected and the config omits a
 # ``segmenter`` key. Spec §7 wants real open-vocab CLIP, so that is the DEFAULT. The shared
 # CI / fast-test / surrogate-demo config (configs/map/traversability_v0.yaml) pins
-# ``segmenter: surrogate`` to keep those paths GPU/model-free (CLAUDE.md QA 5.1, the demo gate);
+# ``segmenter: surrogate`` to keep those paths GPU/model-free (the demo gate);
 # the Isaac CLIP demos load it with ``segmenter: clip``.
 DEFAULT_SEGMENTER = "clip"
 

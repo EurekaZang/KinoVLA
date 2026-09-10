@@ -1,6 +1,6 @@
 """M5 strict closure: the real §7 map propagates hazards from REAL pixel-encoder embeddings.
 
-CLAUDE.md §6 #22 — the appearance encoder must consume real pixels, not a class hash. The
+The appearance encoder must consume real pixels, not a class hash. The
 live Isaac RTX camera is hardware-blocked on this box (three AppLauncher ``--enable_cameras``
 probe crashes — outputs/gpu_audit/cam_probe*.log), exactly as real CLIP is proxy-blocked, so
 the real-pixel input here is a procedural material render (lighting + grain — a camera

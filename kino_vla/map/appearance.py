@@ -3,7 +3,7 @@
 Spec §7 grounds RGB regions with open-vocabulary segmentation (SAM) and CLIP
 features, then propagates traversability labels to *visually homogeneous* neighbours
 via CLIP-feature cosine similarity. On the dev/CI tier there is no RGB camera and no
-CLIP encoder (mirrors the M4 surrogate scope, CLAUDE.md deviation #16), so this module
+CLIP encoder (mirrors the M4 surrogate scope), so this module
 stands in a **named-appearance-class embedding**: a class name (``"brown_mud"``,
 ``"yellow_adhesive"``, ``"ice"``, ``"solid_ground"``) maps deterministically to a unit
 vector, with optional small per-instance jitter modelling within-class texture

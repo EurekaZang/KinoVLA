@@ -97,7 +97,7 @@ def test_demo_assertions_not_vacuous_without_recovery():
     "surrogate point-robot; the real demo is the Isaac sim gate. No rule-monitor demo fallback."
 )
 def test_run_demo_script_output_contract():
-    # The pinned demo command (CLAUDE.md §1): asserted here and in CI.
+    # The pinned demo command: asserted here and in CI.
     proc = subprocess.run(
         [sys.executable, str(REPO_ROOT / "scripts" / "run_demo.py"), "--backend", "surrogate"],
         capture_output=True,

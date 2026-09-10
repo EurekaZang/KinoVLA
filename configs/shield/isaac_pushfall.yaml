@@ -1,4 +1,4 @@
-# M3 push-fall contrast sweep on the real Go2 (spec §6.6; CLAUDE.md §6 #22 strict closure).
+# M3 push-fall contrast sweep on the real Go2 (spec §6.6).
 #
 # The surrogate adversarial gate proves the CBF's zero-fall property on the reduced LIP
 # model (falsifiable fall model). This sweep tries to REALIZE that contrast on the full-order

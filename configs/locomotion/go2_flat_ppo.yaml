@@ -1,7 +1,7 @@
 # M2 low-level locomotion: Go2 flat velocity-tracking policy (RSL-RL PPO).
 # Trained in-repo by scripts/train_locomotion.py; the exported JIT policy
 # (outputs/locomotion/policy.pt) drives the Isaac backend, replacing the M1
-# kinematic stub (CLAUDE.md M2 scope). Reproducible from this config + seed.
+# kinematic stub. Reproducible from this config + seed.
 task: "Isaac-Velocity-Flat-Unitree-Go2-v0"
 num_envs: 2048
 max_iterations: 800

@@ -1,6 +1,6 @@
 """Deployed geometric route planner over the persistent traversability costmap (decoupled nav).
 
-The decoupled navigation architecture (CLAUDE.md #44 resolution, the open-set/commitment split):
+The decoupled navigation architecture (the open-set/commitment split):
 the VLA does OPEN-SET ATTRIBUTION only — on contact it decides "this region is untraversable, type
 = <open-vocabulary>" ONCE and writes that into the §7 costmap (sticky, world-frame, propagated).
 This module is the other half — a classic grid planner that consumes that persistent costmap and

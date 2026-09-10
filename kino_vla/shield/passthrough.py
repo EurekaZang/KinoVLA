@@ -1,6 +1,6 @@
 """Pass-through Safety Shield — walking-skeleton stub, replaced by CBF-QP at M3.
 
-This is the [STUB: pass-through shield] of CLAUDE.md §1. The interface already
+This is the [STUB: pass-through shield]. The interface already
 matches the M3 contract (spec §6.8: every command yields a decision with an
 intervention flag and structured codes) so swapping in the CBF-QP changes one
 constructor in the demo, nothing else.

@@ -6,8 +6,7 @@ the physically-simulated Go2 — real proprioception, real slip/effort/contact, 
 NOT the surrogate point-robot. This drives the real Go2 into each operator's failure across
 lateral lanes (Isaac is one-episode/process, #21a) with the M4 bang-bang excitation, intercepts
 with the high-recall collection monitor, and SAVES the snapshots. The external Oracle (gpt-5.5)
-then annotates them offline + the truth-consistency filter runs — the decoupled GPU→CPU pipeline
-(CLAUDE.md #23):
+then annotates them offline + the truth-consistency filter runs in the decoupled GPU→CPU pipeline:
 
     python scripts/isaac_hindsight_collect.py --headless           # GPU: collect + save snapshots
     python scripts/build_hindsight_dataset.py --oracle api \

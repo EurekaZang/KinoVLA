@@ -1,12 +1,12 @@
 # Semantic traversability map (spec §7; kino_vla/map). Surrogate perception tier
-# (CLAUDE.md deviation #16): CLIP/SAM stand-ins, costmap geometry, propagation/hazard
+# Surrogate configuration: CLIP/SAM stand-ins, costmap geometry, propagation/hazard
 # thresholds. No magic numbers in module code (QA 5.5) — all map behaviour is here.
 
 # Perception front-end (clip | rgbd | surrogate). The CODE DEFAULT is real CLIP
 # (TraversabilityMap.DEFAULT_SEGMENTER, spec §7). This is the SHARED config loaded by the CI fast
 # tests, the surrogate walking-skeleton demo (scripts/run_demo.py / tests/test_demo.py) and
 # tests/test_map.py — none of which have a GPU / HF-model budget — so it pins 'surrogate' to keep
-# the demo gate green (CLAUDE.md QA 5.1). The Isaac CLIP demos load this config with a
+# the demo gate green. The Isaac CLIP demos load this config with a
 # {'segmenter': 'clip'} override (real open-vocab CLIP, 512-d features).
 segmenter: surrogate
 
@@ -27,7 +27,7 @@ camera:
   fov_rad: 1.5708         # 90° horizontal field of view
   max_range_m: 5.0        # back-projection range gate (SurrogateSegmenter centre-in-cone gate)
   # Real RGB-D pinhole back-projection (kino_vla/map/rgbd.py, RgbdSegmenter — spec §7).
-  # Live RTX camera is hardware-blocked here (CLAUDE.md §6 #24/#26), so the same intrinsics
+  # Live RTX camera is hardware-blocked here, so the same intrinsics
   # drive a procedural ground-plane RGB-D render; a working-RTX camera feed is a drop-in.
   image_width: 96         # render/intrinsics resolution
   image_height: 72

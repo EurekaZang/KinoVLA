@@ -1,6 +1,6 @@
 """Network-free pixel appearance encoder — real-pixel perception for the map (spec §7).
 
-CLAUDE.md §6 #22 (M5 strict-GPU gap): the appearance encoder must consume real image pixels,
+The appearance encoder must consume real image pixels,
 not a hash of a class string. This is a **deterministic colour encoder** over an RGB crop,
 satisfying the same drop-in contract as ``appearance.appearance_embedding``: an L2-normalised
 vector whose cosine similarity tracks visual homogeneity (same material → cosine ≈ 1,

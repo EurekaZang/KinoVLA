@@ -1,6 +1,6 @@
 """VLA Recovery Planner — the closed-loop drop-in for the M1 scripted FSM stub (spec §1 / §5 / §11).
 
-This is the milestone's headline swap: the ``[STUB: scripted FSM recovery]`` of CLAUDE.md §1
+This is the milestone's headline swap: the ``[STUB: scripted FSM recovery]``
 becomes the trained planner. It implements the same :class:`~kino_vla.loop.RecoveryPolicy`
 contract (``on_event`` / ``step``) so it slots into the identical monitor→planner→shield→map loop,
 but instead of always Backstep-then-replan it: snapshots the failure (the §10 PHASE 2 multimodal

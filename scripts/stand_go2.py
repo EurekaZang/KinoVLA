@@ -1,6 +1,6 @@
 """M0 bring-up: Unitree Go2 stands on flat terrain in Isaac Lab (headless).
 
-Exit criterion (CLAUDE.md M0): "Go2 stands in Isaac Lab under a default flat-terrain
+Exit criterion: "Go2 stands in Isaac Lab under a default flat-terrain
 config". The robot is spawned with its default joint configuration and held there by
 the default PD actuators; we assert base height and tilt stay inside the pass band
 from ``configs/sim/go2_flat.yaml`` and print a seeded trajectory hash so the same

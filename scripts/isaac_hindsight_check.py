@@ -3,7 +3,7 @@
 
 The spec builds the data pipeline on Isaac Lab (§1 "基于 Isaac Lab 搭建动力学仿真环境…采集",
 §8.1 P1, §10 PHASE 1/2). This closes the M6 surrogate gap on GPU (like the M4/M5 backfills,
-CLAUDE.md #21/#23): it drives the physically-simulated Go2 into each operator's failure in its
+GPU collection protocol): it drives the physically-simulated Go2 into each operator's failure in its
 own lateral lane (Isaac is one-episode/process, #21a), intercepts the anomaly with the high-
 recall collection monitor, and packages the snapshot from the REAL proprioception + privileged
 θ — then runs the SAME Oracle + truth-consistency filter (kino_vla/data, backend-agnostic) on

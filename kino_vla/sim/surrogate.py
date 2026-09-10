@@ -4,7 +4,7 @@ A planar point-robot (unicycle with lateral velocity) that tracks Sport-Client
 velocity commands through the shared friction-limited traction model. It exists
 so the M1/M2 demo, its assertions, and the operator gates run end-to-end on
 machines without a GPU (dev laptop, CI) — the Isaac Lab backend is the deliverable
-and replaces it wherever a GPU is present (CLAUDE.md Section 6 issue #4).
+and replaces it wherever a GPU is present.
 
 M2 generalizes the single friction budget into two: contact friction (O1/O3) and
 actuator effort (O5/O10), plus geometric effects — impassable colliders (O8),

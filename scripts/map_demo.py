@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """M5 semantic-traversability-map demo (spec §7) — the runnable M5 deliverable.
 
-Three parts, each a spec §7 / CLAUDE.md M5 exit criterion, then a combined report:
+Three parts, each a spec §7 exit criterion, then a combined report:
 
   A. Turn-around persistence — a region marked untraversable stays marked after the
      robot rotates 360° and re-approaches (odometry-frame memory, not view-relative).

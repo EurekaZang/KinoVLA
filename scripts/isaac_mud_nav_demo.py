@@ -15,7 +15,7 @@ The MP4 composites, every step: the RTX chase camera (the Go2 on the textured mu
 camera-grounded costmap (mud marked + propagated + avoid-discs + robot trail), the live
 perception-camera inset (what CLIP sees), and telemetry incl. the VLA's attribution → primitive.
 
-One operator per Isaac process (Go2 prims persist across resets, CLAUDE.md #21). HONEST: even fully
+One operator per Isaac process (Go2 prims persist across resets). HONEST: even fully
 real, O2 may not reach the goal (Gap-3 #34c — correct attribution ≠ better outcome when the wrench
 traps the robot); the deliverable is that perception + recovery are real, reported as-is.
 

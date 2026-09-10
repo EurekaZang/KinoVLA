@@ -1,4 +1,4 @@
-"""Walking-skeleton demo — the permanent M1 deliverable (CLAUDE.md §1).
+"""Walking-skeleton demo — the permanent M1 deliverable.
 
 Go2 walks toward the goal, crosses onto an O1 ice patch, the Kino-Monitor fires,
 the scripted FSM backsteps and replans a detour, the CBF-QP shield (spec §6)

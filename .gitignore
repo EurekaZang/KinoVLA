@@ -15,6 +15,17 @@ venv/
 
 # Local documentation, paper, and presentation material
 .claude/
+.codex/
+.agents/
+.agent/
+.superpowers/
+.cursor/
+.gemini/
+.aider*
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+SKILL.md
 docs/
 paper/
 A实验/
@@ -25,9 +36,15 @@ A实验/
 *.doc
 *.docx
 *.tex
-!README.md
+!/README.md
 
-# Large artifacts: checkpoints, datasets, rollout logs (QA 5.4 — never in git)
+# Local credentials and session state
+.env
+.env.*
+*.pem
+*.key
+
+# Large artifacts: checkpoints, datasets, rollout logs
 outputs/
 logs/
 *.log

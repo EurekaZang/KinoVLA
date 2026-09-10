@@ -2,7 +2,7 @@
 
 Real procedural terrain generation arrives with the operator suites; at M1 the
 walking skeleton only needs a deterministic, seed-jittered rectangle for the O1
-ice patch so the demo is procedural rather than hard-coded (CLAUDE.md M1 scope).
+ice patch so the demo is procedural rather than hard-coded.
 """
 
 from __future__ import annotations

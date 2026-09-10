@@ -1,4 +1,4 @@
-"""Closed-loop episode runner — the walking skeleton (CLAUDE.md §1).
+"""Closed-loop episode runner — the walking skeleton.
 
 Pipeline per control step:
     backend obs -> operator obs-corruption (Axis IV) -> Kino-Monitor ->

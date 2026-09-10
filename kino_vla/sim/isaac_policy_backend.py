@@ -1,6 +1,6 @@
 """Isaac Lab Go2 backend driven by the trained velocity-tracking policy (M2).
 
-This replaces the M1 kinematic root drive (CLAUDE.md Section 6 #5/#7): the Go2 is
+This replaces the M1 kinematic root drive: the Go2 is
 physically simulated and walked by the RSL-RL policy trained in
 ``scripts/train_locomotion.py`` (exported JIT at ``outputs/locomotion/policy.pt``).
 

@@ -2,7 +2,7 @@
 
 Real pipeline: SAM segments the RGB frame into regions, CLIP embeds each, and the
 depth channel back-projects every region into the odometry frame as a 3D patch. Here
-(no camera at the dev/CI tier, CLAUDE.md deviation #16) the "scene" is given as a list
+(no camera at the dev/CI tier) the "scene" is given as a list
 of ``SemanticRegion`` world footprints; the segmenter models the two things that matter
 for the map subsystem's logic:
 

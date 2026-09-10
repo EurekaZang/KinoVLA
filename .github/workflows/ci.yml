@@ -6,6 +6,21 @@ on:
   pull_request:
 
 jobs:
+  publication-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install source-check dependencies
+        run: pip install -e ".[dev]"
+      - name: Check registered evaluation paths and configuration guards
+        run: pytest tests/test_publication_evaluation.py -q
+      - name: Lint evaluation wrapper and regression tests
+        run: ruff check scripts/evaluate_publication.py tests/test_publication_evaluation.py
+
   lint-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -22,9 +37,9 @@ jobs:
         run: ruff format --check .
       - name: Unit tests (sim tests auto-skip without Isaac Lab)
         run: pytest -m "not slow" -q
-      - name: Walking skeleton demo (pinned M1 deliverable, CLAUDE.md §1)
+      - name: Walking skeleton demo
         run: python scripts/run_demo.py --backend surrogate
 
   # Sim smoke job intentionally absent: no GPU runner available yet. The sim gate is
   # `pytest -m sim` run manually on the RTX 5090 machine and recorded in the
-  # CLAUDE.md Completed Log (QA rule 5.1.3). Add a self-hosted GPU job here when one exists.
+  # local test logs. Add a self-hosted GPU job here when one exists.

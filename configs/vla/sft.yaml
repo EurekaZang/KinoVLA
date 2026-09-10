@@ -1,5 +1,5 @@
 # Kino-SFT config (spec §11 Stage 1; M7). LoRA fine-tune Qwen3-VL-4B + the Kino-Projector on the
-# truth-filtered Hindsight-CoT dataset. Backbone is Qwen3-VL-4B (CLAUDE.md §6 #33 — the latest Qwen
+# truth-filtered Hindsight-CoT dataset. Backbone is Qwen3-VL-4B (the Qwen
 # VLM; supersedes the spec's Qwen2-VL), sized 4B + LoRA for the 32 GB RTX 5090. No magic numbers in
 # code (QA 5.1.5): every knob lives here, and the run is reproducible from this file + the seed.
 

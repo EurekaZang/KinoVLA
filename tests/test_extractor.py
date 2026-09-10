@@ -2,7 +2,7 @@
 
 Skipped automatically where torch is absent (the torch-free CI box) — like the sim
 gates, the authoritative milestone check is the manual GPU/CPU run of
-``scripts/train_extractor.py`` recorded in the Completed Log. These tests cover the
+``scripts/train_extractor.py``. These tests cover the
 model machinery on a small fast-trained instance (real layer sizes, reduced epochs/
 seeds) and add an opt-in ``slow`` test that reproduces the full exit gates from scratch.
 """
@@ -104,7 +104,7 @@ def test_gate_tokens_anomaly_gating():
 
 def test_inference_latency_under_budget(trained):
     # Real layer sizes (the fixture only shrinks epochs/seeds), so this is the deployed
-    # model's single-window p99 — spec §6.9 / CLAUDE.md §5.3 extractor budget.
+    # model's single-window p99 — spec §6.9 extractor budget.
     _, ex, _, _ = trained
     p99 = ex.inference_latency_ms(n=200)
     assert p99 <= float(TOL.latency.inference_ms_p99)

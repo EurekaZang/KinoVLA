@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """M3 CBF push-fall contrast on the Isaac Go2 (spec §6.6) — STRICT zero-fall realization.
 
-Closes the CLAUDE.md §6 #22 M3 strict-GPU gap. The surrogate adversarial gate proves the
+The surrogate adversarial gate proves the
 shield's zero-fall property on the reduced LIP model; this script tries to realize that
 contrast on the FULL-ORDER physically-simulated Go2:
 
@@ -13,7 +13,7 @@ contrast on the FULL-ORDER physically-simulated Go2:
 Two arms per (push magnitude, direction, seed): BYPASSED (raw hostile command) vs SHIELDED
 (the CBF-QP filters it — reading the post-push body velocity, it sees the DCM leaving the
 safe set and clamps the command to a brake). It sweeps magnitudes/directions and reports the
-full fall-contrast table — turning the previously-untested 0/0 (CLAUDE.md §6 #22) into a real
+full fall-contrast table — turning the previously-untested 0/0 into a real
 characterization of the shield's effect on the full-order policy.
 
 FINDING — TWO ERAS (deviations #13/#23 → #42):

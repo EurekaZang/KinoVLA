@@ -6,7 +6,7 @@ Usage:
         --sft-adapter outputs/vla/sft/adapter_best --out outputs/vla/dpo
 
 Loads the preference pairs (built by build_dpo_pairs.py), initializes the policy from the SFT
-adapter, and runs DPO with the adapter-toggle reference (CLAUDE.md §6 #33). The real GPU step;
+adapter, and runs DPO with the adapter-toggle reference. The real GPU step;
 metrics in ``outputs/vla/dpo/dpo_metrics.json``.
 """
 

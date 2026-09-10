@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Offline CPU train+gate for the M4 Isaac Kino-Tokens rollouts (spec §4; CLAUDE.md §6 #22).
+"""Offline CPU train+gate for the M4 Isaac Kino-Tokens rollouts (spec §4).
 
 Loads the rollouts saved by ``scripts/isaac_tokens_check.py --collect-only`` and runs the
 strict four-channel gate (kino_vla/tokens/isaac_gate.py) without touching the GPU — so the

@@ -1,4 +1,4 @@
-"""M5 semantic-traversability-map gates (spec §7; CLAUDE.md M5 exit criteria).
+"""M5 semantic-traversability-map gates (spec §7).
 
 Covers the map subsystem and its two named exit criteria:
 - **turn-around persistence**: a marked region stays marked after a 360° rotation;
@@ -31,7 +31,7 @@ MAP_CFG = load_config("map/traversability_v0.yaml")
 
 def test_default_segmenter_is_clip_but_shared_config_pins_surrogate():
     """The code default front-end is real CLIP (spec §7); the shared CI/demo config opts down to
-    the surrogate so the fast suite and the demo gate stay GPU/model-free (CLAUDE.md QA 5.1)."""
+    the surrogate so the fast suite and the demo gate stay GPU/model-free."""
     from kino_vla.map.traversability_map import DEFAULT_SEGMENTER
 
     assert DEFAULT_SEGMENTER == "clip"

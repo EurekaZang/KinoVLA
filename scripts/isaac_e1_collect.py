@@ -15,7 +15,7 @@ pair members reuse hazard_lab.build_scenario (so the onset machinery — region 
 is the same tested code the learned monitor collects on). The O4 #49 peel-plateau knob is applied
 only when ``o4_shaping.enabled`` (default OFF ⇒ the tether is byte-identical).
 
-Real-stack only (CLAUDE.md §0): one IsaacPolicyBackend, one lane per (unit × seed) at its own y
+Real-stack only: one IsaacPolicyBackend, one lane per (unit × seed) at its own y
 (Isaac reuses the backend across reset()s, as in scripts/isaac_monitor_data_collect.py).
 
 Run:  python scripts/isaac_e1_collect.py --headless --seeds 8 --tag train

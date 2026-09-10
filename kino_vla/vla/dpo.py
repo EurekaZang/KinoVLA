@@ -9,7 +9,7 @@ correctness* (spec §5/§11).
 
 Two halves: :func:`build_preference_pairs` (pure logic, golden-tested — turn rollout outcomes into
 (prompt, chosen, rejected) triples) and :func:`train_dpo` (the real GPU step — the standard DPO
-loss with an adapter-toggle reference, CLAUDE.md §6 #33). The preference triples are the falsifiable
+loss with an adapter-toggle reference). The preference triples are the falsifiable
 artifact; training just consumes them.
 """
 

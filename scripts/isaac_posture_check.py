@@ -124,7 +124,7 @@ def main() -> int:
     # FLUSH before os._exit — os._exit bypasses stdio flushing, so under a pipe (the sim-gate's
     # capture) the block-buffered prints are lost (gate sees returncode 0 but no PASS).
     sys.stdout.flush()
-    # Isaac's app.close() busy-spins (CLAUDE.md §6 #6); close it on a daemon thread and hard-exit so
+    # Isaac's app.close() busy-spins; close it on a daemon thread and hard-exit so
     # the process actually terminates (a plain close()+return hangs the gate to its 1800 s timeout).
     closer = threading.Thread(target=app.close, daemon=True)
     closer.start()

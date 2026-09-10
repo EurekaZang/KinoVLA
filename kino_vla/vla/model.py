@@ -4,7 +4,7 @@ The deployed planner (spec §1 layer 03) is a vision-language model that reads t
 its proprioception and emits a ``<Thought>…</Thought><Action>{json}</Action>`` recovery. This
 wrapper assembles it:
 
-- **backbone**: ``Qwen3-VL-4B-Instruct`` (the latest Qwen VLM, CLAUDE.md §6 #33; supersedes the
+- **backbone**: ``Qwen3-VL-4B-Instruct`` (the latest Qwen VLM; supersedes the
   spec's Qwen2-VL), LoRA-adapted on the language tower (Kino-SFT, spec §11 Stage 1);
 - **latent route (B5)**: the :class:`~kino_vla.vla.projector.KinoProjector` lifts the 500 ms
   proprioception into K soft tokens spliced at the ``<kino_tokens>`` placeholder. The splice is a
@@ -229,7 +229,7 @@ class KinoVLA(nn.Module):
         ``loss_span`` controls which completion tokens are supervised / scored:
         ``"completion"`` (default) the whole ``<Thought>…</Action>``; ``"action"`` only the
         ``<Action>{…}</Action>`` decision span (the Thought is masked into the context). The
-        ``"action"`` span is the fix for on-policy DPO (CLAUDE.md §6 #36): free-form Chosen/Rejected
+        ``"action"`` span is the fix for on-policy DPO: free-form Chosen/Rejected
         generations differ wholesale in their Thought prose, so a whole-completion preference
         optimizes spurious narrative features; masking to the Action makes the DPO contrast the
         *decision* (attribution + primitive), the §11 target.
@@ -339,7 +339,7 @@ class KinoVLA(nn.Module):
         """Sum of token log-probs over the completion (labels != -100).
 
         ``reference=True`` evaluates the LoRA-OFF base model under ``no_grad`` (the adapter-toggle
-        DPO reference, CLAUDE.md §6 #33 — no second model loaded); the policy path keeps grad.
+        DPO reference — no second model loaded); the policy path keeps grad.
         """
         import contextlib
 

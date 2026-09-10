@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """M4 Kino-Tokens on the Isaac Go2 (spec §4, §6.5) — STRICT four-channel θ gate.
 
-Closes the CLAUDE.md §6 #22 strict-GPU gap: the extractor must regress *all four*
+The extractor must regress *all four*
 privileged channels below their ``configs/tolerances.yaml`` bars on the physically-
 simulated Go2 (μ 0.10, payload 1.5, effort 0.10, support 0.12), not μ alone at a relaxed
 bar. Each channel is excited in its own single-operator lane/phase on the real Go2:

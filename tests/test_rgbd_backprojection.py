@@ -2,8 +2,7 @@
 
 These gate the §7 grounding step the SurrogateSegmenter shortcut skipped: a pinhole camera
 renders a ground-plane RGB-D frame and the depth channel is unprojected back into the
-odometry frame. The camera is procedural (the live Isaac RTX renderer segfaults on this box,
-CLAUDE.md §6 #24/#26), but the geometry is the genuine article: round-trip accuracy,
+odometry frame. The camera is procedural, but the geometry tests cover round-trip accuracy,
 cross-view consistency, O7 depth-corruption flow-through, and the full chain into the costmap.
 """
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Diagnostic: does the real-Go2 effort_ratio channel ever bind for O5/O10? (CLAUDE.md #15/#31).
+"""Diagnostic: does the real-Go2 effort_ratio channel ever bind for O5/O10?.
 
 The M6 dataset reads effort_ratio≈0 for O5 (payload) and O10 (effort-decay). This drives each
 in its own lane with the bang-bang excitation and logs the effort_ratio trajectory, to decide

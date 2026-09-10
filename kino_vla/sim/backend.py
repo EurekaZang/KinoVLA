@@ -2,7 +2,7 @@
 
 Two implementations exist:
 - ``kino_vla.sim.surrogate.SurrogateBackend``: CPU point-robot model, keeps the
-  demo and CI green on machines without a GPU (CLAUDE.md Section 6 issue #4).
+  demo and CI green on machines without a GPU.
 - ``kino_vla.sim.isaac_policy_backend.IsaacPolicyBackend``: Isaac Lab Go2 physically
   simulated and walked by the trained RSL-RL velocity policy (M2); GPU-only.
 

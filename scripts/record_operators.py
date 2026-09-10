@@ -9,7 +9,7 @@ operator and recovery is the FSM stub (real planner = M7), so falls/non-recoveri
 and recorded as-is — that is the benchmark's point.
 
 One operator per Isaac process (Go2 prims persist across resets, so destabilising operators
-can't share a forward course — CLAUDE.md #21); a separate process per operator sidesteps that.
+can't share a forward course); a separate process per operator sidesteps that.
 
 Usage:
     python scripts/record_operators.py --operator O9_high_centering --headless

@@ -1,6 +1,6 @@
 """Scripted FSM recovery — walking-skeleton stand-in for the VLA Recovery Planner.
 
-This is the [STUB: scripted FSM recovery (Backstep + replan)] of CLAUDE.md §1:
+This is the [STUB: scripted FSM recovery (Backstep + replan)]:
 on a monitor event it executes the §5 primitives ``Backstep`` then
 ``Replan_Waypoint`` (a box detour around an avoid circle marked at the event
 position — a degenerate ``Update_Topology``). It is replaced by the trained VLA

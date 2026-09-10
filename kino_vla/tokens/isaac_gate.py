@@ -1,6 +1,6 @@
 """Strict four-channel θ gate for the Kino-Tokens extractor on the real Go2 (spec §4).
 
-CLAUDE.md §6 #22 closes the M4 strict-GPU gap: the Isaac gate must regress *all four*
+The Isaac gate must regress *all four*
 privileged channels (μ, payload, effort-scale, support) below their
 ``configs/tolerances.yaml`` bars on the physically-simulated Go2 — not μ alone at a
 relaxed bar. Each channel is excited in its own single-operator lane/phase on Isaac
@@ -92,7 +92,7 @@ def load_rollouts(path: str | Path) -> list[Rollout]:
 
 
 def smooth_support(tgts: np.ndarray, win: int) -> np.ndarray:
-    """Causal trailing moving-average of the support column (spec §6 / CLAUDE.md §6 #22).
+    """Causal trailing moving-average of the support column (spec §6).
 
     On a real trot the *instantaneous* foot-support fraction is dominated by gait phase
     (only the diagonal stance pair bears load at any tick), so the last-step window

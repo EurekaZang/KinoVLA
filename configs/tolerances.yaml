@@ -1,4 +1,4 @@
-# M4 exit-criterion gates for the Kino-Tokens extractor (spec §4, §9; CLAUDE.md §3).
+# M4 exit-criterion gates for the Kino-Tokens extractor (spec §4, §9).
 # Held-out regression error must fall below per-target tolerances; the OOD residual
 # must rise monotonically off-manifold; inference must fit the latency budget.
 # These thresholds are the contract scripts/train_extractor.py reports against and
@@ -21,7 +21,7 @@ ood:
   min_separation_ratio: 1.10  # mean(OOD residual) / mean(in-dist residual)
 
 latency:
-  inference_ms_p99: 10.0  # spec §6.9 / CLAUDE.md §5.3 extractor budget
+  inference_ms_p99: 10.0  # spec §6.9 extractor budget
 
 coupling:
   # μ̂→shield demo (spec §6.5): on detected ice the friction-cone radius must shrink.

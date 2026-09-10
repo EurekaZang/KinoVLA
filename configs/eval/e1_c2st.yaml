@@ -68,7 +68,7 @@ control:
 # O4 #49 peel-plateau force-shaping (calibration STEP 2; ONLY the O4_O2 pair's op_a). DEFAULT OFF
 # (force_cap_n=.inf, force_offset_n=0 ⇒ the tether is byte-identical). The matching preset that
 # makes O4's forward grip a constant drag = O2's: {enabled: true, force_cap_n: 0.0,
-# force_offset_n: 14.0} (= O2 k_c). FLAG as deviation #49 in CLAUDE.md §6 before enabling.
+# force_offset_n: 14.0} (= O2 k_c). Revalidate the force offset before enabling.
 o4_shaping: {enabled: false, force_cap_n: .inf, force_offset_n: 0.0}
 
 # Vision/disambiguator control rendering (real CLIP path; #16/#18/#24).

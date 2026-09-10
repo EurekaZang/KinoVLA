@@ -1,8 +1,8 @@
 """A4.1 — two-phase (delayed-divergence) O4 adhesion construction tests (CPU surrogate; no Isaac).
 
-Locks in the A4.1 construction as a regression test on the CPU surrogate (scaffolding only, per
-CLAUDE.md §0 — the surrogate never produces A4 RESULTS, but it faithfully mirrors the Isaac tether
-force law byte-for-byte, so it validates the construction here):
+Locks in the A4.1 construction as a regression test on the CPU surrogate. The
+surrogate never produces A4 RESULTS, but it faithfully mirrors the Isaac tether
+force law byte-for-byte, so it validates the construction here:
   - the PLATEAU (pen ≤ p0_m) is byte-identical to O2 compliance (the C1/A1.3 attribution window);
   - the RAMP (pen > p0_m) diverges (the consequence region);
   - ``f_break=inf`` never snaps (the immobilization preset);

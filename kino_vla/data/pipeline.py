@@ -142,7 +142,7 @@ def annotate_snapshots(
     cache: dict[int, tuple] | None = None,
     n_no_interception: int = 0,
 ) -> PipelineResult:
-    """PHASE 3 over PRE-COLLECTED snapshots (the decoupled GPU→CPU path, CLAUDE.md #23).
+    """PHASE 3 over PRE-COLLECTED snapshots (the decoupled GPU→CPU path).
 
     ``items`` are ``(Snapshot, op_theta)`` pairs from ``load_snapshots`` (real-Go2 snapshots
     collected on the GPU by scripts/isaac_hindsight_collect.py). Each is annotated by ``oracle``

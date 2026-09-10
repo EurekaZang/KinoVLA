@@ -1,6 +1,6 @@
 """M2 low-level locomotion: train a Go2 flat velocity-tracking policy (RSL-RL PPO).
 
-Replaces the M1 kinematic root drive (CLAUDE.md Section 6 #5/#7) with a real
+Replaces the M1 kinematic root drive with a real
 trained policy. Mirrors IsaacLab's ``scripts/reinforcement_learning/rsl_rl/train.py``
 wiring (env_cfg -> gym.make -> RslRlVecEnvWrapper -> OnPolicyRunner.learn) but is
 in-repo and config-driven (``configs/locomotion/go2_flat_ppo.yaml``) so the policy
@@ -265,7 +265,7 @@ def main() -> int:
     print("PASS: locomotion training")
 
     # Isaac Sim 5.1 close() busy-spins on this headless setup; the artifacts above
-    # are already on disk, so flush and force-exit (CLAUDE.md Section 6 #6).
+    # are already on disk, so flush and force-exit.
     sys.stdout.flush()
     os._exit(0)
 

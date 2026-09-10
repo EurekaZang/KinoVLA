@@ -81,7 +81,7 @@ ood:
   n_seeds: 24
   in_dist_values: [0.5, 0.4, 0.3, 0.2, 0.1]   # baseline for the separation check
 
-# --- Strict four-channel Isaac gate (kino_vla/tokens/isaac_gate.py; CLAUDE.md §6 #22) ---
+# --- Strict four-channel Isaac gate (kino_vla/tokens/isaac_gate.py) ---
 # Closes the M4 strict-GPU gap: all four θ regress below configs/tolerances.yaml on the
 # real Go2, each scored on the single-operator lane/phase where it actually varies.
 isaac_gate:

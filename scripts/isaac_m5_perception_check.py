@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """M5 real-perception gate on the Isaac Go2 (spec §7) — the map consumes rendered pixels.
 
-Closes the CLAUDE.md §6 #22 M5 strict-GPU gap. Real CLIP is blocked (HuggingFace unreachable
+Real CLIP is blocked (HuggingFace unreachable
 through the proxy), so the appearance encoder is the network-free pixel encoder
 (kino_vla/map/pixel_appearance.py) — but it must run on REAL perception, not class labels.
 

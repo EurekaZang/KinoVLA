@@ -190,7 +190,7 @@ def save_snapshots(
 ) -> Path:
     """Persist collected snapshots (+ each operator's θ for the taxonomy) to an ``.npz`` + json.
 
-    Decouples GPU collection from CPU annotation (CLAUDE.md #23): the real-Go2 snapshots are
+    Decouples GPU collection from CPU annotation: the real-Go2 snapshots are
     collected once on the GPU (scripts/isaac_hindsight_collect.py) and saved here; the external
     Oracle + filter then run offline (build_hindsight_dataset.py --from-snapshots).
 

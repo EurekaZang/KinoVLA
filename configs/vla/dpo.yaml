@@ -1,7 +1,7 @@
 # Embodied DPO config (spec §11 Stage 2; M7). DPO-train the SFT planner on physical-outcome
 # preference pairs from closed-loop rollouts. Inherits the model/projector/route from the SFT run
 # (the DPO policy is initialized from the SFT adapter). The adapter-toggle reference (LoRA off) is
-# the πref — no second model is loaded (CLAUDE.md §6 #33).
+# the πref — no second model is loaded.
 
 route: latent
 

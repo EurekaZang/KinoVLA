@@ -56,7 +56,7 @@ def test_walking_skeleton_demo_isaac():
 @pytest.mark.sim
 @pytest.mark.slow
 def test_m5_operators_isaac():
-    """M5 O2/O4/O7 on the physically-simulated Go2 (spec §8.2; CLAUDE.md M5 GPU gate)."""
+    """M5 O2/O4/O7 on the physically-simulated Go2 (spec §8.2)."""
     proc = subprocess.run(
         [sys.executable, str(REPO_ROOT / "scripts" / "isaac_m5_check.py"), "--headless"],
         capture_output=True,
@@ -386,7 +386,7 @@ def test_m4_kino_tokens_isaac():
 @pytest.mark.sim
 @pytest.mark.slow
 def test_m3_cbf_pushfall_isaac():
-    """M3 push-fall characterization on the real Go2 (spec §6.6; CLAUDE.md §6 #22).
+    """M3 push-fall characterization on the real Go2 (spec §6.6).
 
     Turns the previously-untested 0/0 zero-fall contrast into a real 36-scenario sweep: a real
     O6 impulse builds a capture-point regime, then a hostile command is run shielded vs
